@@ -1,5 +1,5 @@
 // Calendary service worker: offline shell + web push notifications.
-const CACHE = 'calendary-v2';
+const CACHE = 'calendary-v3';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((c) => c.addAll(['/', '/manifest.webmanifest', '/img/icon.svg'])).catch(() => {}));
@@ -74,6 +74,11 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const target = new URL(event.notification.data?.url || '/', self.location.origin).href;
+  // Links to other apps (e.g. a Moveo workout) open in their own window instead of replacing Calendary.
+  if (new URL(target).origin !== self.location.origin) {
+    event.waitUntil(self.clients.openWindow(target));
+    return;
+  }
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((wins) => {
       for (const w of wins) {

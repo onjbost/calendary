@@ -155,6 +155,21 @@ export async function registerRoutes(app) {
     tag: `test-${Date.now()}`,
   }));
 
+  // Generic notification for other add-ons (Moveo stretching breaks…): reaches every subscribed device.
+  app.post('/notify', async (req) => {
+    const b = req.body || {};
+    const title = String(b.title || '').trim().slice(0, 120);
+    if (!title) throw httpError(400, 'Serve un titolo');
+    const url = typeof b.url === 'string' && /^(https?:\/\/|\/(?!\/))/i.test(b.url) ? b.url.slice(0, 2000) : '/';
+    return sendToAll({
+      title,
+      body: String(b.body || '').slice(0, 500),
+      url,
+      tag: String(b.tag || `notify-${Date.now()}`).slice(0, 120),
+      important: !!b.important,
+    });
+  });
+
   // -------------------------------------------------------------- goals
   const goalsChanged = (alsoEvents = true) => {
     broadcast('goals');

@@ -1,5 +1,5 @@
 name: Calendary
-version: "0.2.0"
+version: "0.3.0"
 slug: calendary
 description: Calendario, promemoria, obiettivi con routine, matrice di Eisenhower e assistente in stile neon
 url: https://calendary.gattucciocloud.it
@@ -17,6 +17,7 @@ webui: "http://[HOST]:[PORT:8787]/"
 panel_icon: mdi:calendar-star
 options:
   password: ""
+  api_token: ""
   public_url: "https://calendary.gattucciocloud.it"
   timezone: "Europe/Rome"
   ics_sync_minutes: 15
@@ -27,6 +28,7 @@ options:
   ai_fallback_models: "gemini-2.5-flash-lite"
 schema:
   password: password
+  api_token: password?
   public_url: url
   timezone: str
   ics_sync_minutes: int(5,1440)

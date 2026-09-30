@@ -35,7 +35,7 @@ async function checkReminders() {
     await sendToAll({
       title: `${ev.important ? '⚡ ' : '⏰ '}${minutesLabel(minutesLeft)}: ${ev.title}`,
       body: `${fmtTime(ev.start)} – ${fmtTime(ev.end)}${where}${ev.important ? '\nConta fino a 5 e parti: 5, 4, 3, 2, 1… vai!' : ''}`,
-      url: `/calendario?view=day&date=${ymd(ev.start)}`,
+      url: ev.linkUrl || `/calendario?view=day&date=${ymd(ev.start)}`,
       tag: key,
       important: ev.important,
     });

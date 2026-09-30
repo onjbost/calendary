@@ -1,6 +1,8 @@
 node_modules/
 calendary/server/data/
 calendary/web/dist/
+moveo/server/data/
+moveo/web/dist/
 tablet/android/app/build/
 tablet/android/build/
 tablet/android/.gradle/
@@ -10,3 +12,4 @@ tablet/android/local.properties
 *.log
 *.apk
 .DS_Store
+__pycache__/

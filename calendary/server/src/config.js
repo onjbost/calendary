@@ -28,6 +28,8 @@ export const config = {
   port: Number(pick('PORT', 'port', 8787)),
   password: String(pick('CALENDARY_PASSWORD', 'password', '')),
   noAuth: process.env.CALENDARY_NO_AUTH === '1',
+  // Server-to-server access for other add-ons (e.g. Moveo): "Authorization: Bearer <api_token>".
+  apiToken: String(pick('CALENDARY_API_TOKEN', 'api_token', '')),
   publicUrl: String(pick('PUBLIC_URL', 'public_url', 'https://calendary.gattucciocloud.it')).replace(/\/$/, ''),
   timezone: String(pick('TZ_OVERRIDE', 'timezone', process.env.TZ || 'Europe/Rome')),
   icsSyncMinutes: Math.max(5, Number(pick('ICS_SYNC_MINUTES', 'ics_sync_minutes', 15))),

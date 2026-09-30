@@ -9,6 +9,7 @@ notifiche push e un assistente che pianifica lo studio.
 | Opzione | Descrizione |
 |---|---|
 | `password` | **Obbligatoria.** Password per accedere da web e dal tablet. Cambiarla disconnette tutti i dispositivi. |
+| `api_token` | Facoltativo. Token (min. 16 caratteri) per l'accesso da altri add-on, es. **Moveo**: header `Authorization: Bearer <token>`. Vuoto = disattivato. |
 | `public_url` | Indirizzo pubblico (es. `https://calendary.gattucciocloud.it`). Serve per le notifiche push. |
 | `timezone` | Fuso orario, default `Europe/Rome`. |
 | `ics_sync_minutes` | Ogni quanti minuti riscaricare i calendari iCal (default 15). |
@@ -35,3 +36,12 @@ Esponi la porta `8787` con il tuo Cloudflare Tunnel sul sottodominio scelto.
 Le istruzioni complete sono nel README del repository.
 
 I dati (SQLite) sono in `/data` dell'add-on e sono inclusi nei backup di Home Assistant.
+
+## Integrazione con altri add-on (API)
+
+Dalla 0.3.0 Calendary può essere usato da altre app di casa (ad esempio **Moveo**, l'app di allenamento):
+
+- `api_token` abilita l'accesso server-to-server con `Authorization: Bearer <token>`.
+- Gli eventi hanno i campi facoltativi `linkUrl` e `linkLabel`: nell'app compare il pulsante **▶ linkLabel** e la notifica push apre direttamente quel link.
+- `POST /api/notify` `{ title, body, url, tag, important }` invia una notifica push a tutti i dispositivi iscritti.
+- Gli eventi creati in blocco con lo stesso `planId` si eliminano insieme con `DELETE /api/plans/:planId`.

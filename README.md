@@ -16,6 +16,8 @@ Si modifica da **PC via web**, mentre il **tablet** fa da bacheca sempre accesa.
 ```
 Calendary/
 ├── repository.yaml        ← repository di add-on per Home Assistant
+├── deploy.ps1             ← copia un add-on su Home Assistant (-Addon calendary | moveo)
+├── moveo/                 ← add-on Moveo: allenamento e pause attive (vedi moveo/DOCS.md)
 ├── calendary/             ← l'add-on
 │   ├── config.yaml        ← opzioni dell'add-on
 │   ├── Dockerfile
@@ -158,3 +160,16 @@ Variabili utili: `CALENDARY_PASSWORD`, `DATA_DIR`, `PORT`, `AI_BASE_URL`, `AI_AP
 - I dati sono in un file SQLite nella cartella `/data` dell'add-on, quindi rientrano nei **backup di Home Assistant**.
 - I link iCal segreti danno accesso ai calendari: trattali come password.
 - Gli eventi importati da iCal sono in sola lettura: si modificano nel calendario di origine. Quelli creati in Calendary vivono nei calendari interni (*Personale*, *Studio*, o altri che crei).
+
+## 7. Moveo: allenamento collegato a Calendary
+
+`moveo/` è un secondo add-on dello stesso repository: programmi di yoga, pilates, calisthenics e surf,
+pause di movimento durante il lavoro e un player guidato. Moveo scrive le sessioni nel calendario *Allenamento* di Calendary;
+dall'evento, il pulsante **▶ Avvia allenamento** apre direttamente il player. Le pause usano le notifiche push di Calendary
+e, se configurata, l'app companion di Home Assistant.
+
+1. In Calendary (0.3.0+) imposta `api_token` (almeno 16 caratteri).
+2. Copia Moveo con `powershell -ExecutionPolicy Bypass -File deploy.ps1 -Addon moveo` e installalo da *Componenti aggiuntivi locali*.
+3. Nelle opzioni di Moveo imposta `password` e `calendary_token` (lo stesso token), poi aggiungi `moveo.gattucciocloud.it → http://local-moveo:8788` a Cloudflared.
+
+Dettagli in [`moveo/DOCS.md`](moveo/DOCS.md).

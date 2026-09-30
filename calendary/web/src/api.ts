@@ -16,6 +16,9 @@ export interface CalEvent {
   busy: boolean;
   source: string;
   planId: string | null;
+  /** optional deep link, e.g. "open this workout in Moveo" */
+  linkUrl?: string | null;
+  linkLabel?: string | null;
   /** goal routines ("routine") and milestones ("milestone") are virtual, read-only entries */
   routineId?: string;
   goalId?: string | null;
@@ -134,6 +137,8 @@ export interface EventDraft {
   important?: boolean;
   reminderMinutes?: number | null;
   calendarId?: string;
+  linkUrl?: string | null;
+  linkLabel?: string | null;
 }
 
 export interface TaskDraft {

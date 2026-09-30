@@ -29,6 +29,10 @@ export function Agenda({ events, now, onEventClick, empty = 'Niente in programma
               <div className="title">{ev.important && <span className="neon-amber">⚡ </span>}{ev.source === 'routine' && <span className="neon-cyan">{ev.done ? '✓ ' : '↻ '}</span>}{ev.title}</div>
               <div className="faint tiny">{ev.calendarName}{ev.location ? ` · ${ev.location}` : ''}</div>
             </div>
+            {ev.linkUrl && (
+              <a className="btn sm primary" href={ev.linkUrl} target="_blank" rel="noopener" title={ev.linkLabel || 'Apri'}
+                onClick={(e) => e.stopPropagation()} style={{ alignSelf: 'center', textDecoration: 'none' }}>▶</a>
+            )}
             {state === 'now' && <span className="chip neon-pink" style={{ alignSelf: 'center' }}>ORA</span>}
           </div>
         );

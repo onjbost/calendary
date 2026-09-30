@@ -1,18 +1,22 @@
-# Copies the Calendary add-on to Home Assistant's "addons" Samba share.
+# Copies an add-on of this repository (Calendary or Moveo) to Home Assistant's "addons" Samba share.
 # Only the add-on sources: node_modules, local test data and builds are skipped
 # (Home Assistant rebuilds everything inside Docker).
 #
-# Usage:  powershell -ExecutionPolicy Bypass -File deploy.ps1
+# Usage:  powershell -ExecutionPolicy Bypass -File deploy.ps1                 (Calendary)
+#         powershell -ExecutionPolicy Bypass -File deploy.ps1 -Addon moveo    (Moveo)
 #         powershell -ExecutionPolicy Bypass -File deploy.ps1 -Target \\192.168.1.47\addons\calendary
 #
 # Note: the Home Assistant Samba add-on hides/blocks names matching its "veto_files"
 # (default: ._*  .DS_Store  Thumbs.db  icon?) — never name a file or folder like "icons".
 
 param(
-  [string]$Target = '\\192.168.1.47\addons\Calendary\calendary'
+  [ValidateSet('calendary', 'moveo')]
+  [string]$Addon = 'calendary',
+  [string]$Target = ''
 )
 
-$source = Join-Path $PSScriptRoot 'calendary'
+if (-not $Target) { $Target = "\\192.168.1.47\addons\Calendary\$Addon" }
+$source = Join-Path $PSScriptRoot $Addon
 $excludeDirs = @('node_modules', 'data', 'dist')
 if (-not (Test-Path $Target)) { New-Item -ItemType Directory -Force $Target | Out-Null }
 
@@ -33,6 +37,7 @@ if ($missing) {
 }
 
 $version = (Select-String -Path (Join-Path $source 'config.yaml') -Pattern '^version:\s*"?([^"]+)"?').Matches[0].Groups[1].Value
-Write-Host "`nCalendary $version copiato in $Target (tutti i file verificati)" -ForegroundColor Cyan
-Write-Host "Home Assistant: Componenti aggiuntivi -> Calendary -> Aggiorna (o Ricostruisci)."
+$name = (Get-Culture).TextInfo.ToTitleCase($Addon)
+Write-Host "`n$name $version copiato in $Target (tutti i file verificati)" -ForegroundColor Cyan
+Write-Host "Home Assistant: Componenti aggiuntivi -> $name -> Aggiorna (o Ricostruisci)."
 exit 0
