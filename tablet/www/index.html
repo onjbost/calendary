@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Calendary</title>
+    <style>
+      html, body { height: 100%; margin: 0; background: #05030f; color: #e6fdff; font-family: system-ui, sans-serif; }
+      body { display: grid; place-items: center; text-align: center; }
+      h1 { letter-spacing: 0.2em; text-shadow: 0 0 8px #00e5ff, 0 0 24px #00e5ff; }
+      p { color: #a3acd0; }
+      button { margin-top: 16px; padding: 12px 24px; border-radius: 999px; border: 1px solid #00e5ff; background: rgba(0, 229, 255, 0.1); color: #e6fdff; font-size: 1rem; box-shadow: 0 0 16px rgba(0, 229, 255, 0.4); }
+    </style>
+  </head>
+  <body>
+    <!-- Shown only if the server can't be reached: the app normally loads server.url directly. -->
+    <div>
+      <h1>CALENDARY</h1>
+      <p>Impossibile raggiungere calendary.gattucciocloud.it.<br />Controlla la connessione Wi-Fi.</p>
+      <button onclick="location.href='https://calendary.gattucciocloud.it/kiosk'">Riprova</button>
+    </div>
+    <script>setTimeout(() => (location.href = 'https://calendary.gattucciocloud.it/kiosk'), 30000);</script>
+  </body>
+</html>

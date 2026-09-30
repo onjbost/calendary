@@ -1,0 +1,357 @@
+import { useEffect, useState } from 'react';
+import { api, type Calendar } from '../api';
+import { fmt } from '../dates';
+import { useCalendars } from '../hooks';
+import { notifyChanged } from '../live';
+import {
+  allowExactAlarms, browserLocalTest, currentPushSubscription, disablePush, enablePush, isNative, nativeNotificationStatus, pushSupported, sendNativeTest,
+  type NativeNotificationStatus,
+} from '../native';
+import { useUI } from '../ui';
+
+const PALETTE = ['#00e5ff', '#ff2bd6', '#a66bff', '#9dff3a', '#ffb020', '#ff3d6e', '#3d8bff', '#00d5a0'];
+
+function CalendarRow({ cal }: { cal: Calendar }) {
+  const { toast } = useUI();
+  const [name, setName] = useState(cal.name);
+  const [busy, setBusy] = useState(false);
+  const [confirm, setConfirm] = useState(false);
+
+  const update = async (patch: Partial<Calendar>) => {
+    try {
+      await api.updateCalendar(cal.id, patch);
+      notifyChanged('calendars');
+    } catch (e) {
+      toast((e as Error).message, 'error');
+    }
+  };
+
+  const sync = async () => {
+    setBusy(true);
+    try {
+      const r = await api.syncCalendar(cal.id);
+      notifyChanged('calendars');
+      toast(r.error ? `Errore: ${r.error}` : 'Calendario sincronizzato', r.error ? 'error' : 'ok');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const remove = async () => {
+    try {
+      await api.deleteCalendar(cal.id);
+      notifyChanged('calendars');
+      toast('Calendario rimosso');
+    } catch (e) {
+      toast((e as Error).message, 'error');
+    }
+  };
+
+  return (
+    <div className="cal-row">
+      <input type="color" className="color-input" value={cal.color} onChange={(e) => update({ color: e.target.value })} title="Colore" />
+      <div className="stack" style={{ gap: 6, minWidth: 0 }}>
+        <div className="row">
+          <input className="input grow" value={name} onChange={(e) => setName(e.target.value)} onBlur={() => name.trim() && name !== cal.name && update({ name })} style={{ maxWidth: 320 }} />
+          <span className="chip">{cal.type === 'local' ? 'Interno' : 'iCal'}</span>
+        </div>
+        {cal.type === 'ics' && (
+          <div className="faint tiny" style={{ overflowWrap: 'anywhere' }}>
+            {cal.lastError ? <span style={{ color: '#ff9db5' }}>⚠ {cal.lastError}</span> : cal.lastSync ? `Sincronizzato ${fmt(cal.lastSync, "d MMM 'alle' HH:mm")}` : 'Mai sincronizzato'}
+          </div>
+        )}
+        <div className="row small">
+          <label className="switch"><input type="checkbox" checked={cal.enabled} onChange={(e) => update({ enabled: e.target.checked })} /> Visibile</label>
+          <label className="row nowrap muted">Promemoria predefinito
+            <select className="input" style={{ width: 'auto', padding: '5px 10px' }} value={cal.reminderMinutes ?? ''}
+              onChange={(e) => update({ reminderMinutes: e.target.value === '' ? null : Number(e.target.value) })}>
+              <option value="">Nessuno</option>
+              <option value="0">All'inizio</option>
+              <option value="10">10 min</option>
+              <option value="15">15 min</option>
+              <option value="30">30 min</option>
+              <option value="60">1 ora</option>
+            </select>
+          </label>
+        </div>
+      </div>
+      <div className="stack" style={{ gap: 6 }}>
+        {cal.type === 'ics' && <button className="btn sm" onClick={sync} disabled={busy}>{busy ? '…' : '⟳ Sincronizza'}</button>}
+        {confirm ? (
+          <button className="btn sm danger" onClick={remove}>Conferma</button>
+        ) : (
+          <button className="btn sm ghost" onClick={() => setConfirm(true)}>Rimuovi</button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function AddCalendar() {
+  const { toast } = useUI();
+  const [type, setType] = useState<'ics' | 'local'>('ics');
+  const [name, setName] = useState('');
+  const [url, setUrl] = useState('');
+  const [color, setColor] = useState(PALETTE[1]);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const add = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      await api.createCalendar({ type, name, url: type === 'ics' ? url : null, color });
+      notifyChanged('calendars');
+      toast(type === 'ics' ? 'Calendario importato' : 'Calendario creato');
+      setName('');
+      setUrl('');
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="stack">
+      <div className="seg" style={{ alignSelf: 'flex-start' }}>
+        <button className={type === 'ics' ? 'on' : ''} onClick={() => setType('ics')}>Importa iCal</button>
+        <button className={type === 'local' ? 'on' : ''} onClick={() => setType('local')}>Nuovo interno</button>
+      </div>
+      <div className="grid-2">
+        <label className="field">Nome
+          <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder={type === 'ics' ? 'Es. Lavoro, Master, Google' : 'Es. Palestra'} />
+        </label>
+        <div className="field">
+          <span>Colore</span>
+          <div className="color-swatches">
+            {PALETTE.map((c) => (
+              <button key={c} className={color === c ? 'on' : ''} style={{ ['--sw' as string]: c }} onClick={() => setColor(c)} aria-label={c} />
+            ))}
+          </div>
+        </div>
+      </div>
+      {type === 'ics' && (
+        <label className="field">Indirizzo iCal (.ics)
+          <input className="input" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://… oppure webcal://…" />
+        </label>
+      )}
+      {error && <div className="alert error">{error}</div>}
+      <button className="btn primary" style={{ alignSelf: 'flex-start' }} onClick={add} disabled={busy || !name.trim() || (type === 'ics' && !url.trim())}>
+        {busy ? 'Importazione…' : type === 'ics' ? 'Importa calendario' : 'Crea calendario'}
+      </button>
+      {type === 'ics' && (
+        <details className="help">
+          <summary>Dove trovo il link iCal?</summary>
+          <ol>
+            <li><b>Google Calendar</b>: dal PC apri calendar.google.com → ⚙ Impostazioni → seleziona il calendario a sinistra → “Integra calendario” → copia l’<i>Indirizzo segreto in formato iCal</i>.</li>
+            <li><b>Outlook / Microsoft 365</b>: outlook.office.com → ⚙ → Calendario → Calendari condivisi → “Pubblica un calendario” → scegli il calendario e “Può visualizzare tutti i dettagli” → Pubblica → copia il link <i>ICS</i>.</li>
+            <li><b>Calendario di lavoro / master</b>: se usano Google o Outlook vale quanto sopra; molte piattaforme (Moodle, Teams, Zoom, portali universitari) hanno un pulsante “Esporta” o “Iscriviti” che fornisce un link .ics.</li>
+            <li><b>iCloud</b>: app Calendario → ⓘ accanto al calendario → “Calendario pubblico” → copia il link webcal://.</li>
+          </ol>
+          <div className="faint tiny" style={{ marginTop: 6 }}>I calendari iCal sono in sola lettura e si aggiornano automaticamente ogni pochi minuti. Il link segreto dà accesso al calendario: non condividerlo.</div>
+        </details>
+      )}
+    </div>
+  );
+}
+
+/** Android app: Web Push doesn't exist in the WebView, reminders are native local notifications. */
+function NativeNotifications() {
+  const { toast } = useUI();
+  const [st, setSt] = useState<NativeNotificationStatus | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const refresh = async () => setSt(await nativeNotificationStatus());
+  useEffect(() => {
+    refresh();
+    const t = setInterval(refresh, 10_000);
+    return () => clearInterval(t);
+  }, []);
+
+  const run = async (fn: () => Promise<unknown>, ok?: string) => {
+    setBusy(true);
+    try {
+      await fn();
+      if (ok) toast(ok);
+    } catch (e) {
+      toast((e as Error).message, 'error');
+    } finally {
+      await refresh();
+      setBusy(false);
+    }
+  };
+
+  const granted = st?.permission === 'granted';
+  return (
+    <div className="stack">
+      <div className="muted small">
+        Su questo tablet i promemoria sono <b>notifiche locali</b>: l'app le programma da sola per gli eventi ⚡ importanti dei prossimi 3 giorni,
+        e le aggiorna ogni volta che il calendario cambia. Non serve registrare il tablet sul server.
+      </div>
+      <div className="row small">
+        <span className="chip"><span className="dot" style={{ color: granted ? 'var(--lime)' : 'var(--red)' }} /> Permesso: {granted ? 'concesso' : st?.permission === 'denied' ? 'negato' : 'da concedere'}</span>
+        <span className="chip">⏰ {st?.pending ?? 0} promemoria programmati</span>
+        {st?.exactAlarms && (
+          <span className="chip"><span className="dot" style={{ color: st.exactAlarms === 'granted' ? 'var(--lime)' : 'var(--amber)' }} /> Allarmi precisi: {st.exactAlarms === 'granted' ? 'sì' : 'no'}</span>
+        )}
+      </div>
+      {st?.permission === 'denied' && (
+        <div className="alert small">Permesso negato: apri <b>Impostazioni Android → App → Calendary → Notifiche</b> e attivale.</div>
+      )}
+      {st?.exactAlarms && st.exactAlarms !== 'granted' && (
+        <div className="alert small">Senza “Allarmi e promemoria” Android può ritardare le notifiche di qualche minuto.</div>
+      )}
+      <div className="row">
+        {!granted && <button className="btn primary" disabled={busy} onClick={() => run(enablePush, 'Notifiche consentite ✨')}>🔔 Consenti notifiche</button>}
+        {st?.exactAlarms && st.exactAlarms !== 'granted' && (
+          <button className="btn" disabled={busy} onClick={() => run(allowExactAlarms)}>⏰ Consenti allarmi precisi</button>
+        )}
+        <button className={`btn ${granted ? 'primary' : ''}`} disabled={busy || !granted}
+          onClick={() => run(sendNativeTest, 'Notifica di prova inviata: controlla la barra delle notifiche')}>Invia prova su questo tablet</button>
+      </div>
+    </div>
+  );
+}
+
+/** Browsers (PC, phone): standard Web Push through the server. */
+function WebNotifications() {
+  const { toast } = useUI();
+  const [subscribed, setSubscribed] = useState<boolean | null>(null);
+  const [devices, setDevices] = useState(0);
+  const [busy, setBusy] = useState(false);
+
+  const refresh = async () => {
+    const [sub, st] = await Promise.all([currentPushSubscription().catch(() => null), api.pushStatus().catch(() => null)]);
+    setSubscribed(!!sub);
+    setDevices(st?.subscriptions ?? 0);
+  };
+  useEffect(() => {
+    refresh();
+  }, []);
+
+  const toggle = async () => {
+    setBusy(true);
+    try {
+      if (subscribed) await disablePush();
+      else await enablePush();
+      await refresh();
+      toast(subscribed ? 'Notifiche disattivate su questo dispositivo' : 'Notifiche attivate ✨');
+    } catch (e) {
+      toast((e as Error).message, 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const [report, setReport] = useState<{ kind: 'ok' | 'error' | 'info'; text: string } | null>(null);
+
+  const test = async () => {
+    setReport(null);
+    try {
+      const r = await api.pushTest();
+      await refresh();
+      if (!r.sent && !r.failed) {
+        setReport({ kind: 'error', text: 'Nessun browser registrato: premi prima “Attiva su questo dispositivo”.' });
+      } else if (r.failed) {
+        const details = r.errors.map((e) => `${e.service}${e.status ? ` (${e.status})` : ''}: ${e.message}`).join('\n');
+        setReport({ kind: 'error', text: `Inviata a ${r.sent}, fallita per ${r.failed}:\n${details}` });
+      } else {
+        setReport({
+          kind: 'ok',
+          text: `Il server l’ha consegnata a ${r.sent} browser. Se entro pochi secondi non la vedi, il blocco è sul dispositivo: prova “Prova solo browser” e guarda i suggerimenti qui sotto.`,
+        });
+      }
+    } catch (e) {
+      setReport({ kind: 'error', text: (e as Error).message });
+    }
+  };
+
+  const localTest = async () => {
+    setReport(null);
+    try {
+      await browserLocalTest();
+      setReport({ kind: 'info', text: 'Notifica mostrata dal browser senza passare dal server. Se non l’hai vista, il blocco è nelle impostazioni del sistema (vedi sotto).' });
+    } catch (e) {
+      setReport({ kind: 'error', text: (e as Error).message });
+    }
+  };
+
+  return (
+    <div className="stack">
+      <div className="muted small">
+        Ricevi una notifica push quando si avvicina un evento ⚡ importante (30 minuti prima, o il promemoria che imposti), più un riepilogo ogni mattina.
+        Attivale su ogni browser in cui le vuoi (PC, telefono).
+      </div>
+      {!pushSupported() && (
+        <div className="alert small">Questo browser non supporta le notifiche push. Su iPhone/iPad aggiungi prima Calendary alla schermata Home (Condividi → Aggiungi a Home).</div>
+      )}
+      <div className="row">
+        {pushSupported() && (
+          <button className={`btn ${subscribed ? '' : 'primary'}`} onClick={toggle} disabled={busy || subscribed === null}>
+            {subscribed ? 'Disattiva su questo dispositivo' : '🔔 Attiva su questo dispositivo'}
+          </button>
+        )}
+        <button className="btn" onClick={test}>Invia prova</button>
+        {subscribed && <button className="btn ghost" onClick={localTest}>Prova solo browser</button>}
+        <span className="faint small">{devices} {devices === 1 ? 'browser registrato' : 'browser registrati'} per le push{subscribed ? ' (incluso questo)' : ''}</span>
+      </div>
+      {report && <div className={`alert small ${report.kind === 'error' ? 'error' : report.kind === 'ok' ? 'ok' : ''}`} style={{ whiteSpace: 'pre-wrap' }}>{report.text}</div>}
+      <details className="help">
+        <summary>Non arriva nessuna notifica?</summary>
+        <ol>
+          <li><b>Windows</b>: Impostazioni → Sistema → Notifiche → attiva le notifiche e controlla che <i>Chrome</i> / <i>Edge</i> siano abilitati. Disattiva <i>Non disturbare</i>.</li>
+          <li><b>Browser</b>: clicca sul lucchetto accanto all’indirizzo → Notifiche → <i>Consenti</i>. In Chrome controlla anche <i>chrome://settings/content/notifications</i>.</li>
+          <li>Chrome riceve le push solo se è in esecuzione (anche in background): Impostazioni → Sistema → <i>Continua a eseguire app in background</i>.</li>
+          <li><b>Android</b>: Impostazioni → App → Chrome (o Calendary) → Notifiche attive; disattiva l’ottimizzazione batteria se arrivano in ritardo.</li>
+          <li>Le notifiche funzionano solo dall’indirizzo <b>https://calendary.gattucciocloud.it</b>, non da 192.168.x.x:8787 (lì il browser le blocca perché non è HTTPS).</li>
+        </ol>
+      </details>
+      <div className="faint tiny">L'app Android del tablet non compare qui: usa notifiche locali, gestite dalla sua pagina Impostazioni.</div>
+    </div>
+  );
+}
+
+function Notifications() {
+  return isNative() ? <NativeNotifications /> : <WebNotifications />;
+}
+
+export function SettingsPage({ onLogout }: { onLogout: () => void }) {
+  const { data: calendars } = useCalendars();
+
+  return (
+    <div>
+      <div className="page-head"><h1>Impostazioni</h1></div>
+      <div className="dash">
+        <section className="glass pad span-7">
+          <div className="card-title"><h2>Calendari</h2></div>
+          {calendars.map((c) => <CalendarRow key={`${c.id}-${c.name}`} cal={c} />)}
+        </section>
+        <section className="glass pad span-5 glow-pink">
+          <div className="card-title"><h2 className="neon-pink">Aggiungi calendario</h2></div>
+          <AddCalendar />
+        </section>
+        <section className="glass pad span-7">
+          <div className="card-title"><h2>Notifiche</h2></div>
+          <Notifications />
+        </section>
+        <section className="glass pad span-5 glow-violet">
+          <div className="card-title"><h2 className="neon-violet">Tablet</h2></div>
+          <div className="stack small">
+            <div className="muted">La vista tablet è una bacheca sempre accesa: orologio, agenda del giorno, settimana, matrice e tips a rotazione. Si aggiorna in tempo reale quando modifichi qualcosa dal PC.</div>
+            <div className="row">
+              <a className="btn primary" href="/kiosk">Apri vista tablet</a>
+              <code className="faint">{location.origin}/kiosk</code>
+            </div>
+          </div>
+        </section>
+        <section className="glass pad span-12">
+          <div className="row">
+            <div className="muted small grow">Calendary · dati salvati sul tuo Home Assistant</div>
+            <button className="btn danger" onClick={async () => { await api.logout(); onLogout(); }}>Esci</button>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,26 @@
+{
+  "appId": "it.gattucciocloud.calendary",
+  "appName": "Calendary",
+  "webDir": "www",
+  "server": {
+    "url": "https://calendary.gattucciocloud.it/kiosk",
+    "cleartext": false,
+    "errorPath": "index.html",
+    "allowNavigation": ["calendary.gattucciocloud.it"]
+  },
+  "android": {
+    "backgroundColor": "#05030f",
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_icon",
+      "iconColor": "#00e5ff"
+    },
+    "StatusBar": {
+      "overlaysWebView": true,
+      "style": "DARK",
+      "backgroundColor": "#00000000"
+    }
+  }
+}

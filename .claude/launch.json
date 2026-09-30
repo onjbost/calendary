@@ -1,0 +1,15 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "calendary",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["--disable-warning=ExperimentalWarning", "calendary/server/src/index.js"],
+      "port": 8787,
+      "env": {
+        "DATA_DIR": "calendary/server/data",
+        "CALENDARY_PASSWORD": "demo"
+      }
+    }
+  ]
+}
