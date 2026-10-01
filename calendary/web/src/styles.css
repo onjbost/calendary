@@ -547,3 +547,75 @@ details.help ol { margin: 8px 0 0; padding-left: 20px; color: var(--muted); font
 
 .toast { position: fixed; left: 50%; bottom: 30px; transform: translateX(-50%); z-index: 300; padding: 12px 20px; border-radius: 999px; animation: fade 0.2s; max-width: calc(100vw - 32px); }
 @media (max-width: 860px) { .toast { bottom: 100px; } }
+
+/* Moveo card (suite) */
+.moveo-card { flex-shrink: 0; }
+.kiosk-col > .glass:not(.scroll) { flex-shrink: 0; }
+.moveo-card .ellipsis { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ------------------------------------------------ night stand (modalità notte, StandBy-like) */
+.nightstand { position: fixed; inset: 0; z-index: 80; background: #000; color: #f4f6ff; display: flex; align-items: center; justify-content: center; overflow: hidden; user-select: none; cursor: pointer; --ns-accent: var(--cyan); }
+.nightstand .ns-inner { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; padding: 4vh 5vw; transition: transform 2s ease; }
+.ns-split { display: grid; grid-template-columns: 1.15fr 1fr; gap: 4vw; width: 100%; align-items: center; }
+.ns-left { display: flex; flex-direction: column; align-items: center; gap: 1vh; }
+.ns-right { display: flex; flex-direction: column; gap: 2.2vh; min-width: 0; }
+.ns-center { display: flex; flex-direction: column; align-items: center; gap: 2vh; }
+.ns-clock { font-family: var(--font-display); font-weight: 700; line-height: 0.9; letter-spacing: 0.02em; display: flex; align-items: baseline; color: #e9fdff;
+  text-shadow: 0 0 10px rgba(0, 229, 255, 0.55), 0 0 34px rgba(0, 229, 255, 0.3); font-variant-numeric: tabular-nums; }
+.ns-clock.xl { font-size: min(30vh, 16vw); }
+.ns-clock.xxl { font-size: min(52vh, 28vw); }
+.ns-colon { opacity: 0.55; margin: 0 0.02em; }
+.ns-date { font-size: min(4.2vh, 2.4vw); color: #c9d2f5; letter-spacing: 0.04em; }
+.ns-small-clock { font-family: var(--font-display); font-size: min(9vh, 5vw); margin-top: 2vh; color: #e9fdff; }
+.ns-widget { background: rgba(255, 255, 255, 0.06); border-radius: 22px; padding: 2.2vh 2vw; display: flex; flex-direction: column; gap: 0.8vh; min-width: 0; }
+.ns-label { font-size: min(2.3vh, 1.25vw); text-transform: uppercase; letter-spacing: 0.12em; color: #8f98c4; }
+.ns-big-line { font-size: min(3.8vh, 2.1vw); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ns-dim { color: #8f98c4; }
+.ns-w-now { display: flex; align-items: center; gap: 1.2vw; }
+.ns-w-ico { font-size: min(6vh, 3.4vw); }
+.ns-w-temp { font-family: var(--font-display); font-size: min(7vh, 4vw); }
+.ns-w-days { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1vw; font-size: min(2.8vh, 1.6vw); }
+.ns-w-days > div { display: flex; flex-direction: column; align-items: center; gap: 0.3vh; }
+.ns-row { display: grid; grid-template-columns: auto auto 1fr; gap: 0.9vw; align-items: center; font-size: min(3vh, 1.7vw); }
+.ns-dot { width: 10px; height: 10px; border-radius: 50%; background: currentColor; }
+.ns-ellipsis { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ns-month { width: 100%; max-width: 46vh; }
+.ns-month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.6vh; text-align: center; font-size: min(3vh, 1.7vw); }
+.ns-month-grid span { padding: 0.5vh 0; border-radius: 999px; }
+.ns-month-grid .out { opacity: 0.25; }
+.ns-month-grid .today { background: var(--ns-accent); color: #000; font-weight: 700; }
+.ns-status { position: absolute; top: 2.4vh; right: 3vw; display: flex; gap: 1.6vw; font-size: min(2.6vh, 1.5vw); color: #8f98c4; }
+.ns-dots { position: absolute; bottom: 3vh; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; }
+.ns-dots button { width: 10px; height: 10px; border-radius: 50%; border: 0; padding: 0; background: rgba(255, 255, 255, 0.25); cursor: pointer; }
+.ns-dots button.on { background: rgba(255, 255, 255, 0.85); }
+.ns-hint { position: absolute; bottom: 3vh; right: 3vw; font-size: 0.75rem; color: #4d5577; }
+/* night hours: everything red and dim, no glow (eyes adapted to the dark) */
+.nightstand.red { color: #ff3b30; --ns-accent: #ff3b30; filter: brightness(0.75); }
+.nightstand.red * { color: #ff3b30 !important; text-shadow: none !important; border-color: #5a0f0b !important; }
+.nightstand.red .ns-widget { background: rgba(255, 59, 48, 0.08); }
+.nightstand.red .ns-dim, .nightstand.red .ns-label, .nightstand.red .ns-status, .nightstand.red .ns-hint { color: #a3241d !important; }
+.nightstand.red .ns-dot, .nightstand.red .ns-dots button.on { background: #ff3b30; }
+.nightstand.red .ns-month-grid .today { background: #ff3b30; color: #000 !important; }
+.nightstand.red .ns-w-ico, .nightstand.red .ns-w-days span:nth-child(2) { filter: grayscale(1) brightness(0.6) sepia(1) hue-rotate(-50deg) saturate(6); }
+@media (orientation: portrait) {
+  .ns-split { grid-template-columns: 1fr; }
+  .ns-clock.xl { font-size: 22vw; }
+  .ns-date, .ns-big-line { font-size: 4.5vw; }
+  .ns-label { font-size: 3vw; }
+  .ns-row, .ns-month-grid, .ns-w-days { font-size: 3.6vw; }
+}
+
+/* alarm ringing */
+.alarm-ring { position: fixed; inset: 0; z-index: 95; background: radial-gradient(ellipse at 50% 30%, #3a1f00 0%, #000 70%); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3vh; }
+.alarm-time { font-family: var(--font-display); font-size: min(26vh, 22vw); color: #fff4dc; text-shadow: 0 0 20px var(--amber), 0 0 60px rgba(255, 176, 32, 0.5); }
+.alarm-title { font-size: 1.6rem; color: #ffd08a; }
+.alarm-btn { min-height: 64px; padding: 0 34px; font-size: 1.2rem; }
+
+/* ------------------------------------------------ power saving: no blur, glow or animation, pure black */
+html.eco .bg-blob, html.eco .bg-grid { display: none; }
+html.eco .bg-scene { background: #000; }
+html.eco body { background: #000; }
+html.eco *, html.eco *::before, html.eco *::after { animation: none !important; transition: none !important; text-shadow: none !important; box-shadow: none !important; }
+html.eco .glass { backdrop-filter: none; -webkit-backdrop-filter: none; background: #0a0a12; }
+html.eco .ns-clock { text-shadow: none; }
+html.eco .nightstand .ns-inner { transition: none; }

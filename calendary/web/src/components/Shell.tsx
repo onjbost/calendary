@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { isNative } from '../native';
 import { Link } from '../router';
+import { openMoveo, useMoveo } from '../suite';
 
 export function Background() {
   return (
@@ -27,6 +28,7 @@ const NAV = [
 const inAppWindow = isNative() || window.matchMedia('(display-mode: standalone)').matches;
 
 export function Shell({ path, children }: { path: string; children: ReactNode }) {
+  const moveo = useMoveo();
   const isActive = (to: string) => (to === '/' ? path === '/' : path.startsWith(to));
   return (
     <div className="shell">
@@ -42,6 +44,12 @@ export function Shell({ path, children }: { path: string; children: ReactNode })
           </Link>
         ))}
         <div className="spacer nav-extra" />
+        {moveo?.enabled && (
+          <button type="button" className="nav-link nav-extra" onClick={() => openMoveo('/')} style={{ background: 'none', border: 0, cursor: 'pointer', textAlign: 'left', font: 'inherit' }}>
+            <span className="ico">🏃</span>
+            <span>Moveo ↗</span>
+          </button>
+        )}
         {inAppWindow ? (
           <Link to="/kiosk" className="nav-link nav-extra">
             <span className="ico">▭</span>

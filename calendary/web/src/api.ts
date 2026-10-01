@@ -219,6 +219,45 @@ const post = <T>(url: string, body: unknown = {}) => request<T>('POST', url, bod
 const patch = <T>(url: string, body: unknown) => request<T>('PATCH', url, body);
 const del = <T>(url: string) => request<T>('DELETE', url);
 
+export interface MoveoSession {
+  title: string;
+  programTitle: string;
+  category: string | null;
+  /** emoji of the category (also the ones created in Moveo) */
+  emoji?: string;
+  date: string;
+  time: string;
+  durationMin: number;
+  week: number;
+  weeks: number | null;
+  path: string;
+}
+
+export interface MoveoToday {
+  enabled: boolean;
+  publicUrl?: string;
+  error?: string;
+  date?: string;
+  session?: MoveoSession | null;
+  next?: MoveoSession | null;
+  doneToday?: { title: string; category: string }[];
+  breaks?: { done: number; total: number; paused: boolean; open: { title: string; path: string } | null; next: { title: string; dueAt: string; path: string } | null };
+  streak?: number;
+  minutesWeek?: number;
+}
+
+export interface Weather {
+  enabled: boolean;
+  error?: string;
+  condition?: string;
+  temperature?: number | null;
+  unit?: string;
+  humidity?: number | null;
+  wind?: number | null;
+  windUnit?: string;
+  daily?: { date: string; condition: string; high: number | null; low: number | null; rain: number | null }[];
+}
+
 export const api = {
   session: () => get<{ authenticated: boolean; authConfigured: boolean }>('/session'),
   login: (password: string) => post<{ ok: boolean }>('/login', { password }),
@@ -245,6 +284,10 @@ export const api = {
   updateTask: (id: string, t: Partial<Task>) => patch<Task>(`/tasks/${id}`, t),
   deleteTask: (id: string) => del(`/tasks/${id}`),
   carryOver: (date: string) => post<{ moved: number }>('/tasks/carry-over', { date }),
+
+  moveoToday: () => get<MoveoToday>('/suite/moveo'),
+  weather: () => get<Weather>('/weather'),
+  suiteLink: (next: string) => post<{ url: string }>('/suite/link', { next }),
 
   pushStatus: () => get<{ publicKey: string; subscriptions: number }>('/push/status'),
   pushSubscribe: (sub: PushSubscriptionJSON) => post('/push/subscribe', sub),

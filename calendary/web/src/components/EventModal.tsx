@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type MouseEvent } from 'react';
 import { addDays, addHours, startOfHour } from 'date-fns';
 import { api, type CalEvent, type EventDraft } from '../api';
 import { capitalize, fmt, hm, timeRange, ymd } from '../dates';
@@ -7,6 +7,7 @@ import { notifyChanged } from '../live';
 import { navigate } from '../router';
 import { useUI } from '../ui';
 import { Modal } from './Modal';
+import { isMoveoLink, openMoveoUrl } from '../suite';
 
 const REMINDERS: { value: string; label: string }[] = [
   { value: '', label: 'Automatico' },
@@ -62,9 +63,17 @@ function initialForm(event?: CalEvent, draft?: Partial<EventDraft>): Form {
 export function EventLinkButton({ event, onOpen }: { event: Pick<CalEvent, 'linkUrl' | 'linkLabel'>; onOpen?: () => void }) {
   if (!event.linkUrl) return null;
   const external = /^https?:\/\//i.test(event.linkUrl) && !event.linkUrl.startsWith(window.location.origin);
+  const click = (e: MouseEvent) => {
+    if (isMoveoLink(event.linkUrl)) {
+      // Moveo workout: open it signed in (and in the Moveo app on the tablet).
+      e.preventDefault();
+      openMoveoUrl(event.linkUrl!);
+    }
+    onOpen?.();
+  };
   return (
     <a className="btn primary" href={event.linkUrl} target={external ? '_blank' : undefined} rel="noopener"
-      onClick={onOpen} style={{ alignSelf: 'flex-start', textDecoration: 'none' }}>
+      onClick={click} style={{ alignSelf: 'flex-start', textDecoration: 'none' }}>
       ▶ {event.linkLabel || 'Apri'}
     </a>
   );

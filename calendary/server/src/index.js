@@ -5,7 +5,8 @@ import Fastify from 'fastify';
 import fastifyCookie from '@fastify/cookie';
 import fastifyStatic from '@fastify/static';
 import { config } from './config.js';
-import { registerAuth } from './auth.js';
+import { registerAuth, startSession } from './auth.js';
+import { verifyTicket } from './suite.js';
 import { registerRoutes } from './routes.js';
 import { initPush } from './push.js';
 import { startIcsSync } from './ics.js';
@@ -30,6 +31,14 @@ app.setErrorHandler((err, req, reply) => {
 await app.register(fastifyCookie);
 registerAuth(app);
 await app.register(registerRoutes, { prefix: '/api' });
+
+// Single sign-on from Moveo: /sso?t=<ticket signed by Moveo> → session cookie → redirect.
+app.get('/sso', async (req, reply) => {
+  const next = verifyTicket(req.query.t, 'moveo');
+  if (!next) return reply.redirect('/?sso=scaduto');
+  startSession(req, reply);
+  return reply.redirect(next);
+});
 
 const hasWeb = fs.existsSync(path.join(webDist, 'index.html'));
 if (hasWeb) {

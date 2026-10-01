@@ -3,10 +3,13 @@ import { assistantStatus, chat } from './assistant.js';
 import * as goals from './goals.js';
 import { forgetCalendar, syncCalendar } from './ics.js';
 import { planStudy } from './planner.js';
+import { config } from './config.js';
+import { moveoToday, signTicket, suiteSecretOk } from './suite.js';
 import { countSubscriptions, removeSubscription, saveSubscription, sendToAll, vapidPublicKey } from './push.js';
 import * as store from './store.js';
 import { broadcast, streamHandler } from './stream.js';
 import { httpError } from './util.js';
+import { weather } from './weather.js';
 
 export async function registerRoutes(app) {
   app.get('/health', async () => ({ ok: true }));
@@ -168,6 +171,19 @@ export async function registerRoutes(app) {
       tag: String(b.tag || `notify-${Date.now()}`).slice(0, 120),
       important: !!b.important,
     });
+  });
+
+  // ------------------------------------------------------------- weather (night mode widget)
+  app.get('/weather', async () => weather());
+
+  // ------------------------------------------------------------- suite (Moveo)
+  app.get('/suite/moveo', async () => moveoToday());
+
+  /** Link to Moveo that signs you in automatically (single-use ticket, valid 2 minutes). */
+  app.post('/suite/link', async (req) => {
+    if (!suiteSecretOk()) throw httpError(400, 'Imposta api_token per collegare Moveo');
+    const ticket = signTicket('calendary', req.body?.next);
+    return { url: `${config.moveo.publicUrl}/sso?t=${encodeURIComponent(ticket)}` };
   });
 
   // -------------------------------------------------------------- goals

@@ -1,5 +1,6 @@
 import type { CalEvent } from '../api';
 import { fmt, hm } from '../dates';
+import { isMoveoLink, openMoveoUrl } from '../suite';
 
 /** Vertical list of events, highlighting the one in progress and dimming past ones. */
 export function Agenda({ events, now, onEventClick, empty = 'Niente in programma', showDay = false }: {
@@ -31,7 +32,10 @@ export function Agenda({ events, now, onEventClick, empty = 'Niente in programma
             </div>
             {ev.linkUrl && (
               <a className="btn sm primary" href={ev.linkUrl} target="_blank" rel="noopener" title={ev.linkLabel || 'Apri'}
-                onClick={(e) => e.stopPropagation()} style={{ alignSelf: 'center', textDecoration: 'none' }}>▶</a>
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (isMoveoLink(ev.linkUrl)) { e.preventDefault(); openMoveoUrl(ev.linkUrl!); }
+                }} style={{ alignSelf: 'center', textDecoration: 'none' }}>▶</a>
             )}
             {state === 'now' && <span className="chip neon-pink" style={{ alignSelf: 'center' }}>ORA</span>}
           </div>

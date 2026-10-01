@@ -10,6 +10,9 @@ notifiche push e un assistente che pianifica lo studio.
 |---|---|
 | `password` | **Obbligatoria.** Password per accedere da web e dal tablet. Cambiarla disconnette tutti i dispositivi. |
 | `api_token` | Facoltativo. Token (min. 16 caratteri) per l'accesso da altri add-on, es. **Moveo**: header `Authorization: Bearer <token>`. Vuoto = disattivato. |
+| `moveo_url` | Indirizzo interno di **Moveo** per la card *Allenamento* (`http://local-moveo:8788`). Vuoto = card nascosta. |
+| `moveo_public_url` | Indirizzo pubblico di Moveo, usato nei link (`https://moveo.gattucciocloud.it`). |
+| `weather_entity` | Entità meteo di Home Assistant per il widget della modalità notte (default `weather.forecast_home`, creata da Met.no con l'installazione). Vuoto = niente meteo. |
 | `public_url` | Indirizzo pubblico (es. `https://calendary.gattucciocloud.it`). Serve per le notifiche push. |
 | `timezone` | Fuso orario, default `Europe/Rome`. |
 | `ics_sync_minutes` | Ogni quanti minuti riscaricare i calendari iCal (default 15). |
@@ -45,3 +48,52 @@ Dalla 0.3.0 Calendary può essere usato da altre app di casa (ad esempio **Moveo
 - Gli eventi hanno i campi facoltativi `linkUrl` e `linkLabel`: nell'app compare il pulsante **▶ linkLabel** e la notifica push apre direttamente quel link.
 - `POST /api/notify` `{ title, body, url, tag, important }` invia una notifica push a tutti i dispositivi iscritti.
 - Gli eventi creati in blocco con lo stesso `planId` si eliminano insieme con `DELETE /api/plans/:planId`.
+
+## Suite con Moveo (0.4.0)
+
+Calendary e Moveo restano due app distinte, collegate da un **segreto condiviso**: `api_token` di Calendary = `calendary_token` di Moveo.
+
+- **Card "Allenamento"** nella dashboard e nella vista tablet: mostra la sessione di oggi (o la prossima), le pause della giornata e la serie di giorni attivi, con i pulsanti **▶ Avvia** e **Pausa adesso**.
+- **Accesso unico**: i link verso Moveo (card, pulsante ▶ degli eventi, voce *Moveo ↗* nel menu) contengono un ticket firmato, monouso e valido 2 minuti, quindi Moveo ti riconosce senza chiederti la password. Vale anche al contrario, dal pulsante *Calendary* di Moveo. Il ticket può portare solo a pagine della stessa app.
+- **App Android**: nell'app Calendary i link verso Moveo aprono l'app Moveo (`moveo://`); dall'app Moveo il pulsante Calendary apre questa app (`calendary://`). Se l'altra app non è installata, il link si apre nel browser.
+
+## Modalità notte, sveglia e risparmio energetico (0.5.0)
+
+Si regolano in **Impostazioni → Questo dispositivo**: valgono solo per il tablet o il telefono su cui le imposti, perché sono salvate nel browser.
+
+**Modalità notte** (come StandBy di iPhone). È un orologio a schermo intero su fondo nero, con tre viste da sfogliare:
+1. orologio con meteo, prossimo impegno e allenamento di Moveo;
+2. solo orologio gigante;
+3. calendario del mese con gli impegni di oggi e di domani.
+
+- Si apre da sola dalla vista tablet dopo qualche secondo senza tocchi, scegliendo tra:
+  - *in carica e in orizzontale* (predefinito);
+  - *nelle ore notturne*;
+  - *solo a mano* con il pulsante 🌙.
+- Si apre anche dall'indirizzo `/notte`.
+- Si chiude con un tocco.
+- Nelle ore impostate (default 22:30-6:30) diventa **rossa e scura**.
+- Il contenuto si sposta di pochi pixel ogni minuto, per non stampare l'immagine sullo schermo.
+
+**Sveglia**: ora, giorni e suono (dolce o classico), con volume crescente e i pulsanti *Posticipa 9 min* e *Ferma*.
+- Suona dalla pagina, quindi Calendary deve restare aperto, per esempio il tablet in carica sul comodino.
+- Dopo aver aperto la pagina basta toccare lo schermo una volta: i browser bloccano l'audio finché non c'è stato un tocco.
+- Nell'app Android viene programmata anche una notifica di riserva.
+
+**Risparmio energetico**: *automatico* (sotto il 20% di batteria e senza carica), *sempre* o *mai*. Quando è attivo:
+- spegne sfocature, bagliori e animazioni e usa il nero pieno;
+- aggiorna orologio e widget meno spesso;
+- nell'app abbassa la luminosità;
+- lontano dal caricatore lascia spegnere lo schermo (disattivabile).
+
+**Batteria e luminosità.** Lo stato della batteria arriva dal browser (Chrome e la WebView di Android lo forniscono; Safari e Firefox no). La luminosità reale dello schermo si può cambiare solo nell'app Android, che dalla 0.3.0 include i plugin `@capacitor-community/screen-brightness` e `@capacitor/device`. Per averli bisogna ricompilare l'APK:
+
+```powershell
+cd tablet
+npm install
+npx cap sync android
+cd android
+.\gradlew.bat assembleDebug
+```
+
+Nel browser la modalità notte scurisce solo la pagina.

@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from './api';
 import { AlertWatcher } from './components/AlertWatcher';
+import { DeviceLayer } from './components/DeviceLayer';
+import { NightStand } from './components/NightStand';
 import { Background, Shell } from './components/Shell';
 import { connectLive, disconnectLive } from './live';
 import { AssistantPage } from './pages/AssistantPage';
@@ -12,7 +14,9 @@ import { Login } from './pages/Login';
 import { MatrixPage } from './pages/MatrixPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { TipsPage } from './pages/TipsPage';
-import { useLocation } from './router';
+import { listenDeepLinks } from './native';
+import { navigate, useLocation } from './router';
+import { primeMoveo } from './suite';
 import { UIProvider, useUI } from './ui';
 
 type Session = { authenticated: boolean; authConfigured: boolean } | null;
@@ -57,9 +61,14 @@ export function App() {
   }, [check]);
 
   useEffect(() => {
-    if (session?.authenticated) connectLive();
-    else disconnectLive();
+    if (session?.authenticated) {
+      connectLive();
+      primeMoveo();
+    } else disconnectLive();
   }, [session?.authenticated]);
+
+  // Android app: links from Moveo (calendary://open?url=…) land on the right page.
+  useEffect(() => listenDeepLinks(), []);
 
   if (!session) return <Background />;
 
@@ -73,10 +82,13 @@ export function App() {
   }
 
   const kiosk = path.startsWith('/kiosk');
+  const night = path.startsWith('/notte');
   return (
     <UIProvider>
       <Background />
-      {kiosk ? <KioskPage /> : <Routes path={path} query={query} onLogout={check} />}
+      {night ? <NightStand onExit={() => (history.length > 1 ? history.back() : navigate('/kiosk'))} />
+        : kiosk ? <KioskPage /> : <Routes path={path} query={query} onLogout={check} />}
+      <DeviceLayer />
     </UIProvider>
   );
 }

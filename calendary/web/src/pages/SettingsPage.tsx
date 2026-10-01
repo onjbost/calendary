@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { DeviceSettings } from '../components/DeviceSettings';
 import { api, type Calendar } from '../api';
 import { fmt } from '../dates';
 import { useCalendars } from '../hooks';
@@ -344,6 +345,10 @@ export function SettingsPage({ onLogout }: { onLogout: () => void }) {
               <code className="faint">{location.origin}/kiosk</code>
             </div>
           </div>
+        </section>
+        <section className="glass pad span-12 glow-cyan">
+          <div className="card-title"><h2>Questo dispositivo · notte, sveglia e risparmio</h2></div>
+          <DeviceSettings />
         </section>
         <section className="glass pad span-12">
           <div className="row">

@@ -69,6 +69,17 @@ function bearerMatches(req) {
 
 export const isAuthenticated = (req) => config.noAuth || verifyToken(req.cookies?.[COOKIE]) || bearerMatches(req);
 
+/** Sets the long-lived session cookie (after a password login or a suite single sign-on ticket). */
+export function startSession(req, reply) {
+  reply.setCookie(COOKIE, makeToken(), {
+    path: '/',
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: req.protocol === 'https',
+    maxAge: SESSION_DAYS * 86400,
+  });
+}
+
 export function registerAuth(app) {
   if (config.noAuth) app.log.warn('CALENDARY_NO_AUTH=1: autenticazione disattivata (solo per sviluppo!)');
   else if (!config.password) app.log.warn('Nessuna password configurata: le API resteranno bloccate finché non la imposti.');
@@ -95,13 +106,7 @@ export function registerAuth(app) {
       return reply.code(401).send({ error: 'Password errata' });
     }
     attempts.delete(ip);
-    reply.setCookie(COOKIE, makeToken(), {
-      path: '/',
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: req.protocol === 'https',
-      maxAge: SESSION_DAYS * 86400,
-    });
+    startSession(req, reply);
     return { ok: true };
   });
 

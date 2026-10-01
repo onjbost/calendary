@@ -16,8 +16,6 @@ Si modifica da **PC via web**, mentre il **tablet** fa da bacheca sempre accesa.
 ```
 Calendary/
 ├── repository.yaml        ← repository di add-on per Home Assistant
-├── deploy.ps1             ← copia un add-on su Home Assistant (-Addon calendary | moveo)
-├── moveo/                 ← add-on Moveo: allenamento e pause attive (vedi moveo/DOCS.md)
 ├── calendary/             ← l'add-on
 │   ├── config.yaml        ← opzioni dell'add-on
 │   ├── Dockerfile
@@ -161,15 +159,20 @@ Variabili utili: `CALENDARY_PASSWORD`, `DATA_DIR`, `PORT`, `AI_BASE_URL`, `AI_AP
 - I link iCal segreti danno accesso ai calendari: trattali come password.
 - Gli eventi importati da iCal sono in sola lettura: si modificano nel calendario di origine. Quelli creati in Calendary vivono nei calendari interni (*Personale*, *Studio*, o altri che crei).
 
-## 7. Moveo: allenamento collegato a Calendary
+## 7. Suite con Moveo e API per altre app
 
-`moveo/` è un secondo add-on dello stesso repository: programmi di yoga, pilates, calisthenics e surf,
-pause di movimento durante il lavoro e un player guidato. Moveo scrive le sessioni nel calendario *Allenamento* di Calendary;
-dall'evento, il pulsante **▶ Avvia allenamento** apre direttamente il player. Le pause usano le notifiche push di Calendary
-e, se configurata, l'app companion di Home Assistant.
+[Moveo](https://github.com/onjbost/moveo) è l'app di allenamento che si integra con Calendary. Le due app restano separate e condividono un solo segreto: `api_token` di Calendary = `calendary_token` di Moveo.
 
-1. In Calendary (0.3.0+) imposta `api_token` (almeno 16 caratteri).
-2. Copia Moveo con `powershell -ExecutionPolicy Bypass -File deploy.ps1 -Addon moveo` e installalo da *Componenti aggiuntivi locali*.
-3. Nelle opzioni di Moveo imposta `password` e `calendary_token` (lo stesso token), poi aggiungi `moveo.gattucciocloud.it → http://local-moveo:8788` a Cloudflared.
+- **Da Moveo a Calendary**: le sessioni pianificate diventano eventi del calendario *Allenamento*, con il pulsante **▶ Avvia allenamento**.
+- **Da Calendary a Moveo**: la card *Allenamento* nella dashboard e nel kiosk mostra la sessione di oggi e le pause, con **▶ Avvia** e **Pausa adesso**. Imposta `moveo_url` e `moveo_public_url`.
+- **Accesso unico** in entrambe le direzioni: ticket firmati, monouso, validi 2 minuti.
+- **Tablet**: due app Android separate che si aprono a vicenda (`calendary://` e `moveo://`). Dopo l'aggiornamento ricompila l'APK di Calendary (`cd tablet; npm install; npx cap sync android; ...`): è stato aggiunto il plugin `@capacitor/app` per ricevere i link.
 
-Dettagli in [`moveo/DOCS.md`](moveo/DOCS.md).
+API per altre app:
+
+- `api_token` (almeno 16 caratteri), inviato come `Authorization: Bearer <token>`;
+- eventi con `linkUrl` e `linkLabel` (pulsante **▶** nell'evento; la notifica push apre il link);
+- `POST /api/notify` `{ title, body, url, tag, important }`;
+- `DELETE /api/plans/:planId` per eliminare gli eventi creati insieme.
+
+Dettagli in [`calendary/DOCS.md`](calendary/DOCS.md).
