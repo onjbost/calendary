@@ -1,5 +1,5 @@
 name: Calendary
-version: "0.7.2"
+version: "0.8.0"
 slug: calendary
 description: Calendario, promemoria, obiettivi con routine, matrice di Eisenhower, assistente e Alexa in stile neon
 url: https://calendary.gattucciocloud.it
@@ -20,6 +20,7 @@ panel_icon: mdi:calendar-star
 options:
   password: ""
   api_token: ""
+  mcp_token: ""
   moveo_url: "http://local-moveo:8788"
   moveo_public_url: "https://moveo.gattucciocloud.it"
   weather_entity: "weather.forecast_home"
@@ -39,6 +40,7 @@ options:
 schema:
   password: password
   api_token: password?
+  mcp_token: password
   moveo_url: str?
   moveo_public_url: str?
   weather_entity: str?

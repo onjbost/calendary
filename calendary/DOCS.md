@@ -10,6 +10,7 @@ notifiche push e un assistente che pianifica lo studio.
 |---|---|
 | `password` | **Obbligatoria.** Password per accedere da web e dal tablet. Cambiarla disconnette tutti i dispositivi. |
 | `api_token` | Facoltativo. Token (min. 16 caratteri) per l'accesso da altri add-on, es. **Moveo**: header `Authorization: Bearer <token>`. Vuoto = disattivato. |
+| `mcp_token` | Password (min. 24 caratteri) del collegamento con **Claude** (server MCP per le note). Vuoto = spento. |
 | `moveo_url` | Indirizzo interno di **Moveo** per la card *Allenamento* (`http://local-moveo:8788`). Vuoto = card nascosta. |
 | `moveo_public_url` | Indirizzo pubblico di Moveo, usato nei link (`https://moveo.gattucciocloud.it`). |
 | `weather_entity` | Entità meteo di Home Assistant per il widget della modalità notte (default `weather.forecast_home`, creata da Met.no con l'installazione). Vuoto = niente meteo. |
@@ -112,3 +113,25 @@ cd android
 ```
 
 Nel browser la modalità notte scurisce solo la pagina.
+
+## Claude e le note (0.8.0)
+
+Le **note** sono raggruppate in **cartelle**, una per progetto (es. *Calendary*, *Moveo*), e hanno **titolo** e **descrizione**.
+Calendary espone un server **MCP** (Model Context Protocol) che permette a Claude di leggere e scrivere **solo le note**:
+quando gli dici *“annotalo su Calendary”* crea la nota nella cartella del progetto, creando la cartella se manca.
+
+1. Imposta `mcp_token` (una stringa casuale di almeno 24 caratteri) e riavvia l'add-on.
+2. Su claude.ai: **Impostazioni → Connettori → Aggiungi connettore personalizzato**, URL `https://calendary.gattucciocloud.it/api/mcp/<mcp_token>`.
+   Da Claude Code: `claude mcp add --transport http calendary https://calendary.gattucciocloud.it/api/mcp --header "Authorization: Bearer <mcp_token>"`.
+
+Strumenti: `list_note_folders`, `create_note_folder`, `list_notes`, `add_note`, `update_note`. Le note aggiunte da Claude hanno il simbolo ✦.
+
+## Vista tablet: menu e schede (0.8.0)
+
+Menu: **Dashboard · Pillole · Moveo · Calendario · Matrice · Obiettivi · Note**. In *Calendario* si sceglie *Giorno / Settimana / Mese*.
+
+- **Pillole**: dosi di oggi, terapie, storico e registro. **Presa ✓** registra l'orario attuale; con 🕐 (o toccando l'orario già registrato) si sceglie un altro orario o si segna *Non presa*.
+- **Moveo**: prossimi allenamenti con ▶, pulsante **Fai una pausa**, ultimi allenamenti, programmi. Gli ultimi allenamenti e l'elenco dei
+  programmi arrivano da `GET <moveo_url>/api/suite/overview` (Bearer `api_token`), che deve restituire
+  `{ recent: [{ title, category, emoji?, finishedAt, durationSec? }], upcoming: [sessioni come in /api/suite/today], programs: [{ id, title, category, emoji?, level?, minutes?, weeks?, path?, planned? }] }`.
+  Con versioni di Moveo che non lo hanno la scheda usa i dati di `/api/suite/today` e mostra i collegamenti alle pagine di Moveo.

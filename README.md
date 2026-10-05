@@ -11,7 +11,7 @@ Si modifica da **PC via web**, mentre il **tablet** fa da bacheca sempre accesa.
 - **Tips motivazionali**: regola dei 5 secondi (con conto alla rovescia a schermo intero), mangia il ranocchio, pomodoro, 2 minuti…
 - **Assistente virtuale** con AI gratuita o quasi: pianifica lo studio, aggiunge impegni e riempie la matrice. **Ogni modifica va approvata.**
 - **Pianificatore di studio** (funziona anche senza AI): *“corso di 15 ore in 5 moduli da 3 ore entro il 31/10”* → sessioni distribuite negli slot liberi, evitando gli impegni già presenti.
-- **Note**: una bacheca di sticky note per le cose da ricordare senza data, anche nella vista tablet (scheda *Note*).
+- **Note**: sticky note con titolo e descrizione, raggruppate in cartelle per progetto, anche nella vista tablet. **Claude** può aggiungerle (*“annotalo su Calendary”*) tramite il server MCP: vedi `calendary/DOCS.md`.
 - **Pillole**: terapie con orari e giorni, notifica e sveglia su Alexa a ogni dose, pulsante **Presa ✓** in dashboard, storico completo dall'inizio della terapia (percentuale, serie di giorni, mappa per settimane) e registro mese per mese.
 - **Temi**: *Neon* (predefinito) e *Minimal* nero e arancione, scelti per dispositivo in Impostazioni → Aspetto.
 - **Alexa**: aggiungi promemoria, impegni e attività a voce con la skill *AiCal*, chiedi cosa hai in programma, e senti sugli Echo i promemoria e gli annunci che arrivano da Calendary.

@@ -6,10 +6,11 @@ import { getSetting } from './db.js';
 import { assistantStatus, chat } from './assistant.js';
 import * as goals from './goals.js';
 import * as notes from './notes.js';
+import { mcpEnabled } from './mcp.js';
 import * as pills from './pills.js';
 import { forgetCalendar, syncCalendar } from './ics.js';
 import { planStudy } from './planner.js';
-import { moveoToday, signTicket, suiteSecretOk } from './suite.js';
+import { moveoOverview, moveoToday, signTicket, suiteSecretOk } from './suite.js';
 import { countSubscriptions, removeSubscription, saveSubscription, sendToAll, vapidPublicKey } from './push.js';
 import * as store from './store.js';
 import { broadcast, streamHandler } from './stream.js';
@@ -183,6 +184,7 @@ export async function registerRoutes(app) {
 
   // ------------------------------------------------------------- suite (Moveo)
   app.get('/suite/moveo', async () => moveoToday());
+  app.get('/suite/moveo/overview', async () => moveoOverview());
 
   /** Link to Moveo that signs you in automatically (single-use ticket, valid 2 minutes). */
   app.post('/suite/link', async (req) => {
@@ -192,7 +194,27 @@ export async function registerRoutes(app) {
   });
 
   // -------------------------------------------------------------- notes
-  app.get('/notes', async () => notes.listNotes());
+  app.get('/notes', async (req) => notes.listNotes({ folderId: req.query.folder || undefined }));
+
+  app.get('/note-folders', async () => notes.listFolders());
+
+  app.post('/note-folders', async (req) => {
+    const f = notes.createFolder(req.body || {});
+    broadcast('notes');
+    return f;
+  });
+
+  app.patch('/note-folders/:id', async (req) => {
+    const f = notes.updateFolder(req.params.id, req.body || {});
+    broadcast('notes');
+    return f;
+  });
+
+  app.delete('/note-folders/:id', async (req) => {
+    notes.deleteFolder(req.params.id, { withNotes: req.query.withNotes === '1' });
+    broadcast('notes');
+    return { ok: true };
+  });
 
   app.post('/notes', async (req) => {
     const n = notes.createNote(req.body || {});
@@ -236,8 +258,8 @@ export async function registerRoutes(app) {
   app.get('/pills/doses', async (req) => pills.dosesOn(req.query.date));
 
   app.post('/pills/:id/dose', async (req) => {
-    const { date, time, taken = true } = req.body || {};
-    pills.setDose(req.params.id, date, time, !!taken);
+    const { date, time, taken = true, takenAt = null } = req.body || {};
+    pills.setDose(req.params.id, date, time, !!taken, takenAt);
     broadcast('pills');
     return { ok: true };
   });
@@ -249,6 +271,8 @@ export async function registerRoutes(app) {
   app.get('/pills/log', async (req) => pills.pillLog(req.query.month));
 
   // -------------------------------------------------------------- alexa
+  app.get('/integrations/mcp', async () => ({ enabled: mcpEnabled(), url: `${config.publicUrl}/api/mcp/<mcp_token>` }));
+
   app.get('/alexa/status', async () => {
     const plan = config.alexa.reminders === 'off' ? null : planDiff();
     return {

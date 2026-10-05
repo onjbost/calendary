@@ -8,7 +8,8 @@ import { MatrixBoard, MiniMatrix } from '../components/Matrix';
 import { MonthView } from '../components/MonthView';
 import { MoveoCard } from '../components/MoveoCard';
 import { NotesBoard } from '../components/Notes';
-import { PillsToday } from '../components/Pills';
+import { PillsBoard, PillsToday } from '../components/Pills';
+import { MoveoBoard } from '../components/MoveoBoard';
 import { TimeGrid } from '../components/TimeGrid';
 import { TipCard } from '../components/TipCard';
 import { capitalize, countdown, eventsOnDay, fmt, hm, monthGrid, parseYmd, weekDays, WEEK, ymd } from '../dates';
@@ -21,15 +22,24 @@ import { Link } from '../router';
 import { tipOfTheDay } from '../tips';
 import { useUI } from '../ui';
 
-type Tab = 'today' | 'day' | 'week' | 'month' | 'matrix' | 'goals' | 'notes';
-// "Dashboard" (tab 'today') is a button of its own, next to these.
-const TABS: { id: Tab; label: string }[] = [
-  { id: 'day', label: 'Giorno' },
-  { id: 'week', label: 'Settimana' },
-  { id: 'month', label: 'Mese' },
+type Tab = 'today' | 'pills' | 'moveo' | 'day' | 'week' | 'month' | 'matrix' | 'goals' | 'notes';
+type CalView = 'day' | 'week' | 'month';
+const isCal = (t: Tab): t is CalView => t === 'day' || t === 'week' || t === 'month';
+
+// Main menu; "Calendario" opens the last calendar view (Giorno / Settimana / Mese is chosen inside it).
+const MENU: { id: Tab | 'calendar'; label: string }[] = [
+  { id: 'today', label: 'Dashboard' },
+  { id: 'pills', label: 'Pillole' },
+  { id: 'moveo', label: 'Moveo' },
+  { id: 'calendar', label: 'Calendario' },
   { id: 'matrix', label: 'Matrice' },
   { id: 'goals', label: 'Obiettivi' },
   { id: 'notes', label: 'Note' },
+];
+const CAL_VIEWS: { id: CalView; label: string }[] = [
+  { id: 'day', label: 'Giorno' },
+  { id: 'week', label: 'Settimana' },
+  { id: 'month', label: 'Mese' },
 ];
 
 const IDLE_RESET_MS = 2 * 60_000;
@@ -58,7 +68,12 @@ export function KioskPage() {
   const battery = useBattery();
   const landscape = useLandscape();
   const [manualNight, setManualNight] = useState(false);
-  const [tab, setTab] = useState<Tab>('today');
+  const [tab, setTabState] = useState<Tab>('today');
+  const [calView, setCalView] = useState<CalView>('day');
+  const setTab = (t: Tab) => {
+    if (isCal(t)) setCalView(t);
+    setTabState(t);
+  };
   const [focusKey, setFocusKey] = useState(() => ymd(new Date()));
   const [lastTouch, setLastTouch] = useState(Date.now());
   const dayKey = ymd(now);
@@ -167,6 +182,9 @@ export function KioskPage() {
 
   const calendarNav = (
     <div className="kiosk-nav">
+      <div className="seg">
+        {CAL_VIEWS.map((v) => <button key={v.id} className={tab === v.id ? 'on' : ''} onClick={() => setTab(v.id)}>{v.label}</button>)}
+      </div>
       <button className="btn icon" onClick={() => step(-1)} aria-label="Precedente">‹</button>
       <button className="btn sm" onClick={() => setFocusKey(dayKey)}>Oggi</button>
       <button className="btn icon" onClick={() => step(1)} aria-label="Successivo">›</button>
@@ -185,9 +203,11 @@ export function KioskPage() {
           <div className="kiosk-date muted">{fmt(now, 'd MMMM yyyy')}</div>
         </div>
         <span className="spacer" />
-        <button className={`btn kiosk-home ${tab === 'today' ? 'on' : ''}`} onClick={() => setTab('today')}>◉ Dashboard</button>
-        <div className="seg">
-          {TABS.map((t) => <button key={t.id} className={tab === t.id ? 'on' : ''} onClick={() => setTab(t.id)}>{t.label}</button>)}
+        <div className="seg kiosk-menu">
+          {MENU.map((m) => {
+            const on = m.id === 'calendar' ? isCal(tab) : tab === m.id;
+            return <button key={m.id} className={on ? 'on' : ''} onClick={() => setTab(m.id === 'calendar' ? calView : m.id)}>{m.label}</button>;
+          })}
         </div>
         <button className="btn primary" onClick={() => create()}>＋ Evento</button>
         <button className="btn pink" onClick={() => startFive(next?.title)}>⚡ 5 s</button>
@@ -292,6 +312,14 @@ export function KioskPage() {
           <MatrixBoard date={dayKey} tasks={taskData.tasks} setTasks={(fn) => setTaskData((d) => ({ ...d, tasks: fn(d.tasks) }))} />
         </div>
       )}
+
+      {tab === 'pills' && (
+        <div className="kiosk-full col-scroll">
+          <PillsBoard kiosk />
+        </div>
+      )}
+
+      {tab === 'moveo' && <MoveoBoard />}
 
       {tab === 'notes' && (
         <div className="kiosk-full col-scroll">

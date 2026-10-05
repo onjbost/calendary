@@ -32,6 +32,8 @@ export const config = {
   noAuth: process.env.CALENDARY_NO_AUTH === '1',
   // Server-to-server access for other add-ons (e.g. Moveo): "Authorization: Bearer <api_token>".
   apiToken: String(pick('CALENDARY_API_TOKEN', 'api_token', '')),
+  // MCP server for Claude (notes only): /api/mcp/<mcp_token> or "Authorization: Bearer <mcp_token>". Min. 24 characters.
+  mcpToken: String(pick('CALENDARY_MCP_TOKEN', 'mcp_token', '')).trim(),
   // Suite: the training app Moveo (internal address for the API, public one for the links).
   moveo: {
     url: String(pick('MOVEO_URL', 'moveo_url', '')).replace(/\/$/, ''),

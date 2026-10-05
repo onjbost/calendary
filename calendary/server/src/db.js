@@ -207,6 +207,22 @@ db.exec(`
 // 0.7.1: day a therapy was paused, so the history stops counting missed doses from then on.
 addColumn('pills', 'paused_at', 'paused_at TEXT');
 
+// 0.8.0: notes grouped in folders (one per project), with a title.
+db.exec(`
+  CREATE TABLE IF NOT EXISTS note_folders (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT,
+    color TEXT NOT NULL,
+    position REAL NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+`);
+addColumn('notes', 'title', 'title TEXT');
+addColumn('notes', 'folder_id', 'folder_id TEXT REFERENCES note_folders(id) ON DELETE SET NULL');
+addColumn('notes', 'source', "source TEXT NOT NULL DEFAULT 'manual'");
+
 export function getSetting(key) {
   const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(key);
   return row ? row.value : null;

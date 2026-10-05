@@ -9,6 +9,7 @@ import { registerAuth, startSession } from './auth.js';
 import { verifyTicket } from './suite.js';
 import { registerRoutes } from './routes.js';
 import { registerAlexa } from './alexa.js';
+import { registerMcp } from './mcp.js';
 import { scheduleSync, startAlexaReminders } from './alexa-reminders.js';
 import { onChange } from './stream.js';
 import { initPush } from './push.js';
@@ -35,6 +36,7 @@ await app.register(fastifyCookie);
 registerAuth(app);
 await app.register(registerRoutes, { prefix: '/api' });
 await app.register(registerAlexa, { prefix: '/api' });
+await app.register(registerMcp, { prefix: '/api' });
 
 // Single sign-on from Moveo: /sso?t=<ticket signed by Moveo> → session cookie → redirect.
 app.get('/sso', async (req, reply) => {

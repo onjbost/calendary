@@ -88,6 +88,7 @@ export function registerAuth(app) {
   app.addHook('onRequest', async (req, reply) => {
     const path = req.url.split('?')[0];
     if (!path.startsWith('/api/') || PUBLIC_PATHS.has(path)) return;
+    if (path === '/api/mcp' || path.startsWith('/api/mcp/')) return; // checks its own token (mcp.js)
     if (!authConfigured()) return reply.code(503).send({ error: "Imposta una password nelle opzioni dell'add-on" });
     if (!isAuthenticated(req)) return reply.code(401).send({ error: 'Accesso richiesto' });
   });

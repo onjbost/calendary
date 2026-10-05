@@ -62,3 +62,29 @@ export async function moveoToday() {
     return { ...base, error: `Moveo non raggiungibile (${err.cause?.code || err.message})` };
   }
 }
+
+/**
+ * Everything for the tablet's "Moveo" tab: today's summary plus, when Moveo offers /api/suite/overview,
+ * the last workouts, the next ones and the programs. Older Moveo versions only have /today: `overview` is then false.
+ */
+export async function moveoOverview() {
+  const today = await moveoToday();
+  if (!today.enabled || today.error) return { ...today, overview: false };
+  try {
+    const res = await fetch(`${config.moveo.url}/api/suite/overview`, {
+      headers: { authorization: `Bearer ${config.apiToken}` },
+      signal: AbortSignal.timeout(6000),
+    });
+    if (!res.ok) return { ...today, overview: false };
+    const data = await res.json();
+    return {
+      ...today,
+      overview: true,
+      recent: Array.isArray(data.recent) ? data.recent.slice(0, 20) : [],
+      upcoming: Array.isArray(data.upcoming) ? data.upcoming.slice(0, 20) : [],
+      programs: Array.isArray(data.programs) ? data.programs.slice(0, 50) : [],
+    };
+  } catch {
+    return { ...today, overview: false };
+  }
+}

@@ -28,6 +28,7 @@ export function PillsToday({ className = '', kiosk = false, managePage = false }
   const { data: doses, setData } = useDoses(day);
   const { data: pills } = usePills();
   const [editing, setEditing] = useState<Pill | null>(null);
+  const [timing, setTiming] = useState<Dose | null>(null); // hooks before the early return below
 
   if (!doses.length) {
     if (kiosk) return null; // nothing scheduled: keep the tablet column for the rest
@@ -39,18 +40,17 @@ export function PillsToday({ className = '', kiosk = false, managePage = false }
     );
   }
 
-  const toggle = async (d: Dose) => {
-    const taken = !d.takenAt;
-    setData((list) => list.map((x) => (x === d ? { ...x, takenAt: taken ? new Date().toISOString() : null } : x)));
+  const save = async (d: Dose, taken: boolean, takenAt?: string) => {
+    setData((list) => list.map((x) => (x === d ? { ...x, takenAt: taken ? takenAt || new Date().toISOString() : null } : x)));
     try {
-      await api.setDose(d.pillId, d.date, d.time, taken);
+      await api.setDose(d.pillId, d.date, d.time, taken, takenAt);
       notifyChanged('pills');
-      if (taken) toast(`💊 ${d.name}: presa ✓`);
+      if (taken) toast(`💊 ${d.name}: presa alle ${hm(takenAt || new Date())} ✓`);
     } catch (e) {
       toast((e as Error).message, 'error');
+      notifyChanged('pills');
     }
   };
-
   const left = doses.filter((d) => !d.takenAt).length;
   return (
     <section className={`glass pad ${className}`}>
@@ -72,16 +72,56 @@ export function PillsToday({ className = '', kiosk = false, managePage = false }
                 </button>
                 {late && <span className="neon-red small"> · in ritardo</span>}
               </span>
-              <button className={`btn sm ${d.takenAt ? 'ghost' : late ? 'pink' : 'primary'}`} onClick={() => toggle(d)}
-                title={d.takenAt ? 'Tocca per annullare' : 'Segna come presa'}>
-                {d.takenAt ? `✓ ${hm(d.takenAt)}` : 'Presa ✓'}
-              </button>
+              {d.takenAt ? (
+                <button className="btn sm ghost" onClick={() => setTiming(d)} title="Cambia l'orario o segna come non presa">✓ {hm(d.takenAt)} ✎</button>
+              ) : (
+                <div className="row nowrap" style={{ gap: 6 }}>
+                  <button className="btn sm icon" onClick={() => setTiming(d)} title="Presa a un altro orario" aria-label="Scegli l'orario">🕐</button>
+                  <button className={`btn sm ${late ? 'pink' : 'primary'}`} onClick={() => save(d, true)} title="Presa adesso">Presa ✓</button>
+                </div>
+              )}
             </div>
           );
         })}
       </div>
       {editing && <PillModal pill={editing} onClose={() => setEditing(null)} />}
+      {timing && <DoseModal dose={timing} onClose={() => setTiming(null)} onSave={(taken, at) => { save(timing, taken, at); setTiming(null); }} />}
     </section>
+  );
+}
+
+/** When was it taken? Default: now (or the time already saved); "Non presa" clears it. */
+function DoseModal({ dose, onClose, onSave }: { dose: Dose; onClose: () => void; onSave: (taken: boolean, takenAt?: string) => void }) {
+  const initial = dose.takenAt ? new Date(dose.takenAt) : new Date();
+  const [date, setDate] = useState(ymd(initial));
+  const [time, setTime] = useState(hm(initial));
+  const [error, setError] = useState<string | null>(null);
+  const ok = () => {
+    const at = new Date(`${date}T${time}`);
+    if (Number.isNaN(at.getTime())) return setError('Orario non valido');
+    if (at.getTime() > Date.now() + 60e3) return setError("L'orario è nel futuro");
+    onSave(true, at.toISOString());
+  };
+  return (
+    <Modal title={`💊 ${dose.name}`} onClose={onClose} glow="pink"
+      footer={<>
+        {dose.takenAt && <button className="btn danger" onClick={() => onSave(false)}>Non presa</button>}
+        <span className="spacer" />
+        <button className="btn" onClick={onClose}>Annulla</button>
+        <button className="btn primary" onClick={ok}>{dose.takenAt ? 'Salva orario' : 'Presa ✓'}</button>
+      </>}>
+      <div className="stack">
+        {error && <div className="alert error">{error}</div>}
+        <div className="muted">Dose delle <b className="mono">{dose.time}</b>{dose.dose ? ` · ${dose.dose}` : ''}</div>
+        <div className="field">Presa alle
+          <div className="row nowrap">
+            <input className="input" type="time" value={time} onChange={(e) => setTime(e.target.value)} style={{ fontSize: '1.4rem', maxWidth: 170 }} autoFocus />
+            <input className="input" type="date" value={date} max={ymd(new Date())} onChange={(e) => setDate(e.target.value)} />
+            <button className="btn sm" onClick={() => { const n = new Date(); setDate(ymd(n)); setTime(hm(n)); }}>Adesso</button>
+          </div>
+        </div>
+      </div>
+    </Modal>
   );
 }
 
@@ -225,22 +265,42 @@ function daysFrom(fromYmd: string, toYmd: string) {
 }
 
 export function PillsPage() {
+  const [adding, setAdding] = useState(false);
+  return (
+    <div>
+      <div className="page-head">
+        <h1>Pillole</h1>
+        <button className="btn primary" onClick={() => setAdding(true)}>＋ Nuova pillola</button>
+      </div>
+      <PillsBoard adding={adding} onAdded={() => setAdding(false)} />
+    </div>
+  );
+}
+
+/** Today's doses, therapies, history and register: the Pillole page and the tablet's "Pillole" tab. */
+export function PillsBoard({ adding = false, onAdded, kiosk = false }: { adding?: boolean; onAdded?: () => void; kiosk?: boolean }) {
   const { data: pills } = usePills();
   const [editing, setEditing] = useState<Pill | 'new' | null>(null);
   const [period, setPeriod] = useState<Period>('all');
   const history = useHistory(period);
   const days = history ? daysFrom(history.from, history.to) : [];
+  useEffect(() => {
+    if (adding) setEditing('new');
+  }, [adding]);
+  const closeEditor = () => {
+    setEditing(null);
+    onAdded?.();
+  };
 
   return (
-    <div>
-      <div className="page-head">
-        <h1>Pillole</h1>
-        <button className="btn primary" onClick={() => setEditing('new')}>＋ Nuova pillola</button>
-      </div>
+    <>
       <div className="dash">
         <PillsToday className="span-5 glow-pink" managePage />
         <section className="glass pad span-7">
-          <div className="card-title"><h2>Terapie</h2></div>
+          <div className="card-title">
+            <h2>Terapie</h2>
+            {kiosk && <button className="btn primary sm" onClick={() => setEditing('new')}>＋ Nuova pillola</button>}
+          </div>
           {!pills.length && <div className="empty">Nessuna pillola. Aggiungine una con “＋ Nuova pillola”.</div>}
           <div className="stack" style={{ gap: 8 }}>
             {pills.map((p) => (
@@ -292,8 +352,8 @@ export function PillsPage() {
 
         <PillLog />
       </div>
-      {editing && <PillModal pill={editing === 'new' ? undefined : editing} onClose={() => setEditing(null)} />}
-    </div>
+      {editing && <PillModal pill={editing === 'new' ? undefined : editing} onClose={closeEditor} />}
+    </>
   );
 }
 

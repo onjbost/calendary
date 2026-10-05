@@ -322,6 +322,35 @@ const Dot = ({ ok }: { ok: boolean | null }) => (
   <span className="dot" style={{ color: ok === null ? 'var(--amber)' : ok ? 'var(--lime)' : 'var(--red)' }} />
 );
 
+/** Claude connector (MCP): lets Claude add notes ("annotalo su Calendary"). */
+function ClaudeSettings() {
+  const [st, setSt] = useState<{ enabled: boolean; url: string } | null>(null);
+  useEffect(() => {
+    api.mcpStatus().then(setSt).catch(() => setSt(null));
+  }, []);
+  if (!st) return <div className="muted small">Caricamento…</div>;
+  return (
+    <div className="stack">
+      <div className="muted small">
+        Collega Claude a Calendary: quando gli dici <i>“annotalo su Calendary”</i> crea una nota con titolo e descrizione nella cartella del progetto
+        (es. <b>Calendary</b>, <b>Moveo</b>). Claude può leggere e scrivere <b>solo le note</b>.
+      </div>
+      <div className="row small">
+        <span className="chip"><Dot ok={st.enabled} /> Server MCP: {st.enabled ? 'attivo' : 'spento (manca mcp_token)'}</span>
+      </div>
+      <details className="help">
+        <summary>Come collegarlo</summary>
+        <ol>
+          <li>Nella configurazione dell'add-on scrivi in <code>mcp_token</code> una stringa casuale di almeno 24 caratteri (è la password del collegamento), salva e riavvia.</li>
+          <li>Su <b>claude.ai → Impostazioni → Connettori → Aggiungi connettore personalizzato</b>: nome <i>Calendary</i>, URL <code>{st.url}</code> (sostituisci <code>&lt;mcp_token&gt;</code> con il token).</li>
+          <li>In Claude Code puoi usare anche: <code>claude mcp add --transport http calendary {st.url.replace('/<mcp_token>', '')} --header "Authorization: Bearer &lt;mcp_token&gt;"</code></li>
+        </ol>
+        <div className="faint tiny">L'URL contiene il token: trattalo come una password. Se lo cambi, aggiorna anche il connettore.</div>
+      </details>
+    </div>
+  );
+}
+
 /** Theme picker: colors, background and fonts, saved on this device. */
 function ThemePicker() {
   const [theme, set] = useState<ThemeId>(currentTheme);
@@ -455,6 +484,10 @@ export function SettingsPage({ onLogout }: { onLogout: () => void }) {
         <section className="glass pad span-12 glow-cyan">
           <div className="card-title"><h2>Questo dispositivo · notte, sveglia e risparmio</h2></div>
           <DeviceSettings />
+        </section>
+        <section className="glass pad span-12 glow-cyan">
+          <div className="card-title"><h2>Claude</h2></div>
+          <ClaudeSettings />
         </section>
         <section className="glass pad span-12 glow-violet">
           <div className="card-title"><h2 className="neon-violet">Aspetto</h2></div>

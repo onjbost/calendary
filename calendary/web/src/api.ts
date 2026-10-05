@@ -190,9 +190,22 @@ export interface AlexaStatus {
   announce: { enabled: boolean; services: string[]; homeAssistant: boolean };
 }
 
+export interface NoteFolder {
+  id: string;
+  name: string;
+  description: string;
+  color: string;
+  position: number;
+  count: number;
+  open: number;
+}
+
 export interface Note {
   id: string;
+  title: string;
   text: string;
+  folderId: string | null;
+  source: string;
   color: string;
   pinned: boolean;
   done: boolean;
@@ -313,6 +326,14 @@ export interface MoveoToday {
   minutesWeek?: number;
 }
 
+export interface MoveoOverview extends MoveoToday {
+  /** false: this Moveo version only gives today's summary */
+  overview?: boolean;
+  recent?: { title: string; programTitle?: string; category?: string; emoji?: string; finishedAt: string; durationSec?: number; completion?: number }[];
+  upcoming?: MoveoSession[];
+  programs?: { id: string; title: string; category?: string; emoji?: string; level?: string; minutes?: number; weeks?: number; summary?: string; path?: string; planned?: boolean }[];
+}
+
 export interface Weather {
   enabled: boolean;
   error?: string;
@@ -353,10 +374,16 @@ export const api = {
   carryOver: (date: string) => post<{ moved: number }>('/tasks/carry-over', { date }),
 
   moveoToday: () => get<MoveoToday>('/suite/moveo'),
+  moveoOverview: () => get<MoveoOverview>('/suite/moveo/overview'),
   weather: () => get<Weather>('/weather'),
   suiteLink: (next: string) => post<{ url: string }>('/suite/link', { next }),
 
   notes: () => get<Note[]>('/notes'),
+  noteFolders: () => get<NoteFolder[]>('/note-folders'),
+  createNoteFolder: (f: Partial<NoteFolder>) => post<NoteFolder>('/note-folders', f),
+  updateNoteFolder: (id: string, changes: Partial<NoteFolder>) => patch<NoteFolder>(`/note-folders/${id}`, changes),
+  deleteNoteFolder: (id: string, withNotes = false) => del(`/note-folders/${id}${withNotes ? '?withNotes=1' : ''}`),
+  mcpStatus: () => get<{ enabled: boolean; url: string }>('/integrations/mcp'),
   createNote: (n: Partial<Note> = {}) => post<Note>('/notes', n),
   updateNote: (id: string, changes: Partial<Note>) => patch<Note>(`/notes/${id}`, changes),
   deleteNote: (id: string) => del(`/notes/${id}`),
@@ -366,7 +393,7 @@ export const api = {
   updatePill: (id: string, p: Partial<PillDraft>) => patch<Pill>(`/pills/${id}`, p),
   deletePill: (id: string) => del(`/pills/${id}`),
   doses: (date: string) => get<Dose[]>(`/pills/doses?date=${date}`),
-  setDose: (pillId: string, date: string, time: string, taken: boolean) => post(`/pills/${pillId}/dose`, { date, time, taken }),
+  setDose: (pillId: string, date: string, time: string, taken: boolean, takenAt?: string) => post(`/pills/${pillId}/dose`, { date, time, taken, takenAt }),
   pillHistory: (days: number | 'all' = 14) => get<PillHistory>(days === 'all' ? '/pills/history?all=1' : `/pills/history?days=${days}`),
   pillLog: (month: string) => get<Dose[]>(`/pills/log?month=${month}`),
 

@@ -57,7 +57,14 @@ describe('pills', () => {
 
     pills.setDose(p.id, today, '08:00', true);
     assert.ok(pills.dosesOn(today)[0].takenAt);
-    pills.setDose(p.id, today, '08:00', true); // idempotent
+    // the time can be corrected, but not in the future
+    const at = new Date(`${today}T08:20`);
+    if (at.getTime() < Date.now()) {
+      pills.setDose(p.id, today, '08:00', true, at.toISOString());
+      assert.equal(pills.dosesOn(today)[0].takenAt, at.toISOString());
+    }
+    assert.throws(() => pills.setDose(p.id, today, '08:00', true, new Date(Date.now() + 3600e3).toISOString()), /futuro/);
+    assert.throws(() => pills.setDose(p.id, today, '08:00', true, 'boh'), /non valido/);
     const h = pills.pillHistory({ days: 7 }).pills.find((x) => x.pillId === p.id);
     assert.ok(h.taken >= 1);
     assert.ok(h.scheduled >= h.taken);

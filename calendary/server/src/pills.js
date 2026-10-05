@@ -156,12 +156,26 @@ export function dosesOn(dateYmd) {
   return dosesBetween(day, addDays(day, 1));
 }
 
-export function setDose(pillId, date, time, taken) {
+/**
+ * Marks a dose taken (at `takenAt`, default now: it can be corrected later) or not taken.
+ * The time can't be in the future, nor more than 2 days away from the dose.
+ */
+export function setDose(pillId, date, time, taken, takenAt = null) {
   const pill = getPill(pillId);
   if (!pill) throw httpError(404, 'Pillola non trovata');
   if (!isYmd(date) || !TIME_RE.test(String(time))) throw httpError(400, 'Dose non valida');
   if (taken) {
-    db.prepare('INSERT OR IGNORE INTO pill_doses (pill_id, date, time, taken_at) VALUES (?, ?, ?, ?)').run(pillId, date, time, nowIso());
+    let at = new Date();
+    if (takenAt) {
+      at = new Date(takenAt);
+      if (Number.isNaN(at.getTime())) throw httpError(400, 'Orario non valido');
+      if (at.getTime() > Date.now() + 60e3) throw httpError(400, 'L\'orario è nel futuro');
+      if (Math.abs(at.getTime() - Date.parse(new Date(`${date}T${time}`).toISOString())) > 2 * 86400e3) {
+        throw httpError(400, 'L\'orario è troppo lontano dalla dose');
+      }
+    }
+    db.prepare(`INSERT INTO pill_doses (pill_id, date, time, taken_at) VALUES (?, ?, ?, ?)
+      ON CONFLICT(pill_id, date, time) DO UPDATE SET taken_at = excluded.taken_at`).run(pillId, date, time, at.toISOString());
   } else {
     db.prepare('DELETE FROM pill_doses WHERE pill_id = ? AND date = ? AND time = ?').run(pillId, date, time);
   }
