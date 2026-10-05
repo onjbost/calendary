@@ -2,7 +2,7 @@ import { config } from './config.js';
 import { getAllEvents } from './agenda.js';
 import { atTime, dayLabel, joinList } from './alexa-speech.js';
 import {
-  REMINDERS_SCOPE, forgetAlexaUser, rememberAlexaUser, remindersAllowed, remindersGranted, setPermission, syncWithToken,
+  REMINDERS_SCOPE, forgetAlexaUser, rememberAlexaUser, remindersGranted, setPermission, syncWithToken,
 } from './alexa-reminders.js';
 import { verifyAlexaRequest } from './alexa-verify.js';
 import { db } from './db.js';
@@ -203,7 +203,8 @@ export async function handleAlexa(body, now = new Date()) {
   rememberAlexaUser(system);
   const token = system?.apiAccessToken;
   const endpoint = system?.apiEndpoint;
-  const syncLater = () => (token && endpoint && config.alexa.reminders !== 'off' && remindersAllowed() ? syncWithToken(token, endpoint) : null);
+  // Always try: the Reminders API answers for itself if the permission is really missing.
+  const syncLater = () => (token && endpoint && config.alexa.reminders !== 'off' ? syncWithToken(token, endpoint) : null);
 
   switch (request.type) {
     case 'Messaging.MessageReceived': // our own Skill Message: Alexa hands us a token to sync reminders

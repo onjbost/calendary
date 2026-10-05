@@ -135,6 +135,22 @@ function fail(message) {
   return { ok: false, error: message };
 }
 
+/** Amazon's explanation of a 401/403 from the Reminders API. */
+async function amazonRefusal(res) {
+  let detail = '';
+  try {
+    const body = await res.text();
+    try {
+      const j = JSON.parse(body);
+      detail = j.message || j.code || body;
+    } catch {
+      detail = body;
+    }
+  } catch { /* no body */ }
+  return `Amazon ha rifiutato il promemoria (${res.status}${detail ? `: ${String(detail).slice(0, 160)}` : ''}). `
+    + 'Se il permesso Promemoria è concesso nell\'app Alexa, prova da un Echo vero: il simulatore della console non gestisce i promemoria.';
+}
+
 // One sync at a time: a voice request and a Skill Message may arrive together.
 let queue = Promise.resolve();
 
@@ -159,7 +175,7 @@ async function applyPlan(apiAccessToken, apiEndpoint) {
     const res = await fetch(`${apiEndpoint}/v1/alerts/reminders/${encodeURIComponent(row.alert_token)}`, {
       method: 'DELETE', headers, signal: AbortSignal.timeout(8000),
     });
-    if (res.status === 401 || res.status === 403) return fail('permesso Promemoria non concesso nell\'app Alexa');
+    if (res.status === 401 || res.status === 403) return fail(await amazonRefusal(res));
     if (res.ok || res.status === 404) {
       forget.run(row.key);
       removed += 1;
@@ -179,10 +195,9 @@ async function applyPlan(apiAccessToken, apiEndpoint) {
         pushNotification: { status: 'ENABLED' },
       }),
     });
-    if (res.status === 401 || res.status === 403) {
-      setPermission('DENIED');
-      return fail('permesso Promemoria non concesso nell\'app Alexa');
-    }
+    // 401/403 doesn't always mean "no permission" (the console simulator, an expired token…): keep Amazon's words
+    // and don't remember it as denied, the permission status comes from Alexa's own payloads.
+    if (res.status === 401 || res.status === 403) return fail(await amazonRefusal(res));
     if (!res.ok) { // skip this one, the others can still go through
       error = `Alexa ha rifiutato "${r.text}" (${res.status}): ${(await res.text()).slice(0, 200)}`;
       continue;
@@ -254,8 +269,8 @@ export async function requestSync({ force = false } = {}) {
   const endpoint = getSetting('alexa_api_endpoint');
   if (!userId || !endpoint) return { ok: false, error: 'apri almeno una volta la skill dicendo "Alexa, apri AiCal"' };
   if (!canSyncOutOfSession()) return { ok: false, error: 'mancano alexa_client_id e alexa_client_secret' };
-  // Permission denied: Alexa tells us again in the callback once it is granted, so just retry now and then.
-  if (!remindersAllowed() && !force && Date.now() - lastMessageAt < 3600e3) return { ok: false, error: 'permesso Promemoria non concesso' };
+  // Permission explicitly revoked (Alexa said so): retry now and then, Alexa tells us again once it is granted.
+  if (!remindersAllowed() && !force && Date.now() - lastMessageAt < 3600e3) return { ok: false, error: 'permesso Promemoria non concesso nell\'app Alexa' };
   const { create, remove, expired } = planDiff();
   if (!create.length && !remove.length && !force) {
     const forget = db.prepare('DELETE FROM alexa_reminders WHERE key = ?');
@@ -289,6 +304,9 @@ export function scheduleSync(delayMs = 20_000) {
 }
 
 export function startAlexaReminders() {
+  // Up to 0.8.2 a 401/403 from Amazon was stored as "denied" and blocked the sync: forget it, Alexa's next request sets it again.
+  if (getSetting('alexa_permission') === 'DENIED' && !getSetting('alexa_permission_v2')) deleteSetting('alexa_permission');
+  setSetting('alexa_permission_v2', '1');
   if (config.alexa.reminders === 'off') return;
   // The horizon moves forward with time, so check periodically even if nothing was edited.
   setInterval(() => scheduleSync(0), 15 * 60e3);

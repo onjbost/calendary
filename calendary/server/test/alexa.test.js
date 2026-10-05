@@ -304,14 +304,16 @@ describe('reminders on Alexa', () => {
     }
   });
 
-  test('a denied permission is reported', async () => {
+  test('a 401 from Amazon is reported with its message, without storing "denied"', async () => {
     store.createEvent({ title: 'Volo', start: new Date(Date.now() + 5 * 3600e3), alexaMinutes: 15 });
     const realFetch = globalThis.fetch;
-    globalThis.fetch = async () => new Response('{}', { status: 401 });
+    setSetting('alexa_permission', 'GRANTED');
+    globalThis.fetch = async () => new Response(JSON.stringify({ code: 'UNAUTHORIZED', message: 'Request is not authorized' }), { status: 401 });
     try {
       const r = await syncWithToken('token-123', 'https://api.eu.amazonalexa.com');
       assert.equal(r.ok, false);
-      assert.match(r.error, /permesso/);
+      assert.match(r.error, /401: Request is not authorized/);
+      assert.equal(getSetting('alexa_permission'), 'GRANTED'); // what Alexa said about the permission stays
     } finally {
       globalThis.fetch = realFetch;
     }
