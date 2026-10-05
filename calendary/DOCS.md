@@ -22,7 +22,7 @@ notifiche push e un assistente che pianifica lo studio.
 | `ai_model` | Modello, default `gemini-2.5-flash`. |
 | `alexa_skill_id` | ID della skill Alexa *Calendary* (`amzn1.ask.skill…`). Vuoto = integrazione Alexa spenta. |
 | `alexa_client_id` / `alexa_client_secret` | Credenziali *Alexa Skill Messaging* (console Alexa → Permissions). Servono per mandare i promemoria su Alexa in automatico. |
-| `alexa_reminders` | Quali eventi suonano sugli Echo come promemoria Alexa: `important` (eventi ⚡ e promemoria dettati ad Alexa, default), `all` (tutti quelli con promemoria), `off`. |
+| `alexa_reminders` | Quali eventi suonano sugli Echo come promemoria Alexa: `important` (default: gli eventi con la spunta *🔊 Riproduci notifica su Alexa*, le pillole con *Sveglia su Alexa* e i promemoria dettati ad Alexa), `all` (tutti quelli con promemoria), `off`. |
 | `alexa_announce_service` | Servizio di Home Assistant che parla sull'Echo, es. `notify.alexa_media_echo_cucina` (più servizi separati da virgola). Vuoto = nessun annuncio. |
 | `ai_fallback_models` | Modelli di riserva, separati da virgola, provati quando quello principale è sovraccarico o ha finito la quota gratuita. Default `gemini-2.5-flash-lite`. |
 

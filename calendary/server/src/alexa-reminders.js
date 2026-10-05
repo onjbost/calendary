@@ -3,6 +3,7 @@ import { config } from './config.js';
 import { effectiveReminder, getAllEvents } from './agenda.js';
 import { atTime, dayLabel, inMinutes } from './alexa-speech.js';
 import { db, deleteSetting, getSetting, setSetting } from './db.js';
+import { dosesBetween } from './pills.js';
 import { localStamp, nowIso } from './util.js';
 
 // Calendary → Alexa: upcoming reminders are mirrored as Alexa reminders, so the Echo devices
@@ -54,10 +55,19 @@ export const remindersAllowed = () => getSetting('alexa_permission') !== 'DENIED
 
 const shortHash = (s) => crypto.createHash('sha1').update(s).digest('hex').slice(0, 8);
 
-function wanted(ev) {
-  if (config.alexa.reminders === 'all') return true;
-  return ev.important || ev.source === 'alexa'; // what you asked Alexa to remember rings on Alexa
+/**
+ * Minutes before the start at which the event rings on Alexa, or null.
+ * The "🔊 Alexa" option of the event wins; what you dictated to Alexa rings at its time;
+ * with alexa_reminders = all every event with a reminder rings too.
+ */
+export function alexaMinutesFor(ev) {
+  if (ev.alexaMinutes !== null && ev.alexaMinutes !== undefined) return ev.alexaMinutes;
+  if (ev.source === 'alexa') return effectiveReminder(ev);
+  if (config.alexa.reminders === 'all') return effectiveReminder(ev);
+  return null;
 }
+
+export const pillText = (d) => `È ora della pillola: ${d.name}${d.dose ? `, ${d.dose}` : ''}`.slice(0, 140);
 
 /** What Alexa says when the reminder rings (day words are relative to that moment, not to now). */
 export function reminderText(ev, minutes) {
@@ -77,13 +87,19 @@ export function desiredReminders(now = Date.now()) {
   const events = getAllEvents(new Date(now), new Date(now + HORIZON_MS + 7 * 86400e3));
   const list = [];
   for (const ev of events) {
-    if (ev.allDay || ev.done || !wanted(ev)) continue;
-    const minutes = effectiveReminder(ev);
+    if (ev.allDay || ev.done) continue;
+    const minutes = alexaMinutesFor(ev);
     if (minutes === null) continue;
     const fireAt = Date.parse(ev.start) - minutes * 60e3;
     if (fireAt < now + MIN_LEAD_MS || fireAt > now + HORIZON_MS) continue;
     const text = reminderText(ev, minutes);
     list.push({ key: `${ev.id}|${ev.start}|${minutes}|${shortHash(text)}`, fireAt, text });
+  }
+  // Pills: every dose not taken yet rings at its time (taking it early removes the reminder).
+  for (const d of dosesBetween(new Date(now + MIN_LEAD_MS), new Date(now + HORIZON_MS))) {
+    if (!d.alexa || d.takenAt) continue;
+    const text = pillText(d);
+    list.push({ key: `pill:${d.pillId}|${d.date}|${d.time}|${shortHash(text)}`, fireAt: Date.parse(d.at), text });
   }
   return list.sort((a, b) => a.fireAt - b.fireAt).slice(0, MAX_REMINDERS);
 }

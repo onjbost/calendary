@@ -72,7 +72,7 @@ startIcsSync();
 startNotifier();
 startAlexaReminders();
 onChange((scope) => {
-  if (scope === 'events' || scope === 'goals' || scope === 'calendars') scheduleSync();
+  if (['events', 'goals', 'calendars', 'pills'].includes(scope)) scheduleSync();
 });
 
 await app.listen({ port: config.port, host: '0.0.0.0' });

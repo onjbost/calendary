@@ -11,6 +11,9 @@ Si modifica da **PC via web**, mentre il **tablet** fa da bacheca sempre accesa.
 - **Tips motivazionali**: regola dei 5 secondi (con conto alla rovescia a schermo intero), mangia il ranocchio, pomodoro, 2 minuti…
 - **Assistente virtuale** con AI gratuita o quasi: pianifica lo studio, aggiunge impegni e riempie la matrice. **Ogni modifica va approvata.**
 - **Pianificatore di studio** (funziona anche senza AI): *“corso di 15 ore in 5 moduli da 3 ore entro il 31/10”* → sessioni distribuite negli slot liberi, evitando gli impegni già presenti.
+- **Note**: una bacheca di sticky note per le cose da ricordare senza data, anche nella vista tablet (scheda *Note*).
+- **Pillole**: terapie con orari e giorni, notifica e sveglia su Alexa a ogni dose, pulsante **Presa ✓** in dashboard e storico degli ultimi 14 giorni.
+- **Temi**: *Neon* (predefinito) e *Minimal* nero e arancione, scelti per dispositivo in Impostazioni → Aspetto.
 - **Alexa**: aggiungi promemoria, impegni e attività a voce con la skill *AiCal*, chiedi cosa hai in programma, e senti sugli Echo i promemoria e gli annunci che arrivano da Calendary.
 - **Vista tablet (kiosk)**: orologio, prossimo impegno con conto alla rovescia, agenda del giorno, prossimi giorni, matrice e tips a rotazione. Si aggiorna in tempo reale quando modifichi dal PC.
 
@@ -173,8 +176,10 @@ L'integrazione ha due direzioni, indipendenti tra loro:
 10. Di' *“Alexa, apri AiCal”* almeno una volta: da quel momento Calendary sa a chi mandare i promemoria.
     In **Impostazioni → Alexa** della webapp vedi lo stato, quanti promemoria sono programmati e il pulsante **Sincronizza promemoria**.
 
-Con `alexa_reminders` scegli cosa suona sugli Echo: `important` (default: eventi ⚡ e promemoria dettati ad Alexa), `all` (ogni evento con un promemoria,
-compresi quelli dei calendari iCal) oppure `off`. Calendary tiene programmati i promemoria dei prossimi 3 giorni e li aggiorna da solo quando sposti o cancelli un evento.
+Cosa suona sugli Echo si decide **dall'app**: nell'editor di un evento attiva *🔊 Riproduci notifica su Alexa* e scegli quanti minuti prima;
+le **pillole** con *Sveglia su Alexa* suonano all'orario di ogni dose finché non le segni come prese. Con `alexa_reminders: all` suonano anche
+tutti gli altri eventi con un promemoria, con `off` nulla. Calendary tiene programmati i promemoria dei prossimi 3 giorni e li aggiorna da solo
+quando sposti o cancelli un evento.
 
 **Sicurezza**: `/api/alexa` è l'unico indirizzo raggiungibile senza password, perché lo chiama Amazon. Il server accetta solo richieste **firmate da Amazon**
 (certificato `echo-api.amazon.com`, firma del corpo, timestamp entro 150 s) e con il **tuo Skill ID**.

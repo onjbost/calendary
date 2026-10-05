@@ -12,6 +12,8 @@ import { GoalsPage } from './pages/GoalsPage';
 import { KioskPage } from './pages/KioskPage';
 import { Login } from './pages/Login';
 import { MatrixPage } from './pages/MatrixPage';
+import { NotesPage } from './pages/NotesPage';
+import { PillsPage } from './components/Pills';
 import { SettingsPage } from './pages/SettingsPage';
 import { TipsPage } from './pages/TipsPage';
 import { listenDeepLinks } from './native';
@@ -27,6 +29,8 @@ function Routes({ path, query, onLogout }: { path: string; query: URLSearchParam
   if (path.startsWith('/calendario')) page = <CalendarPage query={query} />;
   else if (path.startsWith('/matrice')) page = <MatrixPage query={query} />;
   else if (path.startsWith('/obiettivi')) page = <GoalsPage />;
+  else if (path.startsWith('/note')) page = <NotesPage />;
+  else if (path.startsWith('/pillole')) page = <PillsPage />;
   else if (path.startsWith('/assistente')) page = <AssistantPage />;
   else if (path.startsWith('/tips')) page = <TipsPage />;
   else if (path.startsWith('/impostazioni')) page = <SettingsPage onLogout={onLogout} />;
@@ -35,7 +39,7 @@ function Routes({ path, query, onLogout }: { path: string; query: URLSearchParam
   return (
     <Shell path={path}>
       {page}
-      {!path.startsWith('/assistente') && (
+      {!path.startsWith('/assistente') && !path.startsWith('/note') && (
         <button className="btn primary fab" onClick={() => newEvent()} aria-label="Nuovo evento" title="Nuovo evento">＋</button>
       )}
       <AlertWatcher />

@@ -19,6 +19,8 @@ const NAV = [
   { to: '/calendario', label: 'Calendario', ico: '▦' },
   { to: '/matrice', label: 'Matrice', ico: '⊞' },
   { to: '/obiettivi', label: 'Obiettivi', ico: '◎' },
+  { to: '/note', label: 'Note', ico: '✎' },
+  { to: '/pillole', label: 'Pillole', ico: '✚' },
   { to: '/assistente', label: 'Assistente', ico: '✦' },
   { to: '/tips', label: 'Tips', ico: '✺' },
   { to: '/impostazioni', label: 'Impostazioni', ico: '⚙' },

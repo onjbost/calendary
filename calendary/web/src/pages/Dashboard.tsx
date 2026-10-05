@@ -5,6 +5,7 @@ import { Agenda } from '../components/Agenda';
 import { GoalsMini, WeekRoutines } from '../components/GoalWidgets';
 import { MiniMatrix } from '../components/Matrix';
 import { MoveoCard } from '../components/MoveoCard';
+import { PillsToday } from '../components/Pills';
 import { TipCard } from '../components/TipCard';
 import { capitalize, countdown, fmt, greeting, hm, parseYmd, ymd } from '../dates';
 import { useEvents, useGoals, useNow, useTasks } from '../hooks';
@@ -81,6 +82,8 @@ export function Dashboard() {
       </section>
 
       <MoveoCard className="span-5 glow-cyan" />
+
+      <PillsToday className="span-7 glow-pink" />
 
       <section className="glass pad span-5 glow-violet">
         <div className="card-title">

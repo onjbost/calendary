@@ -21,6 +21,8 @@ const REMINDERS: { value: string; label: string }[] = [
   { value: '1440', label: '1 giorno prima' },
 ];
 
+const ALEXA_MINUTES = [0, 5, 10, 15, 30, 45, 60, 120];
+
 interface Form {
   title: string;
   calendarId: string;
@@ -35,6 +37,8 @@ interface Form {
   reminder: string;
   linkUrl: string;
   linkLabel: string;
+  alexa: boolean;
+  alexaMinutes: string;
 }
 
 function initialForm(event?: CalEvent, draft?: Partial<EventDraft>): Form {
@@ -56,6 +60,8 @@ function initialForm(event?: CalEvent, draft?: Partial<EventDraft>): Form {
     reminder: src.reminderMinutes === null || src.reminderMinutes === undefined ? '' : String(src.reminderMinutes),
     linkUrl: src.linkUrl || '',
     linkLabel: src.linkLabel || '',
+    alexa: src.alexaMinutes !== null && src.alexaMinutes !== undefined,
+    alexaMinutes: src.alexaMinutes !== null && src.alexaMinutes !== undefined ? String(src.alexaMinutes) : '10',
   };
 }
 
@@ -176,6 +182,7 @@ export function EventModal({ event, draft, onClose }: {
       reminderMinutes: f.reminder === '' ? null : Number(f.reminder),
       linkUrl: f.linkUrl.trim() || null,
       linkLabel: f.linkLabel.trim() || null,
+      alexaMinutes: f.alexa && !f.allDay ? Number(f.alexaMinutes) : null,
     };
   };
 
@@ -289,6 +296,16 @@ export function EventModal({ event, draft, onClose }: {
             </select>
           </label>
         </div>
+        {!f.allDay && (
+          <div className="row alexa-row">
+            <label className="switch"><input type="checkbox" checked={f.alexa} onChange={(e) => set('alexa', e.target.checked)} /> 🔊 Riproduci notifica su Alexa</label>
+            {f.alexa && (
+              <select className="input" value={f.alexaMinutes} onChange={(e) => set('alexaMinutes', e.target.value)} style={{ width: 'auto' }}>
+                {ALEXA_MINUTES.map((m) => <option key={m} value={String(m)}>{m === 0 ? "all'inizio" : m < 60 ? `${m} minuti prima` : `${m / 60} ${m === 60 ? 'ora' : 'ore'} prima`}</option>)}
+              </select>
+            )}
+          </div>
+        )}
         <label className="field">Luogo
           <input className="input" value={f.location} onChange={(e) => set('location', e.target.value)} placeholder="Opzionale" />
         </label>

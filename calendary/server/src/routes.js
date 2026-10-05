@@ -5,6 +5,8 @@ import { config } from './config.js';
 import { getSetting } from './db.js';
 import { assistantStatus, chat } from './assistant.js';
 import * as goals from './goals.js';
+import * as notes from './notes.js';
+import * as pills from './pills.js';
 import { forgetCalendar, syncCalendar } from './ics.js';
 import { planStudy } from './planner.js';
 import { moveoToday, signTicket, suiteSecretOk } from './suite.js';
@@ -188,6 +190,59 @@ export async function registerRoutes(app) {
     const ticket = signTicket('calendary', req.body?.next);
     return { url: `${config.moveo.publicUrl}/sso?t=${encodeURIComponent(ticket)}` };
   });
+
+  // -------------------------------------------------------------- notes
+  app.get('/notes', async () => notes.listNotes());
+
+  app.post('/notes', async (req) => {
+    const n = notes.createNote(req.body || {});
+    broadcast('notes');
+    return n;
+  });
+
+  app.patch('/notes/:id', async (req) => {
+    const n = notes.updateNote(req.params.id, req.body || {});
+    broadcast('notes');
+    return n;
+  });
+
+  app.delete('/notes/:id', async (req) => {
+    notes.deleteNote(req.params.id);
+    broadcast('notes');
+    return { ok: true };
+  });
+
+  // -------------------------------------------------------------- pills
+  app.get('/pills', async () => pills.listPills());
+
+  app.post('/pills', async (req) => {
+    const p = pills.createPill(req.body || {});
+    broadcast('pills');
+    return p;
+  });
+
+  app.patch('/pills/:id', async (req) => {
+    const p = pills.updatePill(req.params.id, req.body || {});
+    broadcast('pills');
+    return p;
+  });
+
+  app.delete('/pills/:id', async (req) => {
+    pills.deletePill(req.params.id);
+    broadcast('pills');
+    return { ok: true };
+  });
+
+  app.get('/pills/doses', async (req) => pills.dosesOn(req.query.date));
+
+  app.post('/pills/:id/dose', async (req) => {
+    const { date, time, taken = true } = req.body || {};
+    pills.setDose(req.params.id, date, time, !!taken);
+    broadcast('pills');
+    return { ok: true };
+  });
+
+  app.get('/pills/history', async (req) => pills.pillHistory(Math.min(90, Math.max(1, Number(req.query.days) || 14))));
 
   // -------------------------------------------------------------- alexa
   app.get('/alexa/status', async () => {

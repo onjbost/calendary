@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type TouchEvent } from 'react';
-import { api, type CalEvent, type Calendar, type Goal, type Task } from './api';
+import { api, type CalEvent, type Calendar, type Dose, type Goal, type Note, type Pill, type Task } from './api';
 import { onChanged, type Scope } from './live';
 
 /** Fetch + refetch on live "changed" events for a scope, plus a slow safety poll. */
@@ -58,6 +58,18 @@ export function useTasks(date: string) {
 
 export function useGoals() {
   return useLiveResource<Goal[]>('goals', 'all', () => api.goals(), []);
+}
+
+export function useNotes() {
+  return useLiveResource<Note[]>('notes', 'all', () => api.notes(), []);
+}
+
+export function usePills() {
+  return useLiveResource<Pill[]>('pills', 'all', () => api.pills(), []);
+}
+
+export function useDoses(date: string) {
+  return useLiveResource<Dose[]>('pills', date, () => api.doses(date), []);
 }
 
 /** Current time, re-rendering every `ms`. */

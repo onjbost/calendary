@@ -7,6 +7,8 @@ import { GoalsMini, WeekRoutines } from '../components/GoalWidgets';
 import { MatrixBoard, MiniMatrix } from '../components/Matrix';
 import { MonthView } from '../components/MonthView';
 import { MoveoCard } from '../components/MoveoCard';
+import { NotesBoard } from '../components/Notes';
+import { PillsToday } from '../components/Pills';
 import { TimeGrid } from '../components/TimeGrid';
 import { TipCard } from '../components/TipCard';
 import { capitalize, countdown, eventsOnDay, fmt, hm, monthGrid, parseYmd, weekDays, WEEK, ymd } from '../dates';
@@ -19,14 +21,15 @@ import { Link } from '../router';
 import { tipOfTheDay } from '../tips';
 import { useUI } from '../ui';
 
-type Tab = 'today' | 'day' | 'week' | 'month' | 'matrix' | 'goals';
+type Tab = 'today' | 'day' | 'week' | 'month' | 'matrix' | 'goals' | 'notes';
+// "Dashboard" (tab 'today') is a button of its own, next to these.
 const TABS: { id: Tab; label: string }[] = [
-  { id: 'today', label: 'Oggi' },
   { id: 'day', label: 'Giorno' },
   { id: 'week', label: 'Settimana' },
   { id: 'month', label: 'Mese' },
   { id: 'matrix', label: 'Matrice' },
   { id: 'goals', label: 'Obiettivi' },
+  { id: 'notes', label: 'Note' },
 ];
 
 const IDLE_RESET_MS = 2 * 60_000;
@@ -107,6 +110,7 @@ export function KioskPage() {
   useEffect(() => {
     if (now.getTime() - lastTouch < IDLE_RESET_MS) return;
     if (document.querySelector('.modal-back')) return;
+    if (document.activeElement?.matches('textarea, input')) return; // still writing a note
     if (tab !== 'today') setTab('today');
     if (focusKey !== dayKey) setFocusKey(dayKey);
   }, [now, lastTouch, tab, focusKey, dayKey]);
@@ -181,6 +185,7 @@ export function KioskPage() {
           <div className="kiosk-date muted">{fmt(now, 'd MMMM yyyy')}</div>
         </div>
         <span className="spacer" />
+        <button className={`btn kiosk-home ${tab === 'today' ? 'on' : ''}`} onClick={() => setTab('today')}>◉ Dashboard</button>
         <div className="seg">
           {TABS.map((t) => <button key={t.id} className={tab === t.id ? 'on' : ''} onClick={() => setTab(t.id)}>{t.label}</button>)}
         </div>
@@ -193,7 +198,7 @@ export function KioskPage() {
 
       {tab === 'today' && (
         <div className="kiosk-body">
-          <div className="kiosk-col">
+          <div className="kiosk-col col-scroll">
             <section className="glass pad glow-pink next-card">
               <div className="muted small mono">PROSSIMO IMPEGNO</div>
               {next ? (
@@ -209,9 +214,10 @@ export function KioskPage() {
                 <div className="muted">Nessun impegno in vista ✨</div>
               )}
             </section>
+            <PillsToday kiosk className="glow-pink" />
             <MoveoCard kiosk className="glow-cyan" />
             <TipCard key={tip.id} tip={tip} className="glow-amber" />
-            <section className="glass pad scroll" style={{ flex: 1 }}>
+            <section className="glass pad">
               <div className="card-title" style={{ marginBottom: 8 }}><h3>⚡ Importanti in arrivo</h3></div>
               <Agenda events={upcomingImportant} now={now} onEventClick={openEvent} empty="Nessuno nei prossimi giorni" showDay />
             </section>
@@ -228,8 +234,8 @@ export function KioskPage() {
             </div>
           </section>
 
-          <div className="kiosk-col">
-            <section className="glass pad scroll" style={{ flex: 1 }}>
+          <div className="kiosk-col col-scroll">
+            <section className="glass pad">
               <div className="card-title"><h2>Prossimi giorni</h2></div>
               <div className="week-strip">
                 {[1, 2, 3, 4, 5, 6].map((i) => {
@@ -284,6 +290,12 @@ export function KioskPage() {
       {tab === 'matrix' && (
         <div className="kiosk-full" style={{ overflowY: 'auto' }}>
           <MatrixBoard date={dayKey} tasks={taskData.tasks} setTasks={(fn) => setTaskData((d) => ({ ...d, tasks: fn(d.tasks) }))} />
+        </div>
+      )}
+
+      {tab === 'notes' && (
+        <div className="kiosk-full col-scroll">
+          <NotesBoard />
         </div>
       )}
 

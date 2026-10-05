@@ -163,6 +163,47 @@ function addColumn(table, column, ddl) {
 // 0.3.0: events can carry a link (e.g. "open this workout in Moveo").
 addColumn('events', 'link_url', 'link_url TEXT');
 addColumn('events', 'link_label', 'link_label TEXT');
+// 0.7.0: ring on Alexa N minutes before (NULL = not on Alexa).
+addColumn('events', 'alexa_minutes', 'alexa_minutes INTEGER');
+
+db.exec(`
+  -- Sticky notes: things to remember without a date.
+  CREATE TABLE IF NOT EXISTS notes (
+    id TEXT PRIMARY KEY,
+    text TEXT NOT NULL DEFAULT '',
+    color TEXT NOT NULL,
+    pinned INTEGER NOT NULL DEFAULT 0,
+    done INTEGER NOT NULL DEFAULT 0,
+    position REAL NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+
+  -- Pills: a medicine with its daily times, and the doses actually taken.
+  CREATE TABLE IF NOT EXISTS pills (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    dose TEXT,
+    times TEXT NOT NULL DEFAULT '[]',
+    days TEXT NOT NULL DEFAULT '[0,1,2,3,4,5,6]',
+    start_date TEXT NOT NULL,
+    end_date TEXT,
+    alexa INTEGER NOT NULL DEFAULT 1,
+    active INTEGER NOT NULL DEFAULT 1,
+    color TEXT NOT NULL,
+    notes TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS pill_doses (
+    pill_id TEXT NOT NULL REFERENCES pills(id) ON DELETE CASCADE,
+    date TEXT NOT NULL,
+    time TEXT NOT NULL,
+    taken_at TEXT NOT NULL,
+    PRIMARY KEY (pill_id, date, time)
+  );
+`);
 
 export function getSetting(key) {
   const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(key);

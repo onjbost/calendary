@@ -250,12 +250,14 @@ describe('skill', () => {
 });
 
 describe('reminders on Alexa', () => {
-  test('plans voice reminders and important events, not ordinary ones', () => {
-    store.createEvent({ title: 'Riunione qualunque', start: new Date(Date.now() + 3 * 3600e3), reminderMinutes: 10 });
+  test('plans voice reminders and events with the Alexa option, not the others', () => {
+    store.createEvent({ title: 'Riunione qualunque', start: new Date(Date.now() + 3 * 3600e3), reminderMinutes: 10, important: true });
+    store.createEvent({ title: 'Treno', start: new Date(Date.now() + 4 * 3600e3), alexaMinutes: 20 });
     const titles = desiredReminders().map((r) => r.text);
     assert.ok(titles.some((t) => /Chiamare Marco/.test(t)));
     assert.ok(titles.some((t) => /Dentista/.test(t)));
     assert.ok(!titles.some((t) => /Riunione qualunque/.test(t)));
+    assert.ok(titles.some((t) => /Tra 20 minuti, .*Treno/.test(t)));
   });
 
   test('reminder wording', () => {
@@ -278,7 +280,7 @@ describe('reminders on Alexa', () => {
     try {
       const first = await syncWithToken('token-123', 'https://api.eu.amazonalexa.com');
       assert.equal(first.ok, true);
-      assert.equal(first.created, 2);
+      assert.equal(first.created, 3);
       const post = calls.find((c) => c.method === 'POST');
       assert.equal(post.url, 'https://api.eu.amazonalexa.com/v1/alerts/reminders');
       assert.equal(post.body.trigger.type, 'SCHEDULED_ABSOLUTE');
@@ -303,7 +305,7 @@ describe('reminders on Alexa', () => {
   });
 
   test('a denied permission is reported', async () => {
-    store.createEvent({ title: 'Volo', start: new Date(Date.now() + 5 * 3600e3), important: true });
+    store.createEvent({ title: 'Volo', start: new Date(Date.now() + 5 * 3600e3), alexaMinutes: 15 });
     const realFetch = globalThis.fetch;
     globalThis.fetch = async () => new Response('{}', { status: 401 });
     try {

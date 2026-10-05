@@ -19,6 +19,8 @@ export interface CalEvent {
   /** optional deep link, e.g. "open this workout in Moveo" */
   linkUrl?: string | null;
   linkLabel?: string | null;
+  /** ring on Alexa this many minutes before (null = not on Alexa) */
+  alexaMinutes?: number | null;
   /** goal routines ("routine") and milestones ("milestone") are virtual, read-only entries */
   routineId?: string;
   goalId?: string | null;
@@ -139,6 +141,8 @@ export interface EventDraft {
   calendarId?: string;
   linkUrl?: string | null;
   linkLabel?: string | null;
+  /** ring on Alexa this many minutes before (null = not on Alexa) */
+  alexaMinutes?: number | null;
 }
 
 export interface TaskDraft {
@@ -184,6 +188,51 @@ export interface AlexaStatus {
   lastSync: string | null;
   lastError: string | null;
   announce: { enabled: boolean; services: string[]; homeAssistant: boolean };
+}
+
+export interface Note {
+  id: string;
+  text: string;
+  color: string;
+  pinned: boolean;
+  done: boolean;
+  position: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Pill {
+  id: string;
+  name: string;
+  dose: string;
+  times: string[];
+  days: number[];
+  startDate: string;
+  endDate: string | null;
+  alexa: boolean;
+  active: boolean;
+  color: string;
+  notes: string;
+}
+
+export type PillDraft = Partial<Omit<Pill, 'id'>> & { name: string; times: string[] };
+
+export interface Dose {
+  pillId: string;
+  name: string;
+  dose: string;
+  color: string;
+  alexa: boolean;
+  date: string;
+  time: string;
+  at: string;
+  takenAt: string | null;
+}
+
+export interface PillHistory {
+  from: string;
+  to: string;
+  pills: { pillId: string; name: string; color: string; scheduled: number; taken: number; days: Record<string, { scheduled: number; taken: number }> }[];
 }
 
 export class ApiError extends Error {
@@ -303,6 +352,19 @@ export const api = {
   moveoToday: () => get<MoveoToday>('/suite/moveo'),
   weather: () => get<Weather>('/weather'),
   suiteLink: (next: string) => post<{ url: string }>('/suite/link', { next }),
+
+  notes: () => get<Note[]>('/notes'),
+  createNote: (n: Partial<Note> = {}) => post<Note>('/notes', n),
+  updateNote: (id: string, changes: Partial<Note>) => patch<Note>(`/notes/${id}`, changes),
+  deleteNote: (id: string) => del(`/notes/${id}`),
+
+  pills: () => get<Pill[]>('/pills'),
+  createPill: (p: PillDraft) => post<Pill>('/pills', p),
+  updatePill: (id: string, p: Partial<PillDraft>) => patch<Pill>(`/pills/${id}`, p),
+  deletePill: (id: string) => del(`/pills/${id}`),
+  doses: (date: string) => get<Dose[]>(`/pills/doses?date=${date}`),
+  setDose: (pillId: string, date: string, time: string, taken: boolean) => post(`/pills/${pillId}/dose`, { date, time, taken }),
+  pillHistory: (days = 14) => get<PillHistory>(`/pills/history?days=${days}`),
 
   pushStatus: () => get<{ publicKey: string; subscriptions: number }>('/push/status'),
   pushSubscribe: (sub: PushSubscriptionJSON) => post('/push/subscribe', sub),
