@@ -155,8 +155,8 @@ L'integrazione ha due direzioni, indipendenti tra loro:
 1. Vai su <https://developer.amazon.com/alexa/console/ask> con lo **stesso account Amazon dei tuoi Echo** → **Create Skill**:
    nome `AiCal`, lingua **Italian (IT)**, tipo **Other → Custom**, hosting **Provision your own**, template *Start from scratch*.
 2. **Build → Interaction Model → JSON Editor**: incolla il contenuto di [`alexa/skill-package/interactionModels/custom/it-IT.json`](alexa/skill-package/interactionModels/custom/it-IT.json) → **Save** → **Build skill**.
-   La frase di attivazione è *“ai cal”* (si dice *AiCal*, in italiano come si legge): “calendary” veniva confuso con “calendario”,
-   e Amazon vuole almeno due parole.
+   La frase di attivazione è `a. i. cal` (si dice *AiCal*, in italiano come si legge): “calendary” veniva confuso con “calendario”,
+   Amazon vuole almeno due parole e non accetta “ai” (preposizione), mentre accetta le sigle scritte “a. i.”.
 3. **Endpoint** → **HTTPS** → Default Region: `https://calendary.gattucciocloud.it/api/alexa`,
    certificato: *My development endpoint has a certificate from a trusted certificate authority* (quello di Cloudflare va bene) → **Save**.
 4. Copia lo **Skill ID** (`amzn1.ask.skill.…`, in alto nella pagina Endpoint) nell'opzione `alexa_skill_id` dell'add-on.
