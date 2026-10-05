@@ -71,7 +71,7 @@ const TOOLS = [
       properties: {
         folder: { ...folderRef, description: 'Progetto a cui si riferisce la nota, es. "Calendary". Creata se manca.' },
         title: { type: 'string', description: 'Titolo breve (max ~80 caratteri)' },
-        description: { type: 'string', description: 'Descrizione dettagliata' },
+        description: { type: 'string', description: 'Descrizione dettagliata in Markdown: # titoli, - elenchi, - [ ] checklist, **grassetto**, ```tab per le tablature' },
         pinned: { type: 'boolean', description: 'Fissa la nota in cima' },
       },
       required: ['folder', 'title', 'description'],

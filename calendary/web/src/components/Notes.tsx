@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { api, type Note, type NoteFolder } from '../api';
 import { fmt } from '../dates';
 import { useNoteFolders, useNotes } from '../hooks';
 import { notifyChanged } from '../live';
+import { checklistCount, Markdown, plainText, toggleCheck } from '../markdown';
 import { useUI } from '../ui';
 import { Modal } from './Modal';
 
@@ -10,45 +12,116 @@ export const NOTE_COLORS = ['#ffd54a', '#ff7ac8', '#5ee7ff', '#a8ff60', '#c49bff
 
 type Filter = 'all' | 'none' | string; // all notes, notes without folder, or a folder id
 
-/** Text area that grows with its content. */
-function useAutoGrow(ref: React.RefObject<HTMLTextAreaElement | null>, value: string, min: number) {
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    el.style.height = 'auto';
-    el.style.height = `${Math.max(min, el.scrollHeight)}px`;
-  }, [ref, value, min]);
+// ------------------------------------------------------------------- card
+
+/** Fixed-height card with a rendered preview; tap to open the note. */
+function NoteCard({ note, folder, onOpen }: { note: Note; folder?: NoteFolder; onOpen: () => void }) {
+  const checks = checklistCount(note.text);
+  return (
+    <button className={`note-card ${note.done ? 'done' : ''} ${note.pinned ? 'pinned' : ''}`} style={{ ['--note' as string]: note.color }} onClick={onOpen}>
+      <div className="note-card-head">
+        <b className="note-card-title">{note.title || 'Senza titolo'}</b>
+        {note.pinned && <span title="Fissata">📌</span>}
+        {note.source === 'claude' && <span className="sticky-src" title="Aggiunta da Claude">✦</span>}
+      </div>
+      <div className="note-card-body">
+        {note.text.trim() ? <Markdown text={note.text} /> : <span className="faint">Nessun testo</span>}
+      </div>
+      <div className="note-card-foot faint tiny">
+        {folder && <span className="note-card-folder"><span className="dot" style={{ color: folder.color }} /> {folder.name}</span>}
+        {checks.total > 0 && <span>☑ {checks.done}/{checks.total}</span>}
+        <span className="spacer" />
+        <span>{fmt(note.updatedAt, 'd MMM')}</span>
+      </div>
+    </button>
+  );
 }
 
-/** One sticky note: title + description, edited in place, saved while typing (debounced) and on blur. */
-function StickyNote({ note, folders, showFolder, onChange, onDelete, autoFocus }: {
+// ---------------------------------------------------------------- toolbar
+
+/** Inserts Markdown at the cursor: prefixes for lines, wrappers for selections, templates for blocks. */
+function useEditorTools(ref: React.RefObject<HTMLTextAreaElement | null>, value: string, onChange: (v: string) => void) {
+  const apply = (fn: (before: string, sel: string, after: string) => { text: string; cursor: number }) => {
+    const el = ref.current;
+    if (!el) return;
+    const s = el.selectionStart;
+    const e = el.selectionEnd;
+    const { text, cursor } = fn(value.slice(0, s), value.slice(s, e), value.slice(e));
+    onChange(text);
+    requestAnimationFrame(() => {
+      el.focus();
+      el.setSelectionRange(cursor, cursor);
+    });
+  };
+  /** Prefix every selected line (or the current one). */
+  const linePrefix = (prefix: (i: number) => string) => apply((before, sel, after) => {
+    const lineStart = before.lastIndexOf('\n') + 1;
+    const head = before.slice(0, lineStart);
+    const lines = (before.slice(lineStart) + sel).split('\n');
+    const body = lines.map((l, i) => prefix(i) + l.replace(/^(#{1,3}\s|[-*]\s\[[ xX]\]\s|[-*]\s|\d+[.)]\s|>\s)/, '')).join('\n');
+    return { text: head + body + after, cursor: (head + body).length };
+  });
+  const wrap = (mark: string) => apply((before, sel, after) => {
+    const inner = sel || 'testo';
+    return { text: `${before}${mark}${inner}${mark}${after}`, cursor: (before + mark + inner + mark).length };
+  });
+  const block = (tpl: string) => apply((before, sel, after) => {
+    const pre = before && !before.endsWith('\n\n') ? (before.endsWith('\n') ? '\n' : '\n\n') : '';
+    const text = `${before}${pre}${tpl}${sel}\n`;
+    return { text: text + after, cursor: text.length };
+  });
+  return [
+    { label: 'H1', title: 'Titolo grande', run: () => linePrefix(() => '# ') },
+    { label: 'H2', title: 'Titolo', run: () => linePrefix(() => '## ') },
+    { label: 'H3', title: 'Sottotitolo', run: () => linePrefix(() => '### ') },
+    { label: 'B', title: 'Grassetto', run: () => wrap('**'), cls: 'b' },
+    { label: 'I', title: 'Corsivo', run: () => wrap('*'), cls: 'i' },
+    { label: 'S', title: 'Barrato', run: () => wrap('~~'), cls: 's' },
+    { label: '• Lista', title: 'Elenco puntato', run: () => linePrefix(() => '- ') },
+    { label: '1. Lista', title: 'Elenco numerato', run: () => linePrefix((i) => `${i + 1}. `) },
+    { label: '☑ Checklist', title: 'Lista di controllo', run: () => linePrefix(() => '- [ ] ') },
+    { label: '❝ Citazione', title: 'Citazione', run: () => linePrefix(() => '> ') },
+    { label: '🎸 Tablatura', title: 'Tablatura per chitarra', run: () => block('```tab\ne|-----------------|\nB|-----------------|\nG|-----------------|\nD|-----------------|\nA|-----------------|\nE|-----------------|\n```') },
+    { label: '</> Codice', title: 'Blocco di codice', run: () => block('```\n\n```') },
+    { label: '― Linea', title: 'Separatore', run: () => block('---') },
+  ];
+}
+
+// --------------------------------------------------------------- full view
+
+/** The note at full page: read it (checklists are tickable), "✎ Modifica" to edit with the formatting toolbar. */
+function NoteView({ note, folders, startEditing, onClose, onChange, onDelete }: {
   note: Note;
   folders: NoteFolder[];
-  showFolder: boolean;
+  startEditing?: boolean;
+  onClose: () => void;
   onChange: (id: string, patch: Partial<Note>) => void;
   onDelete: (id: string) => void;
-  autoFocus?: boolean;
 }) {
+  const [editing, setEditing] = useState(!!startEditing);
   const [title, setTitle] = useState(note.title);
   const [text, setText] = useState(note.text);
-  const [focused, setFocused] = useState(false);
+  const [preview, setPreview] = useState(false);
   const [confirm, setConfirm] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const area = useRef<HTMLTextAreaElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
-  const textRef = useRef<HTMLTextAreaElement>(null);
-  useAutoGrow(textRef, text, 70);
 
-  // Edited on another device (or by Claude): follow it, unless we're typing here.
+  // follow edits from other devices (or Claude) while only reading
   useEffect(() => {
-    if (!focused) {
+    if (!editing) {
       setTitle(note.title);
       setText(note.text);
     }
-  }, [note.title, note.text, focused]);
-
+  }, [note.title, note.text, editing]);
   useEffect(() => {
-    if (autoFocus) titleRef.current?.focus();
-  }, [autoFocus]);
+    if (startEditing) titleRef.current?.focus();
+  }, [startEditing]);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && !editing && onClose();
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [editing, onClose]);
 
   const flush = (t = title, x = text) => {
     clearTimeout(timer.current);
@@ -59,65 +132,85 @@ function StickyNote({ note, folders, showFolder, onChange, onDelete, autoFocus }
   };
   const schedule = (t: string, x: string) => {
     clearTimeout(timer.current);
-    timer.current = setTimeout(() => flush(t, x), 800);
+    timer.current = setTimeout(() => flush(t, x), 1000);
   };
   useEffect(() => () => clearTimeout(timer.current), []);
 
-  const folder = folders.find((f) => f.id === note.folderId);
-  const focusProps = { onFocus: () => setFocused(true), onBlur: () => { setFocused(false); flush(); } };
+  const setBody = (v: string) => { setText(v); schedule(title, v); };
+  const tools = useEditorTools(area, text, setBody);
+  const done = () => { flush(); setEditing(false); setPreview(false); };
+  const close = () => { flush(); onClose(); };
+  const tick = (line: number) => {
+    const next = toggleCheck(text, line);
+    setText(next);
+    onChange(note.id, { text: next });
+  };
 
-  return (
-    <div className={`sticky ${note.done ? 'done' : ''} ${note.pinned ? 'pinned' : ''}`} style={{ ['--note' as string]: note.color }}>
-      <div className="sticky-bar">
-        <button className={`sticky-btn ${note.pinned ? 'on' : ''}`} onClick={() => onChange(note.id, { pinned: !note.pinned })}
-          title={note.pinned ? 'Togli dalla cima' : 'Fissa in cima'} aria-label="Fissa">📌</button>
-        <button className={`sticky-btn ${note.done ? 'on' : ''}`} onClick={() => onChange(note.id, { done: !note.done })}
-          title={note.done ? 'Da fare' : 'Fatto'} aria-label="Fatto">✓</button>
-        {note.source === 'claude' && <span className="sticky-src" title="Aggiunta da Claude">✦</span>}
+  return createPortal(
+    <div className="note-view" style={{ ['--note' as string]: note.color }}>
+      <header className="note-view-bar">
+        <button className="btn" onClick={close}>← Note</button>
         <span className="spacer" />
-        {NOTE_COLORS.map((c) => (
-          <button key={c} className={`sticky-color ${c === note.color ? 'on' : ''}`} style={{ background: c }}
-            onClick={() => onChange(note.id, { color: c })} aria-label="Colore" />
-        ))}
-      </div>
-      <input
-        ref={titleRef}
-        className="sticky-title"
-        value={title}
-        placeholder="Titolo"
-        {...focusProps}
-        onChange={(e) => { setTitle(e.target.value); schedule(e.target.value, text); }}
-      />
-      <textarea
-        ref={textRef}
-        className="sticky-text"
-        value={text}
-        placeholder="Descrizione…"
-        {...focusProps}
-        onChange={(e) => { setText(e.target.value); schedule(title, e.target.value); }}
-      />
-      <div className="sticky-foot">
-        <select className="sticky-folder" value={note.folderId || ''} onChange={(e) => onChange(note.id, { folderId: e.target.value || null })}
-          title="Cartella" style={showFolder || !folder ? undefined : { opacity: 0.6 }}>
+        <select className="input note-view-folder" value={note.folderId || ''} onChange={(e) => onChange(note.id, { folderId: e.target.value || null })} title="Cartella">
           <option value="">Senza cartella</option>
           {folders.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
         </select>
-        <span className="faint tiny">{fmt(note.updatedAt, 'd MMM')}</span>
-        <span className="spacer" />
+        <div className="row nowrap" style={{ gap: 4 }}>
+          {NOTE_COLORS.map((c) => (
+            <button key={c} className={`sticky-color ${c === note.color ? 'on' : ''}`} style={{ background: c }} onClick={() => onChange(note.id, { color: c })} aria-label="Colore" />
+          ))}
+        </div>
+        <button className={`btn icon ${note.pinned ? 'primary' : ''}`} onClick={() => onChange(note.id, { pinned: !note.pinned })} title={note.pinned ? 'Togli dalla cima' : 'Fissa in cima'}>📌</button>
+        <button className={`btn ${note.done ? 'primary' : ''}`} onClick={() => onChange(note.id, { done: !note.done })}>{note.done ? '✓ Fatta' : '✓ Segna fatta'}</button>
         {confirm ? (
           <>
-            <button className="btn sm danger" onClick={() => onDelete(note.id)}>Elimina</button>
-            <button className="btn sm ghost" onClick={() => setConfirm(false)}>No</button>
+            <button className="btn danger" onClick={() => { clearTimeout(timer.current); onDelete(note.id); onClose(); }}>Elimina</button>
+            <button className="btn ghost" onClick={() => setConfirm(false)}>No</button>
+          </>
+        ) : <button className="btn icon" onClick={() => setConfirm(true)} title="Elimina">🗑</button>}
+        {editing
+          ? <button className="btn primary" onClick={done}>✓ Fine</button>
+          : <button className="btn primary" onClick={() => setEditing(true)}>✎ Modifica</button>}
+      </header>
+
+      <div className="note-view-page">
+        {editing ? (
+          <>
+            <input ref={titleRef} className="note-view-title-input" value={title} placeholder="Titolo"
+              onChange={(e) => { setTitle(e.target.value); schedule(e.target.value, text); }} />
+            <div className="note-tools">
+              {tools.map((t) => (
+                <button key={t.label} type="button" className={`note-tool ${t.cls || ''}`} title={t.title}
+                  onMouseDown={(e) => e.preventDefault()} onClick={t.run} disabled={preview}>{t.label}</button>
+              ))}
+              <span className="spacer" />
+              <button type="button" className={`note-tool ${preview ? 'on' : ''}`} onClick={() => setPreview((v) => !v)}>👁 Anteprima</button>
+            </div>
+            {preview
+              ? <Markdown text={text} className="note-view-body" />
+              : <textarea ref={area} className="note-editor" value={text} onChange={(e) => setBody(e.target.value)}
+                  placeholder={'Scrivi qui…\n\n# Titolo\n- elenco\n- [ ] da fare'} />}
           </>
         ) : (
-          <button className="sticky-btn" onClick={() => setConfirm(true)} aria-label="Elimina" title="Elimina">🗑</button>
+          <>
+            <h1 className="note-view-title">{note.title || 'Senza titolo'}</h1>
+            <div className="faint small" style={{ marginBottom: 18 }}>
+              {folders.find((f) => f.id === note.folderId)?.name || 'Senza cartella'} · modificata {fmt(note.updatedAt, "d MMMM 'alle' HH:mm")}
+              {note.source === 'claude' ? ' · ✦ aggiunta da Claude' : ''}
+            </div>
+            {text.trim()
+              ? <Markdown text={text} onToggle={tick} className="note-view-body" />
+              : <div className="empty" onClick={() => setEditing(true)} style={{ cursor: 'pointer' }}>Nota vuota: tocca “✎ Modifica” per scrivere.</div>}
+          </>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
-/** Create / rename / delete a folder (a project). */
+// ------------------------------------------------------------------ folders
+
 function FolderModal({ folder, onClose, onSaved }: { folder?: NoteFolder; onClose: () => void; onSaved: (f: NoteFolder | null) => void }) {
   const { toast } = useUI();
   const [name, setName] = useState(folder?.name || '');
@@ -180,13 +273,15 @@ function FolderModal({ folder, onClose, onSaved }: { folder?: NoteFolder; onClos
   );
 }
 
-/** Board of sticky notes grouped in folders (one per project). Used by the /note page and the tablet. */
+// -------------------------------------------------------------------- board
+
+/** Notes grouped in folders (one per project): cards with a preview, full page on tap. Used by /note and the tablet. */
 export function NotesBoard() {
   const { toast } = useUI();
   const { data: notes, setData, reload } = useNotes();
   const { data: folders } = useNoteFolders();
   const [filter, setFilter] = useState<Filter>('all');
-  const [fresh, setFresh] = useState<string | null>(null);
+  const [open, setOpen] = useState<{ id: string; edit: boolean } | null>(null);
   const [showDone, setShowDone] = useState(false);
   const [editFolder, setEditFolder] = useState<NoteFolder | 'new' | null>(null);
 
@@ -196,13 +291,13 @@ export function NotesBoard() {
   }, [folders, filter]);
 
   const current = folders.find((f) => f.id === filter);
+  const byId = new Map(folders.map((f) => [f.id, f]));
 
   const add = async () => {
     try {
-      const folderId = current ? current.id : null;
-      const n = await api.createNote({ folderId, ...(current ? {} : { color: NOTE_COLORS[notes.length % NOTE_COLORS.length] }) });
+      const n = await api.createNote({ folderId: current ? current.id : null, ...(current ? {} : { color: NOTE_COLORS[notes.length % NOTE_COLORS.length] }) });
       setData((list) => [n, ...list]);
-      setFresh(n.id);
+      setOpen({ id: n.id, edit: true });
       notifyChanged('notes');
     } catch (e) {
       toast((e as Error).message, 'error');
@@ -213,7 +308,6 @@ export function NotesBoard() {
     setData((list) => list.map((n) => (n.id === id ? { ...n, ...patch, updatedAt: new Date().toISOString() } : n)));
     try {
       await api.updateNote(id, patch);
-      // pin/done/folder change the order or the counts: reload; plain text edits keep the cards where they are
       if (patch.pinned !== undefined || patch.done !== undefined || patch.folderId !== undefined) notifyChanged('notes');
     } catch (e) {
       toast((e as Error).message, 'error');
@@ -228,12 +322,11 @@ export function NotesBoard() {
   };
 
   const visible = notes.filter((n) => (filter === 'all' ? true : filter === 'none' ? !n.folderId : n.folderId === filter));
-  const open = visible.filter((n) => !n.done);
-  const done = visible.filter((n) => n.done);
+  const openList = visible.filter((n) => !n.done);
+  const doneList = visible.filter((n) => n.done);
   const looseCount = notes.filter((n) => !n.folderId && !n.done).length;
-  const card = (n: Note) => (
-    <StickyNote key={n.id} note={n} folders={folders} showFolder={filter === 'all'} onChange={change} onDelete={remove} autoFocus={n.id === fresh} />
-  );
+  const opened = open ? notes.find((n) => n.id === open.id) : null;
+  const card = (n: Note) => <NoteCard key={n.id} note={n} folder={n.folderId ? byId.get(n.folderId) : undefined} onOpen={() => setOpen({ id: n.id, edit: false })} />;
 
   return (
     <div className="stack notes-board">
@@ -242,8 +335,7 @@ export function NotesBoard() {
           Tutte <span className="faint">{notes.filter((n) => !n.done).length}</span>
         </button>
         {folders.map((f) => (
-          <button key={f.id} className={`folder-chip ${filter === f.id ? 'on' : ''}`} onClick={() => setFilter(f.id)}
-            style={{ ['--note' as string]: f.color }} title={f.description || f.name}>
+          <button key={f.id} className={`folder-chip ${filter === f.id ? 'on' : ''}`} onClick={() => setFilter(f.id)} title={f.description || f.name}>
             <span className="dot" style={{ color: f.color }} /> {f.name} <span className="faint">{f.open}</span>
           </button>
         ))}
@@ -267,19 +359,23 @@ export function NotesBoard() {
       <div className="row">
         <button className="btn primary lg" onClick={add}>＋ Nuova nota{current ? ` in ${current.name}` : ''}</button>
         <span className="faint small">
-          {open.length ? `${open.length} ${open.length === 1 ? 'nota' : 'note'}` : 'Nessuna nota: scrivi qui le cose da ricordare senza una data.'}
+          {openList.length ? `${openList.length} ${openList.length === 1 ? 'nota' : 'note'}` : 'Nessuna nota: scrivi qui le cose da ricordare senza una data.'}
         </span>
         <span className="spacer" />
-        {done.length > 0 && (
-          <button className="btn sm ghost" onClick={() => setShowDone((v) => !v)}>{showDone ? 'Nascondi' : 'Mostra'} completate ({done.length})</button>
+        {doneList.length > 0 && (
+          <button className="btn sm ghost" onClick={() => setShowDone((v) => !v)}>{showDone ? 'Nascondi' : 'Mostra'} completate ({doneList.length})</button>
         )}
       </div>
-      <div className="sticky-grid">{open.map(card)}</div>
-      {showDone && done.length > 0 && (
+      <div className="note-grid">{openList.map(card)}</div>
+      {showDone && doneList.length > 0 && (
         <>
           <div className="muted small mono">COMPLETATE</div>
-          <div className="sticky-grid">{done.map(card)}</div>
+          <div className="note-grid">{doneList.map(card)}</div>
         </>
+      )}
+      {opened && (
+        <NoteView key={opened.id} note={opened} folders={folders} startEditing={open?.edit}
+          onClose={() => setOpen(null)} onChange={change} onDelete={remove} />
       )}
       {editFolder && (
         <FolderModal folder={editFolder === 'new' ? undefined : editFolder} onClose={() => setEditFolder(null)}
@@ -289,7 +385,6 @@ export function NotesBoard() {
   );
 }
 
-/** Compact list for the tablet dashboard: open notes (pinned first), tap to open the Note tab. */
 export function NotesMini({ onOpen, max = 6 }: { onOpen: () => void; max?: number }) {
   const { data: notes } = useNotes();
   const { data: folders } = useNoteFolders();
@@ -310,10 +405,10 @@ export function NotesMini({ onOpen, max = 6 }: { onOpen: () => void; max?: numbe
             const folder = n.folderId ? byId.get(n.folderId) : null;
             return (
               <div key={n.id} className="note-mini" style={{ ['--note' as string]: n.color }} onClick={onOpen}>
-                <div className="ellipsis">{n.pinned ? '📌 ' : ''}<b>{n.title || n.text.split('\n')[0]}</b></div>
+                <div className="ellipsis">{n.pinned ? '📌 ' : ''}<b>{n.title || plainText(n.text).slice(0, 80)}</b></div>
                 <div className="faint tiny ellipsis">
                   {folder && <span><span className="dot" style={{ color: folder.color, width: 7, height: 7, display: 'inline-block' }} /> {folder.name}</span>}
-                  {folder && n.title && n.text ? ' · ' : ''}{n.title ? n.text.replace(/\s+/g, ' ') : ''}
+                  {folder && n.title && n.text ? ' · ' : ''}{n.title ? plainText(n.text) : ''}
                 </div>
               </div>
             );

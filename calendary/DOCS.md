@@ -161,3 +161,9 @@ giornaliero e per quanti giorni bastano.
 - **Alexa** lo annuncia una volta al giorno, la mattina (dopo il riepilogo, o alle 8:00), finché la scorta è sotto la soglia.
 - **Push** a ogni dose presa di una pillola in esaurimento: giorni rimasti e invito a riordinarla.
 - Sotto le **15 compresse** nella scheda *Pillole di oggi* compare **📦 Aggiorna magazzino** (aggiungi scatole o scrivi il totale).
+
+## Note formattate (0.9.1)
+
+Le note sono **card** ad altezza fissa con l'anteprima del testo; un tocco apre la nota **a tutta pagina**, **✎ Modifica** apre l'editor.
+Il testo è in **Markdown**, con i pulsanti della barra: titoli (`#`, `##`, `###`), **grassetto**, *corsivo*, ~~barrato~~, elenchi puntati
+e numerati, **checklist** (`- [ ]`, spuntabili anche in lettura), citazioni, linee, blocchi di codice e **tablature** (blocco ```` ```tab ````).

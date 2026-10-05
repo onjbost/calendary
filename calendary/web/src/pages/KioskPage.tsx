@@ -118,13 +118,13 @@ export function KioskPage() {
   const idle = now.getTime() - lastTouch >= prefs.nightIdleSec * 1000;
   const autoNight = prefs.nightAuto === 'charging' ? battery.charging === true && landscape
     : prefs.nightAuto === 'hours' ? inWindow(now, prefs.redFrom, prefs.redTo) : false;
-  const night = manualNight || (autoNight && idle && !document.querySelector('.modal-back'));
+  const night = manualNight || (autoNight && idle && !document.querySelector('.modal-back, .note-view'));
   const exitNight = () => { setManualNight(false); setLastTouch(Date.now()); };
 
   // Back to "Today" after a couple of idle minutes, unless an editor is open.
   useEffect(() => {
     if (now.getTime() - lastTouch < IDLE_RESET_MS) return;
-    if (document.querySelector('.modal-back')) return;
+    if (document.querySelector('.modal-back, .note-view')) return; // an editor or an open note
     if (document.activeElement?.matches('textarea, input')) return; // still writing a note
     if (tab !== 'today') setTab('today');
     if (focusKey !== dayKey) setFocusKey(dayKey);
