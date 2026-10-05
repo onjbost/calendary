@@ -204,6 +204,8 @@ db.exec(`
     PRIMARY KEY (pill_id, date, time)
   );
 `);
+// 0.7.1: day a therapy was paused, so the history stops counting missed doses from then on.
+addColumn('pills', 'paused_at', 'paused_at TEXT');
 
 export function getSetting(key) {
   const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(key);

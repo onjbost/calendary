@@ -770,3 +770,18 @@ html.eco .nightstand .ns-inner { transition: none; }
 .theme-card.on { border-color: var(--cyan); box-shadow: 0 0 0 1px var(--cyan); }
 .theme-swatch { display: flex; height: 36px; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.1); }
 .theme-swatch span { flex: 1; }
+
+/* pill history: totals, heatmap, monthly register */
+.ph-summary { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.ph-card { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border-radius: var(--radius-sm); background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); }
+.ph-pct { font-size: 1.9rem; font-weight: 700; line-height: 1.1; }
+.ph-cell.legend { display: inline-block; width: 14px; height: 14px; vertical-align: middle; }
+.heat-wrap { overflow-x: auto; padding-bottom: 4px; }
+.heat { display: grid; grid-template-rows: 14px repeat(7, 12px); gap: 3px; width: max-content; }
+.heat-cell { height: 12px; border-radius: 3px; }
+.heat-month { white-space: nowrap; text-transform: capitalize; }
+.log-day { display: grid; grid-template-columns: 70px 1fr; gap: 10px; align-items: start; padding-bottom: 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+.log-date { color: var(--muted); padding-top: 4px; text-transform: capitalize; }
+.log-dose.ok { border-color: rgba(var(--lime-rgb), 0.35); }
+.log-dose.miss { border-color: rgba(var(--red-rgb), 0.45); color: var(--muted); }
+.log-dose.wait { border-color: rgba(var(--amber-rgb), 0.5); }

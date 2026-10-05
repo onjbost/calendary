@@ -30,6 +30,8 @@ function mapPill(r) {
     active: !!r.active,
     color: r.color,
     notes: r.notes || '',
+    pausedAt: r.paused_at || null,
+    createdAt: r.created_at,
   };
 }
 
@@ -83,9 +85,12 @@ export function updatePill(id, patch = {}) {
   const cur = getPill(id);
   if (!cur) throw httpError(404, 'Pillola non trovata');
   const p = normalize(patch, cur);
+  // Pausing remembers the day (history stops there); resuming clears it.
+  const pausedAt = p.active ? null : (cur.active ? ymd(new Date()) : cur.pausedAt);
   db.prepare(`UPDATE pills SET name = ?, dose = ?, times = ?, days = ?, start_date = ?, end_date = ?, alexa = ?, active = ?,
-      color = ?, notes = ?, updated_at = ? WHERE id = ?`).run(
-    p.name, p.dose, JSON.stringify(p.times), JSON.stringify(p.days), p.startDate, p.endDate, p.alexa, p.active, p.color, p.notes, nowIso(), id,
+      color = ?, notes = ?, paused_at = ?, updated_at = ? WHERE id = ?`).run(
+    p.name, p.dose, JSON.stringify(p.times), JSON.stringify(p.days), p.startDate, p.endDate, p.alexa, p.active, p.color, p.notes,
+    pausedAt, nowIso(), id,
   );
   return getPill(id);
 }
@@ -94,9 +99,12 @@ export function deletePill(id) {
   if (!db.prepare('DELETE FROM pills WHERE id = ?').run(id).changes) throw httpError(404, 'Pillola non trovata');
 }
 
-const scheduledOn = (pill, date) => {
+/** Is a dose of `pill` due on `date`? For the history a paused therapy still counts up to the day it was paused. */
+const scheduledOn = (pill, date, history = false) => {
   const day = ymd(date);
-  return pill.active && pill.days.includes(date.getDay()) && day >= pill.startDate && (!pill.endDate || day <= pill.endDate);
+  if (!pill.days.includes(date.getDay()) || day < pill.startDate || (pill.endDate && day > pill.endDate)) return false;
+  if (pill.active) return true;
+  return history && !!pill.pausedAt && day < pill.pausedAt;
 };
 
 const takenSet = (fromYmd, toYmd) => new Map(
@@ -104,21 +112,38 @@ const takenSet = (fromYmd, toYmd) => new Map(
     .map((r) => [`${r.pill_id}|${r.date}|${r.time}`, r.taken_at]),
 );
 
-/** Every scheduled dose in [from, to), with its local time and whether it was taken. */
-export function dosesBetween(from, to) {
-  const pills = listPills().filter((p) => p.active);
+/**
+ * Every scheduled dose in [from, to), with its local time and whether it was taken.
+ * With `history`, paused therapies count until they were paused, and doses taken at times that are no longer
+ * in the schedule (the therapy was edited later) are kept too.
+ */
+export function dosesBetween(from, to, { history = false } = {}) {
+  const pills = listPills().filter((p) => p.active || history);
   const first = startOfDay(from);
   const taken = takenSet(ymd(first), ymd(to));
   const out = [];
+  const seen = new Set();
+  const byId = new Map(pills.map((p) => [p.id, p]));
   for (let d = first; d < to; d = addDays(d, 1)) {
     for (const pill of pills) {
-      if (!scheduledOn(pill, d)) continue;
+      if (!scheduledOn(pill, d, history)) continue;
       for (const time of pill.times) {
         const at = new Date(`${ymd(d)}T${time}`);
         if (at < from || at >= to) continue;
-        const takenAt = taken.get(`${pill.id}|${ymd(d)}|${time}`) || null;
-        out.push({ pillId: pill.id, name: pill.name, dose: pill.dose, color: pill.color, alexa: pill.alexa, date: ymd(d), time, at: at.toISOString(), takenAt });
+        const key = `${pill.id}|${ymd(d)}|${time}`;
+        seen.add(key);
+        out.push({ pillId: pill.id, name: pill.name, dose: pill.dose, color: pill.color, alexa: pill.alexa, date: ymd(d), time, at: at.toISOString(), takenAt: taken.get(key) || null });
       }
+    }
+  }
+  if (history) {
+    for (const [key, takenAt] of taken) {
+      if (seen.has(key)) continue;
+      const [pillId, date, time] = key.split('|');
+      const pill = byId.get(pillId);
+      const at = new Date(`${date}T${time}`);
+      if (!pill || at < from || at >= to) continue;
+      out.push({ pillId, name: pill.name, dose: pill.dose, color: pill.color, alexa: pill.alexa, date, time, at: at.toISOString(), takenAt });
     }
   }
   return out.sort((a, b) => a.at.localeCompare(b.at) || a.name.localeCompare(b.name));
@@ -142,15 +167,30 @@ export function setDose(pillId, date, time, taken) {
   }
 }
 
-/** Last `days` days (today included): taken vs scheduled per pill, and the day-by-day grid. */
-export function pillHistory(days = 14) {
+const MAX_HISTORY_DAYS = 3660;
+
+/** First day with something to show: the earliest therapy start (or taken dose). */
+function historyStart() {
+  const row = db.prepare('SELECT MIN(d) AS d FROM (SELECT MIN(start_date) AS d FROM pills UNION ALL SELECT MIN(date) FROM pill_doses)').get();
+  return row?.d && isYmd(row.d) ? row.d : ymd(new Date());
+}
+
+/**
+ * History from `days` days ago (today included) or, with `all`, since the first therapy started.
+ * Per pill: doses due vs taken, percentage, current streak of complete days, and the day-by-day map.
+ */
+export function pillHistory({ days = 14, all = false } = {}) {
   const today = startOfDay(new Date());
-  const from = addDays(today, -(days - 1));
+  let from = all ? parseYmd(historyStart()) : addDays(today, -(days - 1));
+  if (from > today) from = today;
+  const oldest = addDays(today, -(MAX_HISTORY_DAYS - 1));
+  if (from < oldest) from = oldest;
   const now = Date.now();
-  const doses = dosesBetween(from, addDays(today, 1)).filter((d) => Date.parse(d.at) <= now || d.takenAt);
+  // future doses of today aren't "missed" yet (unless already taken)
+  const doses = dosesBetween(from, addDays(today, 1), { history: true }).filter((d) => Date.parse(d.at) <= now || d.takenAt);
   const byPill = new Map();
   for (const d of doses) {
-    const s = byPill.get(d.pillId) || { pillId: d.pillId, name: d.name, color: d.color, scheduled: 0, taken: 0, days: {} };
+    const s = byPill.get(d.pillId) || { pillId: d.pillId, name: d.name, color: d.color, scheduled: 0, taken: 0, firstDate: d.date, days: {} };
     s.scheduled += 1;
     if (d.takenAt) s.taken += 1;
     const day = (s.days[d.date] ||= { scheduled: 0, taken: 0 });
@@ -158,5 +198,29 @@ export function pillHistory(days = 14) {
     if (d.takenAt) day.taken += 1;
     byPill.set(d.pillId, s);
   }
+  for (const s of byPill.values()) {
+    // streak: consecutive complete days going back from today (today counts only once complete)
+    let streak = 0;
+    const dates = Object.keys(s.days).sort().reverse();
+    for (const date of dates) {
+      const day = s.days[date];
+      if (day.taken >= day.scheduled) streak += 1;
+      else if (date === ymd(today)) continue;
+      else break;
+    }
+    s.streak = streak;
+    s.percent = s.scheduled ? Math.round((s.taken / s.scheduled) * 100) : 0;
+  }
   return { from: ymd(from), to: ymd(today), pills: [...byPill.values()] };
+}
+
+/** Day-by-day register of one month (YYYY-MM): every dose with when it was taken. */
+export function pillLog(month) {
+  if (!/^\d{4}-\d{2}$/.test(String(month))) throw httpError(400, 'Mese non valido (YYYY-MM)');
+  const [y, m] = month.split('-').map(Number);
+  const from = new Date(y, m - 1, 1);
+  const end = new Date(y, m, 1);
+  const today = addDays(startOfDay(new Date()), 1);
+  const now = Date.now();
+  return dosesBetween(from, end < today ? end : today, { history: true }).filter((d) => Date.parse(d.at) <= now || d.takenAt);
 }

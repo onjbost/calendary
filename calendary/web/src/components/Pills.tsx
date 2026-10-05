@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { addDays } from 'date-fns';
 import { api, type Dose, type Pill, type PillDraft, type PillHistory } from '../api';
 import { fmt, hm, parseYmd, ymd } from '../dates';
@@ -195,21 +195,36 @@ function PillModal({ pill, onClose }: { pill?: Pill; onClose: () => void }) {
 
 // ------------------------------------------------------------------- page
 
-function useHistory(days: number) {
+type Period = 14 | 30 | 90 | 365 | 'all';
+const PERIODS: { id: Period; label: string }[] = [
+  { id: 14, label: '14 giorni' }, { id: 30, label: '30 giorni' }, { id: 90, label: '3 mesi' }, { id: 365, label: '1 anno' }, { id: 'all', label: 'Tutto' },
+];
+
+function useHistory(period: Period) {
   const [h, setH] = useState<PillHistory | null>(null);
   useEffect(() => {
-    const load = () => api.pillHistory(days).then(setH).catch(() => {});
+    const load = () => api.pillHistory(period).then(setH).catch(() => {});
     load();
     return onChanged('pills', load);
-  }, [days]);
+  }, [period]);
   return h;
+}
+
+const pctClass = (pct: number) => (pct >= 90 ? 'neon-lime' : pct >= 60 ? 'neon-amber' : 'neon-red');
+const cellClass = (s?: { scheduled: number; taken: number }) => (!s ? 'none' : s.taken >= s.scheduled ? 'full' : s.taken ? 'part' : 'miss');
+
+function daysFrom(fromYmd: string, toYmd: string) {
+  const out: Date[] = [];
+  for (let d = parseYmd(fromYmd); ymd(d) <= toYmd; d = addDays(d, 1)) out.push(d);
+  return out;
 }
 
 export function PillsPage() {
   const { data: pills } = usePills();
   const [editing, setEditing] = useState<Pill | 'new' | null>(null);
-  const history = useHistory(14);
-  const days = history ? Array.from({ length: 14 }, (_, i) => addDays(parseYmd(history.from), i)) : [];
+  const [period, setPeriod] = useState<Period>('all');
+  const history = useHistory(period);
+  const days = history ? daysFrom(history.from, history.to) : [];
 
   return (
     <div>
@@ -237,36 +252,149 @@ export function PillsPage() {
             ))}
           </div>
         </section>
-        {history && history.pills.length > 0 && (
-          <section className="glass pad span-12">
-            <div className="card-title"><h2>Ultimi 14 giorni</h2></div>
-            <div className="pill-history">
-              <div />
-              {days.map((d) => <div key={ymd(d)} className="faint tiny mono ph-day">{fmt(d, 'EEEEE d')}</div>)}
-              <div className="faint tiny">%</div>
-              {history.pills.map((p) => (
-                <PillHistoryRow key={p.pillId} p={p} days={days} />
-              ))}
+
+        <section className="glass pad span-12">
+          <div className="card-title">
+            <h2>Storico</h2>
+            <div className="seg">
+              {PERIODS.map((x) => <button key={String(x.id)} className={period === x.id ? 'on' : ''} onClick={() => setPeriod(x.id)}>{x.label}</button>)}
             </div>
-          </section>
-        )}
+          </div>
+          {!history || !history.pills.length ? (
+            <div className="empty">Ancora nessuna dose da mostrare.</div>
+          ) : (
+            <div className="stack">
+              <div className="faint small">
+                {period === 'all' ? `Dal ${fmt(parseYmd(history.from), 'd MMMM yyyy')}, inizio della prima terapia` : `Dal ${fmt(parseYmd(history.from), 'd MMMM yyyy')}`} a oggi
+              </div>
+              <div className="ph-summary">
+                {history.pills.map((p) => (
+                  <div key={p.pillId} className="ph-card">
+                    <div className="row" style={{ gap: 8 }}><span className="dot" style={{ color: p.color }} /><b>{p.name}</b></div>
+                    <div className={`ph-pct mono ${pctClass(p.percent)}`}>{p.percent}%</div>
+                    <div className="muted small">{p.taken} prese su {p.scheduled}{p.scheduled - p.taken ? ` · ${p.scheduled - p.taken} saltate` : ''}</div>
+                    <div className="faint small">{p.streak ? `🔥 ${p.streak} ${p.streak === 1 ? 'giorno' : 'giorni'} di fila` : 'Serie interrotta'} · dal {fmt(parseYmd(p.firstDate), 'd MMM yyyy')}</div>
+                  </div>
+                ))}
+              </div>
+              {days.length <= 31 ? <DayGrid history={history} days={days} /> : <Heatmap history={history} days={days} />}
+              <div className="row faint tiny">
+                <span className="ph-cell full legend" /> tutte prese <span className="ph-cell part legend" /> in parte <span className="ph-cell miss legend" /> saltate <span className="ph-cell none legend" /> nessuna dose
+              </div>
+            </div>
+          )}
+        </section>
+
+        <PillLog />
       </div>
       {editing && <PillModal pill={editing === 'new' ? undefined : editing} onClose={() => setEditing(null)} />}
     </div>
   );
 }
 
-function PillHistoryRow({ p, days }: { p: PillHistory['pills'][number]; days: Date[] }) {
-  const pct = p.scheduled ? Math.round((p.taken / p.scheduled) * 100) : 0;
+/** Up to a month: one column per day, with the dates on top. */
+function DayGrid({ history, days }: { history: PillHistory; days: Date[] }) {
   return (
-    <>
-      <div className="ph-name"><span className="dot" style={{ color: p.color }} /> {p.name}</div>
-      {days.map((d) => {
-        const s = p.days[ymd(d)];
-        const cls = !s ? 'none' : s.taken >= s.scheduled ? 'full' : s.taken ? 'part' : 'miss';
-        return <div key={ymd(d)} className={`ph-cell ${cls}`} title={s ? `${s.taken}/${s.scheduled}` : 'nessuna dose'} />;
-      })}
-      <div className={`mono small ${pct >= 90 ? 'neon-lime' : pct >= 60 ? 'neon-amber' : 'neon-red'}`}>{pct}%</div>
-    </>
+    <div className="pill-history" style={{ gridTemplateColumns: `minmax(120px, 200px) repeat(${days.length}, minmax(18px, 1fr)) 44px` }}>
+      <div />
+      {days.map((d) => <div key={ymd(d)} className="faint tiny mono ph-day">{fmt(d, 'EEEEE d')}</div>)}
+      <div className="faint tiny">%</div>
+      {history.pills.map((p) => (
+        <Fragment key={p.pillId}>
+          <div className="ph-name"><span className="dot" style={{ color: p.color }} /> {p.name}</div>
+          {days.map((d) => {
+            const s = p.days[ymd(d)];
+            return <div key={ymd(d)} className={`ph-cell ${cellClass(s)}`} title={`${fmt(d, 'd MMM')}: ${s ? `${s.taken}/${s.scheduled}` : 'nessuna dose'}`} />;
+          })}
+          <div className={`mono small ${pctClass(p.percent)}`}>{p.percent}%</div>
+        </Fragment>
+      ))}
+    </div>
+  );
+}
+
+/** Longer periods: one heatmap per pill, a column per week (Monday on top), month names above. */
+function Heatmap({ history, days }: { history: PillHistory; days: Date[] }) {
+  const pad = (days[0].getDay() + 6) % 7; // empty cells before the first day so rows are weekdays
+  const cells: (Date | null)[] = [...Array(pad).fill(null), ...days];
+  const weeks = Math.ceil(cells.length / 7);
+  const months = Array.from({ length: weeks }, (_, w) => {
+    // label the week where a month starts (and the very first column)
+    const week = cells.slice(w * 7, w * 7 + 7).filter((d): d is Date => !!d);
+    const start = week.find((d) => d.getDate() === 1) || (w === 0 ? week[0] : undefined);
+    return start ? fmt(start, start.getMonth() === 0 ? 'MMM yy' : 'MMM') : '';
+  });
+  return (
+    <div className="stack" style={{ gap: 16 }}>
+      {history.pills.map((p) => (
+        <div key={p.pillId} className="heat-wrap">
+          <div className="ph-name" style={{ marginBottom: 6 }}><span className="dot" style={{ color: p.color }} /> {p.name}
+            <span className={`mono small ${pctClass(p.percent)}`} style={{ marginLeft: 8 }}>{p.percent}%</span></div>
+          <div className="heat" style={{ gridTemplateColumns: `repeat(${weeks}, 12px)` }}>
+            {months.map((m, i) => <div key={`m${i}`} className="heat-month faint tiny" style={{ gridColumn: i + 1, gridRow: 1 }}>{m}</div>)}
+            {cells.map((d, i) => d && (
+              <div key={ymd(d)} className={`ph-cell heat-cell ${cellClass(p.days[ymd(d)])}`}
+                style={{ gridColumn: Math.floor(i / 7) + 1, gridRow: (i % 7) + 2 }}
+                title={`${fmt(d, 'EEE d MMM yyyy')}: ${p.days[ymd(d)] ? `${p.days[ymd(d)].taken}/${p.days[ymd(d)].scheduled}` : 'nessuna dose'}`} />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Month-by-month register: every dose of every day, taken (with the time) or skipped. */
+function PillLog() {
+  const [month, setMonth] = useState(() => ymd(new Date()).slice(0, 7));
+  const [doses, setDoses] = useState<Dose[] | null>(null);
+  useEffect(() => {
+    const load = () => api.pillLog(month).then(setDoses).catch(() => setDoses([]));
+    load();
+    return onChanged('pills', load);
+  }, [month]);
+  const shift = (n: number) => {
+    const [y, m] = month.split('-').map(Number);
+    setMonth(ymd(new Date(y, m - 1 + n, 1)).slice(0, 7));
+  };
+  const today = ymd(new Date());
+  const thisMonth = today.slice(0, 7);
+  const byDay = new Map<string, Dose[]>();
+  for (const d of doses || []) byDay.set(d.date, [...(byDay.get(d.date) || []), d]);
+  const dayList = [...byDay.keys()].sort().reverse();
+  const taken = (doses || []).filter((d) => d.takenAt).length;
+
+  return (
+    <section className="glass pad span-12">
+      <div className="card-title">
+        <h2>Registro</h2>
+        <div className="row" style={{ gap: 6 }}>
+          <button className="btn icon" onClick={() => shift(-1)} aria-label="Mese precedente">‹</button>
+          <span className="mono" style={{ minWidth: 130, textAlign: 'center' }}>{fmt(parseYmd(`${month}-01`), 'MMMM yyyy')}</span>
+          <button className="btn icon" onClick={() => shift(1)} disabled={month >= thisMonth} aria-label="Mese successivo">›</button>
+        </div>
+      </div>
+      {!doses ? <div className="empty">Caricamento…</div> : !doses.length ? <div className="empty">Nessuna dose in questo mese.</div> : (
+        <div className="stack" style={{ gap: 10 }}>
+          <div className="muted small">{taken} prese su {doses.length} nel mese</div>
+          {dayList.map((day) => (
+            <div key={day} className="log-day">
+              <div className="log-date mono small">{fmt(parseYmd(day), 'EEE d')}</div>
+              <div className="row" style={{ gap: 8 }}>
+                {byDay.get(day)!.map((d) => {
+                  const pending = !d.takenAt && d.date === today; // today's doses can still be taken
+                  return (
+                    <span key={`${d.pillId}|${d.time}`} className={`chip log-dose ${d.takenAt ? 'ok' : pending ? 'wait' : 'miss'}`}
+                      title={d.takenAt ? `Presa alle ${hm(d.takenAt)}` : pending ? 'Ancora da prendere' : 'Saltata'}>
+                      <span className="dot" style={{ color: d.color }} /> {d.time} {d.name} {d.takenAt ? `✓ ${hm(d.takenAt)}` : pending ? '…' : '✗'}
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }

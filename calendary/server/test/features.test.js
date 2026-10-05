@@ -58,7 +58,7 @@ describe('pills', () => {
     pills.setDose(p.id, today, '08:00', true);
     assert.ok(pills.dosesOn(today)[0].takenAt);
     pills.setDose(p.id, today, '08:00', true); // idempotent
-    const h = pills.pillHistory(7).pills.find((x) => x.pillId === p.id);
+    const h = pills.pillHistory({ days: 7 }).pills.find((x) => x.pillId === p.id);
     assert.ok(h.taken >= 1);
     assert.ok(h.scheduled >= h.taken);
     pills.setDose(p.id, today, '08:00', false);
@@ -88,6 +88,44 @@ describe('pills', () => {
     pills.setDose(p.id, ymd(at), hhmm(at), false);
     pills.updatePill(p.id, { alexa: false });
     assert.equal(desiredReminders().filter((r) => r.key.startsWith(`pill:${p.id}|`)).length, 0);
+  });
+});
+
+describe('pill history', () => {
+  test('all-time history since the therapy started, with streak and monthly log', () => {
+    const day = (n) => ymd(new Date(Date.now() - n * 86400e3));
+    const p = pills.createPill({ name: 'Ferro', times: ['00:01'], startDate: day(60) });
+    // taken every day except 40 days ago
+    for (let n = 60; n >= 1; n -= 1) if (n !== 40) pills.setDose(p.id, day(n), '00:01', true);
+    const all = pills.pillHistory({ all: true });
+    assert.ok(all.from <= day(60));
+    const h = all.pills.find((x) => x.pillId === p.id);
+    assert.equal(h.firstDate, day(60));
+    assert.ok(h.scheduled >= 61); // 60 past days + today (00:01 already passed)
+    assert.ok(h.taken === 59);
+    assert.equal(h.streak, 39 + (h.days[day(0)]?.taken ? 1 : 0)); // days 39..1 (today is not complete yet)
+    assert.equal(pills.pillHistory({ days: 14 }).pills.find((x) => x.pillId === p.id).scheduled, 14);
+
+    const month = day(40).slice(0, 7);
+    const log = pills.pillLog(month).filter((d) => d.pillId === p.id);
+    assert.ok(log.some((d) => d.date === day(40) && !d.takenAt));
+    assert.ok(log.every((d) => d.date.startsWith(month)));
+    assert.throws(() => pills.pillLog('2026-13-01'), /Mese/);
+  });
+
+  test('a paused or edited therapy keeps its past', () => {
+    const day = (n) => ymd(new Date(Date.now() - n * 86400e3));
+    const p = pills.createPill({ name: 'Magnesio', times: ['00:02'], startDate: day(5) });
+    pills.setDose(p.id, day(3), '00:02', true);
+    pills.updatePill(p.id, { times: ['00:03'] }); // the old 00:02 dose is still in the history
+    assert.ok(pills.pillLog(day(3).slice(0, 7)).some((d) => d.pillId === p.id && d.time === '00:02' && d.takenAt));
+    pills.updatePill(p.id, { active: false });
+    assert.equal(pills.getPill(p.id).pausedAt, ymd(new Date()));
+    const h = pills.pillHistory({ all: true }).pills.find((x) => x.pillId === p.id);
+    assert.ok(h, 'paused therapies stay in the history');
+    assert.equal(h.days[ymd(new Date())], undefined); // nothing due from the pause on
+    pills.updatePill(p.id, { active: true });
+    assert.equal(pills.getPill(p.id).pausedAt, null);
   });
 });
 

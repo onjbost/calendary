@@ -12,7 +12,7 @@ Si modifica da **PC via web**, mentre il **tablet** fa da bacheca sempre accesa.
 - **Assistente virtuale** con AI gratuita o quasi: pianifica lo studio, aggiunge impegni e riempie la matrice. **Ogni modifica va approvata.**
 - **Pianificatore di studio** (funziona anche senza AI): *“corso di 15 ore in 5 moduli da 3 ore entro il 31/10”* → sessioni distribuite negli slot liberi, evitando gli impegni già presenti.
 - **Note**: una bacheca di sticky note per le cose da ricordare senza data, anche nella vista tablet (scheda *Note*).
-- **Pillole**: terapie con orari e giorni, notifica e sveglia su Alexa a ogni dose, pulsante **Presa ✓** in dashboard e storico degli ultimi 14 giorni.
+- **Pillole**: terapie con orari e giorni, notifica e sveglia su Alexa a ogni dose, pulsante **Presa ✓** in dashboard, storico completo dall'inizio della terapia (percentuale, serie di giorni, mappa per settimane) e registro mese per mese.
 - **Temi**: *Neon* (predefinito) e *Minimal* nero e arancione, scelti per dispositivo in Impostazioni → Aspetto.
 - **Alexa**: aggiungi promemoria, impegni e attività a voce con la skill *AiCal*, chiedi cosa hai in programma, e senti sugli Echo i promemoria e gli annunci che arrivano da Calendary.
 - **Vista tablet (kiosk)**: orologio, prossimo impegno con conto alla rovescia, agenda del giorno, prossimi giorni, matrice e tips a rotazione. Si aggiorna in tempo reale quando modifichi dal PC.

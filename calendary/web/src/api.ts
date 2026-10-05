@@ -232,7 +232,10 @@ export interface Dose {
 export interface PillHistory {
   from: string;
   to: string;
-  pills: { pillId: string; name: string; color: string; scheduled: number; taken: number; days: Record<string, { scheduled: number; taken: number }> }[];
+  pills: {
+    pillId: string; name: string; color: string; scheduled: number; taken: number; percent: number; streak: number; firstDate: string;
+    days: Record<string, { scheduled: number; taken: number }>;
+  }[];
 }
 
 export class ApiError extends Error {
@@ -364,7 +367,8 @@ export const api = {
   deletePill: (id: string) => del(`/pills/${id}`),
   doses: (date: string) => get<Dose[]>(`/pills/doses?date=${date}`),
   setDose: (pillId: string, date: string, time: string, taken: boolean) => post(`/pills/${pillId}/dose`, { date, time, taken }),
-  pillHistory: (days = 14) => get<PillHistory>(`/pills/history?days=${days}`),
+  pillHistory: (days: number | 'all' = 14) => get<PillHistory>(days === 'all' ? '/pills/history?all=1' : `/pills/history?days=${days}`),
+  pillLog: (month: string) => get<Dose[]>(`/pills/log?month=${month}`),
 
   pushStatus: () => get<{ publicKey: string; subscriptions: number }>('/push/status'),
   pushSubscribe: (sub: PushSubscriptionJSON) => post('/push/subscribe', sub),

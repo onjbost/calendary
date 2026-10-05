@@ -242,7 +242,11 @@ export async function registerRoutes(app) {
     return { ok: true };
   });
 
-  app.get('/pills/history', async (req) => pills.pillHistory(Math.min(90, Math.max(1, Number(req.query.days) || 14))));
+  app.get('/pills/history', async (req) => (req.query.all
+    ? pills.pillHistory({ all: true })
+    : pills.pillHistory({ days: Math.min(3660, Math.max(1, Number(req.query.days) || 14)) })));
+
+  app.get('/pills/log', async (req) => pills.pillLog(req.query.month));
 
   // -------------------------------------------------------------- alexa
   app.get('/alexa/status', async () => {
