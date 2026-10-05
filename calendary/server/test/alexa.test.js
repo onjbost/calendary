@@ -317,3 +317,16 @@ describe('reminders on Alexa', () => {
     }
   });
 });
+
+describe('test reminder', () => {
+  test('the test button plans a one-off reminder a couple of minutes ahead', async () => {
+    const { scheduleTestReminder, desiredReminders: plan } = await import('../src/alexa-reminders.js');
+    const r = await scheduleTestReminder(); // no Skill Messaging credentials here: it reports why it can't push
+    assert.equal(r.ok, false);
+    const t = plan().find((x) => x.key.startsWith('test|'));
+    assert.ok(t);
+    assert.match(t.text, /Prova di Calendary/);
+    assert.ok(t.fireAt - Date.now() > 120e3 && t.fireAt - Date.now() < 160e3);
+    assert.equal(Date.parse(r.fireAt), t.fireAt);
+  });
+});

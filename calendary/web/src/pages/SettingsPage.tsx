@@ -433,6 +433,24 @@ function AlexaSettings() {
             ⏰ Sincronizza promemoria
           </button>
         )}
+        {st.remindersMode !== 'off' && (
+          <button className="btn pink" disabled={busy || !st.linked} title="Crea un promemoria di prova che suona sugli Echo tra circa 2 minuti e mezzo"
+            onClick={async () => {
+              setBusy(true);
+              try {
+                const r = await api.alexaTestReminder();
+                if (r.ok === false) toast(r.error || 'Prova non riuscita', 'error');
+                else toast(`🔔 Promemoria di prova programmato: l'Echo suonerà alle ${r.fireAt ? fmt(r.fireAt, 'HH:mm') : 'tra poco'}`);
+              } catch (e) {
+                toast((e as Error).message, 'error');
+              } finally {
+                await refresh();
+                setBusy(false);
+              }
+            }}>
+            🔔 Prova notifica Alexa
+          </button>
+        )}
         <button className="btn" disabled={busy || !st.announce.enabled} onClick={() => run(api.alexaAnnounceTest, 'Annuncio inviato: dovresti sentirlo sull’Echo')}>📣 Prova annuncio</button>
       </div>
       <details className="help">

@@ -101,6 +101,9 @@ export function desiredReminders(now = Date.now()) {
     const text = pillText(d);
     list.push({ key: `pill:${d.pillId}|${d.date}|${d.time}|${shortHash(text)}`, fireAt: Date.parse(d.at), text });
   }
+  // "Prova promemoria" button: a one-off reminder a couple of minutes from now.
+  const test = testReminder();
+  if (test && test.fireAt >= now + MIN_LEAD_MS) list.push(test);
   return list.sort((a, b) => a.fireAt - b.fireAt).slice(0, MAX_REMINDERS);
 }
 
@@ -223,6 +226,28 @@ export const canSyncOutOfSession = () => !!(config.alexa.clientId && config.alex
  * Asks Alexa to call us back (Messaging.MessageReceived) when the plan changed.
  * Returns what happened, for the "Sincronizza ora" button.
  */
+const TEST_LEAD_MS = 150e3;
+
+function testReminder() {
+  try {
+    const t = JSON.parse(getSetting('alexa_test_reminder') || 'null');
+    return t && Number.isFinite(t.fireAt) ? { key: `test|${t.fireAt}`, fireAt: t.fireAt, text: t.text } : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Test button: schedules a reminder ~2.5 minutes from now and asks Alexa to sync (the reminder needs
+ * Alexa's callback to be created). Returns when it will ring.
+ */
+export async function scheduleTestReminder() {
+  const fireAt = Date.now() + TEST_LEAD_MS;
+  setSetting('alexa_test_reminder', JSON.stringify({ fireAt, text: 'Prova di Calendary: le notifiche su Alexa funzionano!' }));
+  const r = await requestSync({ force: true });
+  return { ...r, fireAt: new Date(fireAt).toISOString() };
+}
+
 export async function requestSync({ force = false } = {}) {
   if (config.alexa.reminders === 'off') return { ok: true, skipped: 'promemoria Alexa disattivati' };
   const userId = getSetting('alexa_user_id');

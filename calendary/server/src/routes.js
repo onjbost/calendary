@@ -1,5 +1,5 @@
 import { getAllEvents } from './agenda.js';
-import { canSyncOutOfSession, planDiff, requestSync, syncStatus } from './alexa-reminders.js';
+import { canSyncOutOfSession, planDiff, requestSync, scheduleTestReminder, syncStatus } from './alexa-reminders.js';
 import { announce, announceStatus } from './announce.js';
 import { config } from './config.js';
 import { getSetting } from './db.js';
@@ -290,6 +290,8 @@ export async function registerRoutes(app) {
   });
 
   app.post('/alexa/sync', async () => requestSync({ force: true }));
+
+  app.post('/alexa/test-reminder', async () => scheduleTestReminder());
 
   app.post('/alexa/announce-test', async () => announce('Ciao, sono AiCal. Da ora ti avviso qui degli impegni importanti.', { strict: true }));
 

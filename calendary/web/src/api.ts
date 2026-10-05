@@ -401,6 +401,7 @@ export const api = {
   pushSubscribe: (sub: PushSubscriptionJSON) => post('/push/subscribe', sub),
   pushUnsubscribe: (endpoint: string) => post('/push/unsubscribe', { endpoint }),
   alexaStatus: () => get<AlexaStatus>('/alexa/status'),
+  alexaTestReminder: () => post<{ ok: boolean; error?: string; fireAt?: string }>('/alexa/test-reminder'),
   alexaSync: () => post<{ ok: boolean; error?: string; pending?: number; skipped?: string }>('/alexa/sync'),
   alexaAnnounceTest: () => post<{ sent: number }>('/alexa/announce-test'),
   pushTest: () => post<{ sent: number; failed: number; errors: { service: string; status: number | null; message: string }[] }>('/push/test'),
