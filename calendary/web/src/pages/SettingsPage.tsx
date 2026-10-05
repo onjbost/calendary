@@ -421,7 +421,14 @@ function AlexaSettings() {
       </div>
       <div className="faint small">Promemoria su Alexa: {modeLabel}.{st.lastSync ? ` Ultima sincronizzazione ${fmt(st.lastSync, 'HH:mm')}.` : ''}</div>
       {st.lastError && <div className="alert error small">Ultimo errore: {st.lastError}</div>}
-      {st.remindersMode !== 'off' && st.linked && !st.outOfSession && (
+      {st.sessionOnly && st.remindersMode !== 'off' && (
+        <div className="alert small">
+          Amazon permette di creare i promemoria <b>solo mentre parli con AiCal</b>. Calendary programma quelli dei prossimi 3 giorni
+          ogni volta che usi la skill: basta dire <i>“Alexa, chiedi ad AiCal di aggiornare i promemoria”</i> (anche una volta al giorno).
+          Per avvisi del tutto automatici, senza dire nulla, usa gli <b>annunci</b> di Home Assistant (<code>alexa_announce_service</code>).
+        </div>
+      )}
+      {st.remindersMode !== 'off' && st.linked && !st.outOfSession && !st.sessionOnly && (
         <div className="alert small">
           Senza <code>alexa_client_id</code> e <code>alexa_client_secret</code> i promemoria arrivano su Alexa solo quando parli con la skill.
           Aggiungili per sincronizzarli in automatico ogni volta che modifichi il calendario.
@@ -429,7 +436,8 @@ function AlexaSettings() {
       )}
       <div className="row">
         {st.remindersMode !== 'off' && (
-          <button className="btn primary" disabled={busy || !st.linked} onClick={() => run(api.alexaSync, 'Richiesta inviata ad Alexa: i promemoria si aggiornano entro pochi secondi')}>
+          <button className="btn primary" disabled={busy || !st.linked || st.sessionOnly} title={st.sessionOnly ? 'Di\' "Alexa, chiedi ad AiCal di aggiornare i promemoria"' : undefined}
+            onClick={() => run(api.alexaSync, 'Richiesta inviata ad Alexa: i promemoria si aggiornano entro pochi secondi')}>
             ⏰ Sincronizza promemoria
           </button>
         )}
@@ -440,6 +448,7 @@ function AlexaSettings() {
               try {
                 const r = await api.alexaTestReminder();
                 if (r.ok === false) toast(r.error || 'Prova non riuscita', 'error');
+                else if (r.sessionOnly) toast(`🔔 Ora di' all'Echo: "Alexa, chiedi ad AiCal di aggiornare i promemoria". Suonerà alle ${r.fireAt ? fmt(r.fireAt, 'HH:mm') : 'tra poco'}`);
                 else toast(`🔔 Promemoria di prova programmato: l'Echo suonerà alle ${r.fireAt ? fmt(r.fireAt, 'HH:mm') : 'tra poco'}`);
               } catch (e) {
                 toast((e as Error).message, 'error');

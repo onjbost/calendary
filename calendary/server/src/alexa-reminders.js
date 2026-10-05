@@ -147,6 +147,12 @@ async function amazonRefusal(res) {
       detail = body;
     }
   } catch { /* no body */ }
+  if (/in session/i.test(String(detail))) {
+    // Amazon no longer lets the skill create reminders on its own: stop sending Skill Messages that can't work.
+    setSetting('alexa_session_only', '1');
+    return 'Amazon permette di creare i promemoria solo mentre parli con la skill: di\' "Alexa, chiedi ad AiCal di aggiornare i promemoria" '
+      + '(o usa qualsiasi comando di AiCal) e Calendary programma quelli dei prossimi 3 giorni. Per avvisi del tutto automatici usa gli annunci di Home Assistant.';
+  }
   return `Amazon ha rifiutato il promemoria (${res.status}${detail ? `: ${String(detail).slice(0, 160)}` : ''}). `
     + 'Se il permesso Promemoria è concesso nell\'app Alexa, prova da un Echo vero: il simulatore della console non gestisce i promemoria.';
 }
@@ -235,7 +241,8 @@ async function lwaToken() {
 }
 
 let lastMessageAt = 0;
-export const canSyncOutOfSession = () => !!(config.alexa.clientId && config.alexa.clientSecret);
+export const canSyncOutOfSession = () => !!(config.alexa.clientId && config.alexa.clientSecret) && getSetting('alexa_session_only') !== '1';
+export const sessionOnly = () => getSetting('alexa_session_only') === '1';
 
 /**
  * Asks Alexa to call us back (Messaging.MessageReceived) when the plan changed.
@@ -257,8 +264,10 @@ function testReminder() {
  * Alexa's callback to be created). Returns when it will ring.
  */
 export async function scheduleTestReminder() {
-  const fireAt = Date.now() + TEST_LEAD_MS;
+  // session-only: leave time to say "Alexa, chiedi ad AiCal di aggiornare i promemoria"
+  const fireAt = Date.now() + (sessionOnly() ? 4 * 60e3 : TEST_LEAD_MS);
   setSetting('alexa_test_reminder', JSON.stringify({ fireAt, text: 'Prova di Calendary: le notifiche su Alexa funzionano!' }));
+  if (sessionOnly()) return { ok: true, sessionOnly: true, fireAt: new Date(fireAt).toISOString() };
   const r = await requestSync({ force: true });
   return { ...r, fireAt: new Date(fireAt).toISOString() };
 }
@@ -268,7 +277,8 @@ export async function requestSync({ force = false } = {}) {
   const userId = getSetting('alexa_user_id');
   const endpoint = getSetting('alexa_api_endpoint');
   if (!userId || !endpoint) return { ok: false, error: 'apri almeno una volta la skill dicendo "Alexa, apri AiCal"' };
-  if (!canSyncOutOfSession()) return { ok: false, error: 'mancano alexa_client_id e alexa_client_secret' };
+  if (sessionOnly() && !force) return { ok: false, error: 'Amazon crea i promemoria solo mentre parli con AiCal' };
+  if (!config.alexa.clientId || !config.alexa.clientSecret) return { ok: false, error: 'mancano alexa_client_id e alexa_client_secret' };
   // Permission explicitly revoked (Alexa said so): retry now and then, Alexa tells us again once it is granted.
   if (!remindersAllowed() && !force && Date.now() - lastMessageAt < 3600e3) return { ok: false, error: 'permesso Promemoria non concesso nell\'app Alexa' };
   const { create, remove, expired } = planDiff();

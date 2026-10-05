@@ -97,7 +97,7 @@ const elicit = (slotName, question) => ({
 });
 
 const HELP = 'Puoi dirmi: ricordami di chiamare Marco domani alle 18; aggiungi dentista giovedì alle 15 e 30; '
-  + 'cosa ho domani; qual è il prossimo impegno; oppure aggiungi fare la spesa alla matrice. Cosa faccio?';
+  + 'cosa ho domani; qual è il prossimo impegno; aggiungi fare la spesa alla matrice; oppure aggiorna i promemoria. Cosa faccio?';
 
 // -------------------------------------------------------------- intents
 
@@ -234,9 +234,11 @@ export async function handleAlexa(body, now = new Date()) {
     reminderCard: needsPermission ? { card: permissionCard() } : {},
   };
 
+  // Amazon lets a skill create reminders only while the user is talking to it: every request is a chance to sync.
   if (request.type === 'LaunchRequest') {
     return {
       response: say(`Ciao, sono AiCal, il tuo Calendary. ${HELP}`, { end: false, reprompt: 'Cosa faccio?', ...(needsPermission ? { card: permissionCard() } : {}) }),
+      after: syncLater,
     };
   }
   if (request.type === 'IntentRequest') {
@@ -246,8 +248,15 @@ export async function handleAlexa(body, now = new Date()) {
       const required = intent.name === 'AddTaskIntent' ? ['task'] : ['what', 'time'];
       if (required.some((n) => !intent.slots?.[n]?.value)) return { response: delegate() };
     }
+    if (intent.name === 'SyncRemindersIntent') {
+      if (!token || !endpoint) return { response: say('Non riesco a parlare con i promemoria di Alexa in questo momento.') };
+      const r = await syncWithToken(token, endpoint);
+      if (!r.ok) return { response: say(`Non ci sono riuscito: ${r.error.split('.')[0]}.`) };
+      const n = r.created;
+      return { response: say(n ? `Fatto, ho programmato ${n === 1 ? 'un promemoria' : `${n} promemoria`} per i prossimi tre giorni.` : 'I promemoria dei prossimi tre giorni sono già aggiornati.') };
+    }
     const response = onIntent(intent, ctx);
-    return { response, after: ctx.syncNow ? syncLater : null };
+    return { response, after: syncLater };
   }
   return { response: ack() };
 }

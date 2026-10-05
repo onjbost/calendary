@@ -176,6 +176,11 @@ L'integrazione ha due direzioni, indipendenti tra loro:
 10. Di' *“Alexa, apri AiCal”* almeno una volta: da quel momento Calendary sa a chi mandare i promemoria.
     In **Impostazioni → Alexa** della webapp vedi lo stato, quanti promemoria sono programmati e il pulsante **Sincronizza promemoria**.
 
+> **Limite di Amazon:** i promemoria Alexa si possono creare **solo mentre parli con la skill**. Calendary programma quelli dei
+> prossimi 3 giorni ogni volta che usi AiCal: basta dire *“Alexa, chiedi ad AiCal di aggiornare i promemoria”* (anche una volta al giorno).
+> Per avvisi del tutto automatici usa gli **annunci** con Alexa Media Player (`alexa_announce_service`): Calendary annuncia
+> gli eventi con la spunta Alexa e le pillole che non sono già programmati come promemoria.
+
 Cosa suona sugli Echo si decide **dall'app**: nell'editor di un evento attiva *🔊 Riproduci notifica su Alexa* e scegli quanti minuti prima;
 le **pillole** con *Sveglia su Alexa* suonano all'orario di ogni dose finché non le segni come prese. Con `alexa_reminders: all` suonano anche
 tutti gli altri eventi con un promemoria, con `off` nulla. Calendary tiene programmati i promemoria dei prossimi 3 giorni e li aggiorna da solo

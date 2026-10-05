@@ -183,6 +183,8 @@ export interface AlexaStatus {
   permission: string | null;
   remindersMode: 'off' | 'important' | 'all';
   outOfSession: boolean;
+  /** Amazon only accepts reminders created while talking to the skill */
+  sessionOnly?: boolean;
   pending: number;
   scheduled: number;
   lastSync: string | null;
@@ -401,7 +403,7 @@ export const api = {
   pushSubscribe: (sub: PushSubscriptionJSON) => post('/push/subscribe', sub),
   pushUnsubscribe: (endpoint: string) => post('/push/unsubscribe', { endpoint }),
   alexaStatus: () => get<AlexaStatus>('/alexa/status'),
-  alexaTestReminder: () => post<{ ok: boolean; error?: string; fireAt?: string }>('/alexa/test-reminder'),
+  alexaTestReminder: () => post<{ ok: boolean; error?: string; fireAt?: string; sessionOnly?: boolean }>('/alexa/test-reminder'),
   alexaSync: () => post<{ ok: boolean; error?: string; pending?: number; skipped?: string }>('/alexa/sync'),
   alexaAnnounceTest: () => post<{ sent: number }>('/alexa/announce-test'),
   pushTest: () => post<{ sent: number; failed: number; errors: { service: string; status: number | null; message: string }[] }>('/push/test'),

@@ -1,5 +1,5 @@
 import { getAllEvents } from './agenda.js';
-import { canSyncOutOfSession, planDiff, requestSync, scheduleTestReminder, syncStatus } from './alexa-reminders.js';
+import { canSyncOutOfSession, planDiff, requestSync, scheduleTestReminder, sessionOnly, syncStatus } from './alexa-reminders.js';
 import { announce, announceStatus } from './announce.js';
 import { config } from './config.js';
 import { getSetting } from './db.js';
@@ -283,6 +283,7 @@ export async function registerRoutes(app) {
       permission: getSetting('alexa_permission'),
       remindersMode: config.alexa.reminders,
       outOfSession: canSyncOutOfSession(),
+      sessionOnly: sessionOnly(),
       pending: plan ? plan.create.length + plan.remove.length : 0,
       ...syncStatus(),
       announce: announceStatus(),

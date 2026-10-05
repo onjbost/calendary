@@ -198,6 +198,22 @@
             "devo {task}",
             "devo {task} {date}"
           ]
+        },
+        {
+          "name": "SyncRemindersIntent",
+          "slots": [],
+          "samples": [
+            "aggiorna i promemoria",
+            "sincronizza i promemoria",
+            "aggiorna le notifiche",
+            "sincronizza",
+            "aggiornati",
+            "di aggiornare i promemoria",
+            "di sincronizzare i promemoria",
+            "programma i promemoria",
+            "carica i promemoria",
+            "prepara le notifiche"
+          ]
         }
       ],
       "types": [
