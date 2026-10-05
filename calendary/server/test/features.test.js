@@ -213,3 +213,42 @@ describe('announcements through Home Assistant', () => {
     }
   });
 });
+
+describe('pill stock', () => {
+  test('daily use, days left, auto decrement and boxes', () => {
+    const p = pills.createPill({ name: 'Keppra', dose: '1,5 compresse', unitsPerDose: '1,5', times: ['09:00', '21:00'], boxSize: 60, stock: 30, lowDays: 7 });
+    assert.equal(p.unitsPerDose, 1.5);
+    let s = pills.stockInfo(p);
+    assert.equal(s.perDay, 3);
+    assert.equal(s.daysLeft, 10);
+    assert.equal(s.low, false);
+
+    const day = ymd(new Date(Date.now() - 86400e3));
+    pills.setDose(p.id, day, '09:00', true);
+    assert.equal(pills.getPill(p.id).stock, 28.5);
+    pills.setDose(p.id, day, '09:00', true, new Date(`${day}T09:30`).toISOString()); // only the time changes
+    assert.equal(pills.getPill(p.id).stock, 28.5);
+    pills.setDose(p.id, day, '09:00', false); // "non presa": back in the box
+    assert.equal(pills.getPill(p.id).stock, 30);
+
+    pills.updateStock(p.id, { stock: 20 });
+    s = pills.stockInfo(pills.getPill(p.id));
+    assert.equal(s.daysLeft, 6);
+    assert.equal(s.low, true);
+    pills.updateStock(p.id, { addBoxes: 1 });
+    assert.equal(pills.getPill(p.id).stock, 80);
+    assert.equal(pills.stockInfo(pills.getPill(p.id)).boxes, 1.33);
+
+    // a therapy that ends before the pills do is not "low"
+    pills.updatePill(p.id, { endDate: ymd(new Date(Date.now() + 2 * 86400e3)) });
+    pills.updateStock(p.id, { stock: 9 });
+    assert.equal(pills.stockInfo(pills.getPill(p.id)).low, false);
+
+    // untracked stock
+    const q = pills.createPill({ name: 'Senza scorta', times: ['08:00'] });
+    assert.equal(pills.stockInfo(q), null);
+    pills.setDose(q.id, day, '08:00', true);
+    assert.equal(pills.getPill(q.id).stock, null);
+    assert.throws(() => pills.updateStock(q.id, { addBoxes: 1 }), /scatola/);
+  });
+});

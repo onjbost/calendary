@@ -818,3 +818,7 @@ html.eco .nightstand .ns-inner { transition: none; }
 /* tablet dashboard: notes card */
 .note-mini { padding: 7px 10px; border-radius: 8px; border-left: 3px solid var(--note); background: color-mix(in srgb, var(--note) 8%, transparent); cursor: pointer; min-width: 0; }
 .note-mini .ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* pills: stock */
+.restock { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 12px; margin-bottom: 10px; border-radius: var(--radius-sm); border: 1px solid rgba(var(--pink-rgb), 0.45); background: rgba(var(--pink-rgb), 0.08); }
+.pill-stock-box { display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: var(--radius-sm); background: rgba(255, 255, 255, 0.03); border: 1px dashed rgba(255, 255, 255, 0.15); }

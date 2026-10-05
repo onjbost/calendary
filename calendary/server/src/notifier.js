@@ -3,7 +3,7 @@ import { config } from './config.js';
 import { effectiveReminder, getAllEvents } from './agenda.js';
 import { alexaMinutesFor, pillText } from './alexa-reminders.js';
 import { inMinutes } from './alexa-speech.js';
-import { dosesBetween } from './pills.js';
+import { dosesBetween, getPill, listPills, stockInfo } from './pills.js';
 import { announce } from './announce.js';
 import { sendToAll } from './push.js';
 import { fmtTime, nowIso, ymd } from './util.js';
@@ -93,6 +93,36 @@ async function checkPills() {
   }
 }
 
+const dayFmt = new Intl.DateTimeFormat('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
+
+/** Spoken reminder for pills about to run out: once a day, in the morning (summary time, or 08:00 if it's off). */
+async function checkStock() {
+  const now = new Date();
+  const [h, m] = /^\d{1,2}:\d{2}$/.test(config.morningSummary) ? config.morningSummary.split(':').map(Number) : [8, 0];
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  if (nowMin < h * 60 + m || nowMin > 12 * 60) return; // morning only: a missed morning waits for the next one
+  const today = ymd(now);
+  if (getSetting('last_stock_announce') === today) return;
+  const low = listPills().map((p) => ({ p, s: stockInfo(p, now) })).filter((x) => x.s?.low);
+  if (!low.length) return;
+  setSetting('last_stock_announce', today);
+  const list = low.map(({ p, s }) => (s.empty ? `${p.name} è finita` : `${p.name} basta per ${s.daysLeft === 1 ? 'un giorno' : `${s.daysLeft} giorni`}`));
+  await announce(`Promemoria pillole: ${list.join(', ')}. Ricordati di ricomprarle e di aggiornare il magazzino.`);
+}
+
+/** Push after a dose of a pill that is running out: how many days are left, reorder, update the stock. */
+export async function stockReminderAfterDose(pillId) {
+  const pill = getPill(pillId);
+  const s = pill && stockInfo(pill);
+  if (!s || !s.low) return;
+  await sendToAll({
+    title: s.empty ? `💊 ${pill.name}: compresse finite` : `💊 ${pill.name}: restano ${s.daysLeft === 1 ? '1 giorno' : `${s.daysLeft} giorni`}`,
+    body: `Ne hai ancora ${s.stock} (fino a ${dayFmt.format(new Date(`${s.runOut}T12:00`))}). Riordinala e, quando arriva, aggiorna il magazzino.`,
+    url: '/pillole',
+    tag: `stock|${pill.id}`,
+  });
+}
+
 async function checkMorningSummary() {
   const at = config.morningSummary;
   if (!/^\d{1,2}:\d{2}$/.test(at)) return;
@@ -119,6 +149,7 @@ async function checkMorningSummary() {
   if (events.length) lines.push(`${events.length} ${events.length === 1 ? 'evento' : 'eventi'} oggi${timed.length ? ': ' + timed.join(', ') : ''}`);
   if (urgent.length) lines.push(`🔥 ${urgent.length} urgenti e importanti: ${urgent.slice(0, 3).map((t) => t.title).join(', ')}`);
   if (doses.length) lines.push(`💊 Pillole: ${doses.map((d) => `${d.time} ${d.name}`).join(', ')}`);
+
   await sendToAll({ title: '☀️ Buongiorno! Ecco la tua giornata', body: lines.join('\n'), url: '/', tag: `summary-${today}` });
   announce(`Buongiorno! ${lines.join('. ')}`);
 }
@@ -129,6 +160,7 @@ async function tick() {
     await checkAnnouncements();
     await checkPills();
     await checkMorningSummary();
+    await checkStock(); // after the summary, so Alexa says it right after the good morning
   } catch (err) {
     console.error('Notifier:', err);
   }

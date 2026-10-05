@@ -32,8 +32,62 @@ function mapPill(r) {
     notes: r.notes || '',
     pausedAt: r.paused_at || null,
     createdAt: r.created_at,
+    unitsPerDose: r.units_per_dose ?? 1,
+    boxSize: r.box_size ?? null,
+    stock: r.stock ?? null,
+    lowDays: r.low_days ?? 7,
   };
 }
+
+// ------------------------------------------------------------------ stock
+
+const round2 = (n) => Math.round(n * 100) / 100;
+
+/** Pills used per day on average (a 3-days-a-week therapy uses 3/7 of a full day). */
+export function dailyUse(pill) {
+  if (!pill.active) return 0;
+  return (pill.unitsPerDose * pill.times.length * pill.days.length) / 7;
+}
+
+/** Stock forecast: pills left, use per day, days left, run-out date, whether to buy now. */
+export function stockInfo(pill, now = new Date()) {
+  if (pill.stock === null || pill.stock === undefined) return null;
+  const perDay = dailyUse(pill);
+  const daysLeft = perDay > 0 ? Math.floor(pill.stock / perDay) : null;
+  const runOut = daysLeft !== null ? ymd(addDays(startOfDay(now), daysLeft)) : null;
+  const ended = pill.endDate && runOut && runOut > pill.endDate; // the therapy ends before the pills do
+  return {
+    stock: round2(pill.stock),
+    perDay: round2(perDay),
+    daysLeft,
+    runOut,
+    boxes: pill.boxSize ? round2(pill.stock / pill.boxSize) : null,
+    low: !ended && daysLeft !== null && daysLeft <= pill.lowDays,
+    empty: pill.stock < pill.unitsPerDose,
+  };
+}
+
+/** Sets the pills left ("magazzino"), or adds `boxes` boxes of `boxSize`. */
+export function updateStock(id, { stock, addBoxes } = {}) {
+  const pill = getPill(id);
+  if (!pill) throw httpError(404, 'Pillola non trovata');
+  let next = pill.stock ?? 0;
+  if (stock !== undefined && stock !== null && stock !== '') {
+    next = Number(stock);
+    if (!Number.isFinite(next) || next < 0 || next > 100000) throw httpError(400, 'Quantità non valida');
+  }
+  if (addBoxes) {
+    if (!pill.boxSize) throw httpError(400, 'Imposta prima quante compresse contiene una scatola');
+    next += pill.boxSize * Number(addBoxes);
+  }
+  db.prepare('UPDATE pills SET stock = ?, updated_at = ? WHERE id = ?').run(round2(next), nowIso(), id);
+  return getPill(id);
+}
+
+const changeStock = (pill, delta) => {
+  if (pill.stock === null || pill.stock === undefined) return; // not tracked
+  db.prepare('UPDATE pills SET stock = MAX(0, stock + ?) WHERE id = ?').run(delta, pill.id);
+};
 
 export function getPill(id) {
   const row = db.prepare('SELECT * FROM pills WHERE id = ?').get(id);
@@ -67,16 +121,35 @@ function normalize(input, base = {}) {
     active: m.active === undefined ? 1 : (m.active ? 1 : 0),
     color: COLOR_RE.test(m.color || '') ? m.color : PALETTE[Math.floor(Math.random() * PALETTE.length)],
     notes: str(m.notes, 1000) || '',
+    unitsPerDose: positive(m.unitsPerDose, 1, 'Compresse per dose'),
+    boxSize: m.boxSize === null || m.boxSize === '' || m.boxSize === undefined ? null : positive(m.boxSize, null, 'Compresse per scatola'),
+    stock: m.stock === null || m.stock === '' || m.stock === undefined ? null : nonNegative(m.stock),
+    lowDays: Math.min(90, Math.max(1, Math.round(Number(m.lowDays) || 7))),
   };
+}
+
+function positive(v, fallback, label) {
+  if (v === undefined || v === null || v === '') return fallback;
+  const n = Number(String(v).replace(',', '.'));
+  if (!Number.isFinite(n) || n <= 0 || n > 10000) throw httpError(400, `${label}: valore non valido`);
+  return round2(n);
+}
+
+function nonNegative(v) {
+  const n = Number(String(v).replace(',', '.'));
+  if (!Number.isFinite(n) || n < 0 || n > 100000) throw httpError(400, 'Compresse rimaste: valore non valido');
+  return round2(n);
 }
 
 export function createPill(input = {}) {
   const p = normalize(input);
   const id = crypto.randomUUID();
   const now = nowIso();
-  db.prepare(`INSERT INTO pills (id, name, dose, times, days, start_date, end_date, alexa, active, color, notes, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
-    id, p.name, p.dose, JSON.stringify(p.times), JSON.stringify(p.days), p.startDate, p.endDate, p.alexa, p.active, p.color, p.notes, now, now,
+  db.prepare(`INSERT INTO pills (id, name, dose, times, days, start_date, end_date, alexa, active, color, notes,
+      units_per_dose, box_size, stock, low_days, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
+    id, p.name, p.dose, JSON.stringify(p.times), JSON.stringify(p.days), p.startDate, p.endDate, p.alexa, p.active, p.color, p.notes,
+    p.unitsPerDose, p.boxSize, p.stock, p.lowDays, now, now,
   );
   return getPill(id);
 }
@@ -88,9 +161,9 @@ export function updatePill(id, patch = {}) {
   // Pausing remembers the day (history stops there); resuming clears it.
   const pausedAt = p.active ? null : (cur.active ? ymd(new Date()) : cur.pausedAt);
   db.prepare(`UPDATE pills SET name = ?, dose = ?, times = ?, days = ?, start_date = ?, end_date = ?, alexa = ?, active = ?,
-      color = ?, notes = ?, paused_at = ?, updated_at = ? WHERE id = ?`).run(
+      color = ?, notes = ?, paused_at = ?, units_per_dose = ?, box_size = ?, stock = ?, low_days = ?, updated_at = ? WHERE id = ?`).run(
     p.name, p.dose, JSON.stringify(p.times), JSON.stringify(p.days), p.startDate, p.endDate, p.alexa, p.active, p.color, p.notes,
-    pausedAt, nowIso(), id,
+    pausedAt, p.unitsPerDose, p.boxSize, p.stock, p.lowDays, nowIso(), id,
   );
   return getPill(id);
 }
@@ -174,10 +247,13 @@ export function setDose(pillId, date, time, taken, takenAt = null) {
         throw httpError(400, 'L\'orario è troppo lontano dalla dose');
       }
     }
+    const wasTaken = !!db.prepare('SELECT 1 FROM pill_doses WHERE pill_id = ? AND date = ? AND time = ?').get(pillId, date, time);
     db.prepare(`INSERT INTO pill_doses (pill_id, date, time, taken_at) VALUES (?, ?, ?, ?)
       ON CONFLICT(pill_id, date, time) DO UPDATE SET taken_at = excluded.taken_at`).run(pillId, date, time, at.toISOString());
+    if (!wasTaken) changeStock(pill, -pill.unitsPerDose); // correcting the time doesn't take another pill
   } else {
-    db.prepare('DELETE FROM pill_doses WHERE pill_id = ? AND date = ? AND time = ?').run(pillId, date, time);
+    const removed = db.prepare('DELETE FROM pill_doses WHERE pill_id = ? AND date = ? AND time = ?').run(pillId, date, time).changes;
+    if (removed) changeStock(pill, pill.unitsPerDose); // "non presa": the pill goes back in the box
   }
 }
 

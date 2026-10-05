@@ -206,6 +206,11 @@ db.exec(`
 `);
 // 0.7.1: day a therapy was paused, so the history stops counting missed doses from then on.
 addColumn('pills', 'paused_at', 'paused_at TEXT');
+// 0.9.0: pill stock ("magazzino"): pills per dose, box size, pills left, warning threshold in days.
+addColumn('pills', 'units_per_dose', 'units_per_dose REAL NOT NULL DEFAULT 1');
+addColumn('pills', 'box_size', 'box_size REAL');
+addColumn('pills', 'stock', 'stock REAL');
+addColumn('pills', 'low_days', 'low_days INTEGER NOT NULL DEFAULT 7');
 
 // 0.8.0: notes grouped in folders (one per project), with a title.
 db.exec(`

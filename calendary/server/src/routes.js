@@ -8,6 +8,7 @@ import * as goals from './goals.js';
 import * as notes from './notes.js';
 import { mcpEnabled } from './mcp.js';
 import * as pills from './pills.js';
+import { stockReminderAfterDose } from './notifier.js';
 import * as travel from './travel.js';
 import { forgetCalendar, syncCalendar } from './ics.js';
 import { planStudy } from './planner.js';
@@ -236,7 +237,13 @@ export async function registerRoutes(app) {
   });
 
   // -------------------------------------------------------------- pills
-  app.get('/pills', async () => pills.listPills());
+  app.get('/pills', async () => pills.listPills().map((p) => ({ ...p, stockInfo: pills.stockInfo(p) })));
+
+  app.post('/pills/:id/stock', async (req) => {
+    const p = pills.updateStock(req.params.id, req.body || {});
+    broadcast('pills');
+    return { ...p, stockInfo: pills.stockInfo(p) };
+  });
 
   app.post('/pills', async (req) => {
     const p = pills.createPill(req.body || {});
@@ -262,6 +269,7 @@ export async function registerRoutes(app) {
     const { date, time, taken = true, takenAt = null } = req.body || {};
     pills.setDose(req.params.id, date, time, !!taken, takenAt);
     broadcast('pills');
+    if (taken) stockReminderAfterDose(req.params.id).catch((err) => req.log.error(err));
     return { ok: true };
   });
 

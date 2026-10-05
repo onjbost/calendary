@@ -29,6 +29,8 @@ export function PillsToday({ className = '', kiosk = false, managePage = false }
   const { data: pills } = usePills();
   const [editing, setEditing] = useState<Pill | null>(null);
   const [timing, setTiming] = useState<Dose | null>(null); // hooks before the early return below
+  const [restock, setRestock] = useState<Pill | null>(null);
+  const running = pills.filter((p) => p.active && p.stock !== null && p.stock < RESTOCK_BELOW);
 
   if (!doses.length) {
     if (kiosk) return null; // nothing scheduled: keep the tablet column for the rest
@@ -59,6 +61,15 @@ export function PillsToday({ className = '', kiosk = false, managePage = false }
         <span className="chip">{left ? `${left} da prendere` : 'tutte prese ✓'}</span>
         {!kiosk && !managePage && <Link to="/pillole" className="btn sm ghost">Gestisci →</Link>}
       </div>
+      {running.map((p) => (
+        <div key={p.id} className="restock">
+          <span className="grow small">
+            🛒 <b>{p.name}</b>: restano {num(p.stock)} compresse
+            {p.stockInfo?.daysLeft != null && <> · {p.stockInfo.daysLeft === 1 ? '1 giorno' : `${p.stockInfo.daysLeft} giorni`}</>}
+          </span>
+          <button className="btn sm pink" onClick={() => setRestock(p)}>📦 Aggiorna magazzino</button>
+        </div>
+      ))}
       <div className="stack" style={{ gap: 8 }}>
         {doses.map((d) => {
           const late = !d.takenAt && Date.parse(d.at) < now.getTime();
@@ -85,7 +96,110 @@ export function PillsToday({ className = '', kiosk = false, managePage = false }
         })}
       </div>
       {editing && <PillModal pill={editing} onClose={() => setEditing(null)} />}
+      {restock && <StockModal pill={restock} onClose={() => setRestock(null)} />}
       {timing && <DoseModal dose={timing} onClose={() => setTiming(null)} onSave={(taken, at) => { save(timing, taken, at); setTiming(null); }} />}
+    </section>
+  );
+}
+
+/** Italian decimals: 10,5 */
+const num = (n: number | null | undefined) => (n === null || n === undefined ? '' : String(n).replace('.', ','));
+
+/** Below this many pills the "Aggiorna magazzino" button shows up in the today card. */
+const RESTOCK_BELOW = 15;
+
+/** Pills left: add whole boxes or type the exact count. */
+export function StockModal({ pill, onClose }: { pill: Pill; onClose: () => void }) {
+  const { toast } = useUI();
+  const [value, setValue] = useState(pill.stock != null ? num(pill.stock) : '');
+  const [boxes, setBoxes] = useState(1);
+  const [error, setError] = useState<string | null>(null);
+  const s = pill.stockInfo;
+
+  const apply = async (body: { stock?: number; addBoxes?: number }, msg: string) => {
+    try {
+      await api.updateStock(pill.id, body);
+      notifyChanged('pills');
+      toast(msg);
+      onClose();
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  };
+  const setExact = () => {
+    const n = Number(value.replace(',', '.'));
+    if (value === '' || !Number.isFinite(n) || n < 0) return setError('Scrivi quante compresse hai');
+    apply({ stock: n }, `📦 ${pill.name}: magazzino aggiornato a ${num(n)} compresse`);
+  };
+
+  return (
+    <Modal title={`📦 Magazzino · ${pill.name}`} onClose={onClose} glow="pink"
+      footer={<>
+        <span className="spacer" />
+        <button className="btn" onClick={onClose}>Annulla</button>
+        <button className="btn primary" onClick={setExact}>Salva quantità</button>
+      </>}>
+      <div className="stack">
+        {error && <div className="alert error">{error}</div>}
+        {s && (
+          <div className="row small">
+            <span className="chip">Ora: {num(s.stock)} compresse</span>
+            <span className="chip">{num(s.perDay)} al giorno</span>
+            {s.daysLeft != null && <span className={`chip ${s.low ? 'neon-red' : ''}`}>{s.daysLeft} giorni · fino a {fmt(`${s.runOut}T12:00`, 'd MMM')}</span>}
+          </div>
+        )}
+        {pill.boxSize ? (
+          <div className="row">
+            <span className="muted">Ho comprato</span>
+            <select className="input" value={boxes} onChange={(e) => setBoxes(Number(e.target.value))} style={{ width: 'auto' }}>
+              {[1, 2, 3, 4, 5, 6].map((n) => <option key={n} value={n}>{n} {n === 1 ? 'scatola' : 'scatole'}</option>)}
+            </select>
+            <span className="muted small">da {pill.boxSize}</span>
+            <button className="btn pink" onClick={() => apply({ addBoxes: boxes }, `📦 ${pill.name}: +${boxes * (pill.boxSize || 0)} compresse`)}>＋ Aggiungi</button>
+          </div>
+        ) : (
+          <div className="faint small">Imposta “Compresse per scatola” nella terapia per aggiungere le scatole con un tocco.</div>
+        )}
+        <label className="field">Oppure scrivi quante compresse hai in tutto
+          <input className="input" inputMode="decimal" value={value} onChange={(e) => setValue(e.target.value)} style={{ fontSize: '1.3rem', maxWidth: 200 }} />
+        </label>
+      </div>
+    </Modal>
+  );
+}
+
+/** Stock overview of every tracked pill (Pillole page and tablet tab). */
+function StockSection({ pills }: { pills: Pill[] }) {
+  const [restock, setRestock] = useState<Pill | null>(null);
+  const tracked = pills.filter((p) => p.stock !== null);
+  return (
+    <section className="glass pad span-12">
+      <div className="card-title"><h2>📦 Magazzino</h2></div>
+      {!tracked.length ? (
+        <div className="empty">Nessuna scorta registrata. Nella terapia indica “Compresse che hai adesso” per tenere il conto e ricevere l'avviso prima che finiscano.</div>
+      ) : (
+        <div className="stack" style={{ gap: 8 }}>
+          {tracked.map((p) => {
+            const s = p.stockInfo;
+            return (
+              <div key={p.id} className={`dose ${s?.low ? 'late' : ''}`}>
+                <span className="dot" style={{ color: p.color }} />
+                <span className="grow">
+                  <b>{p.name}</b> <span className="muted small">· {num(p.stock)} compresse{s?.boxes != null ? ` (${num(s.boxes)} scatole)` : ''}</span>
+                  <div className="faint small">
+                    {s ? `${num(s.perDay)} al giorno` : ''}
+                    {s?.daysLeft != null ? ` · bastano ${s.daysLeft} giorni, fino a ${fmt(`${s.runOut}T12:00`, 'EEE d MMM')}` : ' · terapia in pausa'}
+                    {` · avviso ${p.lowDays} giorni prima`}
+                  </div>
+                </span>
+                {s?.low && <span className="chip neon-red">da ricomprare</span>}
+                <button className="btn sm" onClick={() => setRestock(p)}>📦 Aggiorna</button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+      {restock && <StockModal pill={restock} onClose={() => setRestock(null)} />}
     </section>
   );
 }
@@ -130,8 +244,10 @@ function DoseModal({ dose, onClose, onSave }: { dose: Dose; onClose: () => void;
 function PillModal({ pill, onClose }: { pill?: Pill; onClose: () => void }) {
   const { toast } = useUI();
   const [f, setF] = useState<PillDraft>(() => pill
-    ? { ...pill }
-    : { name: '', dose: '', times: ['08:00'], days: [0, 1, 2, 3, 4, 5, 6], startDate: ymd(new Date()), endDate: null, alexa: true, active: true, color: COLORS[0], notes: '' });
+    ? (({ stockInfo: _s, ...rest }) => rest)(pill)
+    : { name: '', dose: '', times: ['08:00'], days: [0, 1, 2, 3, 4, 5, 6], startDate: ymd(new Date()), endDate: null, alexa: true, active: true, color: COLORS[0], notes: '', unitsPerDose: 1, boxSize: null, stock: null, lowDays: 7 });
+  const [stockText, setStockText] = useState(pill?.stock != null ? num(pill.stock) : '');
+  const stockEdited = (pill?.stock != null ? num(pill.stock) : '') !== stockText;
   const [newTime, setNewTime] = useState('20:00');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -153,8 +269,11 @@ function PillModal({ pill, onClose }: { pill?: Pill; onClose: () => void }) {
     setBusy(true);
     setError(null);
     try {
-      if (pill) await api.updatePill(pill.id, f);
-      else await api.createPill(f);
+      // the stock is sent only when edited here: doses taken meanwhile must not be overwritten
+      const { stock: _old, ...rest } = f;
+      const body: PillDraft = stockEdited ? { ...rest, stock: stockText === '' ? null : Number(stockText.replace(',', '.')) } : rest;
+      if (pill) await api.updatePill(pill.id, body);
+      else await api.createPill(body);
       notifyChanged('pills');
       toast(pill ? 'Pillola aggiornata' : 'Pillola aggiunta 💊');
       onClose();
@@ -226,6 +345,25 @@ function PillModal({ pill, onClose }: { pill?: Pill; onClose: () => void }) {
           {COLORS.map((c) => (
             <button key={c} className={`sticky-color ${c === f.color ? 'on' : ''}`} style={{ background: c }} onClick={() => set('color', c)} aria-label="Colore" />
           ))}
+        </div>
+        <div className="pill-stock-box">
+          <div className="muted small"><b>📦 Magazzino</b> · facoltativo: Calendary scala le compresse a ogni dose presa e ti avvisa quando stanno per finire.</div>
+          <div className="grid-2">
+            <label className="field">Compresse per dose
+              <input className="input" inputMode="decimal" value={String(f.unitsPerDose ?? 1)} onChange={(e) => set('unitsPerDose', e.target.value.replace(',', '.') as unknown as number)} placeholder="Es. 1,5" />
+            </label>
+            <label className="field">Compresse per scatola
+              <input className="input" inputMode="decimal" value={f.boxSize ?? ''} onChange={(e) => set('boxSize', (e.target.value === '' ? null : e.target.value.replace(',', '.')) as unknown as number)} placeholder="Es. 60" />
+            </label>
+            <label className="field">Compresse che hai adesso
+              <input className="input" inputMode="decimal" value={stockText} onChange={(e) => setStockText(e.target.value)} placeholder="Vuoto = non tenere il conto" />
+            </label>
+            <label className="field">Avvisami quando restano
+              <select className="input" value={f.lowDays ?? 7} onChange={(e) => set('lowDays', Number(e.target.value))}>
+                {[3, 5, 7, 10, 14, 21, 30].map((d) => <option key={d} value={d}>{d} giorni</option>)}
+              </select>
+            </label>
+          </div>
         </div>
         <label className="field">Note
           <textarea className="input" rows={2} value={f.notes || ''} onChange={(e) => set('notes', e.target.value)} placeholder="Es. dopo i pasti" />
@@ -354,6 +492,7 @@ export function PillsBoard({ adding = false, onAdded, kiosk = false }: { adding?
           )}
         </section>
 
+        <StockSection pills={pills} />
         <PillLog />
       </div>
       {editing && <PillModal pill={editing === 'new' ? undefined : editing} onClose={closeEditor} />}

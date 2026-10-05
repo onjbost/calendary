@@ -236,9 +236,27 @@ export interface Pill {
   active: boolean;
   color: string;
   notes: string;
+  /** pills taken at each dose (1.5 = one and a half) */
+  unitsPerDose: number;
+  boxSize: number | null;
+  /** pills left; null = stock not tracked */
+  stock: number | null;
+  /** warn this many days before running out */
+  lowDays: number;
+  stockInfo?: StockInfo | null;
 }
 
-export type PillDraft = Partial<Omit<Pill, 'id'>> & { name: string; times: string[] };
+export interface StockInfo {
+  stock: number;
+  perDay: number;
+  daysLeft: number | null;
+  runOut: string | null;
+  boxes: number | null;
+  low: boolean;
+  empty: boolean;
+}
+
+export type PillDraft = Partial<Omit<Pill, 'id' | 'stockInfo'>> & { name: string; times: string[] };
 
 export interface Dose {
   pillId: string;
@@ -402,6 +420,7 @@ export const api = {
   createPill: (p: PillDraft) => post<Pill>('/pills', p),
   updatePill: (id: string, p: Partial<PillDraft>) => patch<Pill>(`/pills/${id}`, p),
   deletePill: (id: string) => del(`/pills/${id}`),
+  updateStock: (id: string, body: { stock?: number; addBoxes?: number }) => post<Pill>(`/pills/${id}/stock`, body),
   doses: (date: string) => get<Dose[]>(`/pills/doses?date=${date}`),
   setDose: (pillId: string, date: string, time: string, taken: boolean, takenAt?: string) => post(`/pills/${pillId}/dose`, { date, time, taken, takenAt }),
   pillHistory: (days: number | 'all' = 14) => get<PillHistory>(days === 'all' ? '/pills/history?all=1' : `/pills/history?days=${days}`),

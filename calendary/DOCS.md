@@ -141,3 +141,13 @@ Menu: **Dashboard · Pillole · Moveo · Calendario · Matrice · Obiettivi · N
 In **Impostazioni → Modalità viaggio** programmi i giorni di partenza e ritorno (inclusi): in quei giorni sugli Echo non suonano
 promemoria e non arrivano annunci. Le notifiche push sul telefono restano attive. I promemoria Alexa già programmati per quei giorni
 vengono tolti alla prossima sincronizzazione (cioè la prossima volta che usi AiCal).
+
+## Magazzino pillole (0.9.0)
+
+Nella terapia indica **compresse per dose** (anche 1,5), **compresse per scatola**, **compresse che hai adesso** e con quanti giorni di
+anticipo vuoi l'avviso (default 7). Calendary scala le compresse a ogni **Presa ✓** (e le rimette con *Non presa*), calcola il consumo
+giornaliero e per quanti giorni bastano.
+
+- **Alexa** lo annuncia una volta al giorno, la mattina (dopo il riepilogo, o alle 8:00), finché la scorta è sotto la soglia.
+- **Push** a ogni dose presa di una pillola in esaurimento: giorni rimasti e invito a riordinarla.
+- Sotto le **15 compresse** nella scheda *Pillole di oggi* compare **📦 Aggiorna magazzino** (aggiungi scatole o scrivi il totale).
