@@ -3,13 +3,13 @@
     "publishingInformation": {
       "locales": {
         "it-IT": {
-          "name": "Calendary",
+          "name": "AiCal",
           "summary": "Il tuo calendario Calendary con la voce: promemoria, impegni, agenda e matrice di Eisenhower.",
           "description": "Collega Alexa al tuo Calendary su Home Assistant. Aggiungi promemoria e impegni a voce, chiedi cosa hai in programma e ricevi sui dispositivi Echo i promemoria degli eventi importanti.",
           "examplePhrases": [
-            "Alexa, apri Calendary",
-            "Alexa, chiedi a Calendary cosa ho domani",
-            "Alexa, chiedi a Calendary di ricordarmi di chiamare Marco alle 18"
+            "Alexa, apri AiCal",
+            "Alexa, chiedi ad AiCal cosa ho domani",
+            "Alexa, chiedi ad AiCal di ricordarmi di chiamare Marco alle 18"
           ],
           "keywords": [
             "calendario",

@@ -11,7 +11,7 @@ Si modifica da **PC via web**, mentre il **tablet** fa da bacheca sempre accesa.
 - **Tips motivazionali**: regola dei 5 secondi (con conto alla rovescia a schermo intero), mangia il ranocchio, pomodoro, 2 minuti…
 - **Assistente virtuale** con AI gratuita o quasi: pianifica lo studio, aggiunge impegni e riempie la matrice. **Ogni modifica va approvata.**
 - **Pianificatore di studio** (funziona anche senza AI): *“corso di 15 ore in 5 moduli da 3 ore entro il 31/10”* → sessioni distribuite negli slot liberi, evitando gli impegni già presenti.
-- **Alexa**: aggiungi promemoria, impegni e attività a voce con la skill *Calendary*, chiedi cosa hai in programma, e senti sugli Echo i promemoria e gli annunci che arrivano da Calendary.
+- **Alexa**: aggiungi promemoria, impegni e attività a voce con la skill *AiCal*, chiedi cosa hai in programma, e senti sugli Echo i promemoria e gli annunci che arrivano da Calendary.
 - **Vista tablet (kiosk)**: orologio, prossimo impegno con conto alla rovescia, agenda del giorno, prossimi giorni, matrice e tips a rotazione. Si aggiorna in tempo reale quando modifichi dal PC.
 
 ```
@@ -143,7 +143,7 @@ L'integrazione ha due direzioni, indipendenti tra loro:
 
 | | Cosa fa | Cosa serve |
 |---|---|---|
-| **Alexa → Calendary** | *“Alexa, chiedi a Calendary di ricordarmi di chiamare Marco domani alle 18”*, *“…aggiungi dentista giovedì alle 15:30, importante”*, *“…cosa ho domani?”*, *“…qual è il prossimo impegno?”*, *“…aggiungi consegnare la tesina alla matrice come urgente e importante”* | una skill personale (gratuita) nella console Alexa |
+| **Alexa → Calendary** | *“Alexa, chiedi ad AiCal di ricordarmi di chiamare Marco domani alle 18”*, *“…aggiungi dentista giovedì alle 15:30, importante”*, *“…cosa ho domani?”*, *“…qual è il prossimo impegno?”*, *“…aggiungi consegnare la tesina alla matrice come urgente e importante”* | una skill personale (gratuita) nella console Alexa |
 | **Calendary → Alexa: promemoria** | gli eventi ⚡ importanti e i promemoria dettati ad Alexa diventano **promemoria Alexa**: suonano su tutti gli Echo e arrivano nell'app Alexa, anche se l'evento l'hai creato dal PC o dal tablet | la stessa skill + il permesso *Promemoria* + le credenziali *Skill Messaging* |
 | **Calendary → Alexa: annunci** | gli eventi importanti e il riepilogo del mattino vengono **annunciati a voce** sull'Echo | Home Assistant con l'integrazione *Alexa Media Player* (HACS) |
 
@@ -153,9 +153,10 @@ L'integrazione ha due direzioni, indipendenti tra loro:
 ### Creare la skill (una volta sola, ~10 minuti)
 
 1. Vai su <https://developer.amazon.com/alexa/console/ask> con lo **stesso account Amazon dei tuoi Echo** → **Create Skill**:
-   nome `Calendary`, lingua **Italian (IT)**, tipo **Other → Custom**, hosting **Provision your own**, template *Start from scratch*.
+   nome `AiCal`, lingua **Italian (IT)**, tipo **Other → Custom**, hosting **Provision your own**, template *Start from scratch*.
 2. **Build → Interaction Model → JSON Editor**: incolla il contenuto di [`alexa/skill-package/interactionModels/custom/it-IT.json`](alexa/skill-package/interactionModels/custom/it-IT.json) → **Save** → **Build skill**.
-   La frase di attivazione è *“calendary”*: se Alexa la capisce male puoi cambiarla in `invocationName` (es. *“agenda neon”*).
+   La frase di attivazione è *“aical”*, pronunciata in italiano come si legge (*a-i-cal*): “calendary” veniva confuso con “calendario”.
+   Se Alexa la capisce male puoi provare la variante `ai cal` in `invocationName`.
 3. **Endpoint** → **HTTPS** → Default Region: `https://calendary.gattucciocloud.it/api/alexa`,
    certificato: *My development endpoint has a certificate from a trusted certificate authority* (quello di Cloudflare va bene) → **Save**.
 4. Copia lo **Skill ID** (`amzn1.ask.skill.…`, in alto nella pagina Endpoint) nell'opzione `alexa_skill_id` dell'add-on.
@@ -167,9 +168,9 @@ L'integrazione ha due direzioni, indipendenti tra loro:
    Calendary legge lo stato del permesso a ogni richiesta di Alexa.
 7. **Salva** le opzioni dell'add-on e **riavvialo**.
 8. Scheda **Test** della console → *Skill testing is enabled in*: **Development**. La skill compare subito sui tuoi Echo (solo sul tuo account).
-9. Nell'app Alexa: **Altro → Skill e giochi → Le tue skill → Sviluppatore → Calendary → Impostazioni → Gestisci autorizzazioni** → attiva **Promemoria**.
-   In alternativa di' *“Alexa, apri Calendary”*: se il permesso manca ti arriva una scheda nell'app per concederlo.
-10. Di' *“Alexa, apri Calendary”* almeno una volta: da quel momento Calendary sa a chi mandare i promemoria.
+9. Nell'app Alexa: **Altro → Skill e giochi → Le tue skill → Sviluppatore → AiCal → Impostazioni → Gestisci autorizzazioni** → attiva **Promemoria**.
+   In alternativa di' *“Alexa, apri AiCal”*: se il permesso manca ti arriva una scheda nell'app per concederlo.
+10. Di' *“Alexa, apri AiCal”* almeno una volta: da quel momento Calendary sa a chi mandare i promemoria.
     In **Impostazioni → Alexa** della webapp vedi lo stato, quanti promemoria sono programmati e il pulsante **Sincronizza promemoria**.
 
 Con `alexa_reminders` scegli cosa suona sugli Echo: `important` (default: eventi ⚡ e promemoria dettati ad Alexa), `all` (ogni evento con un promemoria,

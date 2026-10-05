@@ -41,7 +41,7 @@ L'assistente non scrive mai direttamente: propone eventi o attività, e tu li ap
 
 Due direzioni, configurabili separatamente:
 
-- **Alexa → Calendary** (skill personale *Calendary*): *“Alexa, chiedi a Calendary di ricordarmi di chiamare Marco domani alle 18”*,
+- **Alexa → Calendary** (skill personale *AiCal*): *“Alexa, chiedi ad AiCal di ricordarmi di chiamare Marco domani alle 18”*,
   *“…aggiungi dentista giovedì alle 15:30”*, *“…cosa ho domani?”*, *“…qual è il prossimo impegno?”*, *“…aggiungi fare la spesa alla matrice”*.
 - **Calendary → Alexa**: i promemoria degli eventi importanti (e quelli dettati ad Alexa) diventano **promemoria Alexa** e suonano su tutti gli Echo,
   anche se modifichi il calendario dal PC o dal tablet. Con *Alexa Media Player* gli eventi importanti e il riepilogo del mattino vengono anche **annunciati a voce**.

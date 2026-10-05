@@ -10,9 +10,9 @@ import { createEvent, createTask } from './store.js';
 import { broadcast } from './stream.js';
 import { addDays, httpError, parseYmd, startOfDay, ymd } from './util.js';
 
-// Alexa → Calendary: the custom skill "Calendary" (interaction model in /alexa) talks to POST /api/alexa.
-// "Alexa, chiedi a Calendary di ricordarmi di chiamare Marco domani alle 18"
-// "Alexa, chiedi a Calendary cosa ho domani"
+// Alexa → Calendary: the custom skill "AiCal" (interaction model in /alexa) talks to POST /api/alexa.
+// "Alexa, chiedi ad AiCal di ricordarmi di chiamare Marco domani alle 18"
+// "Alexa, chiedi ad AiCal cosa ho domani"
 
 // --------------------------------------------------------- slot parsing
 
@@ -235,7 +235,7 @@ export async function handleAlexa(body, now = new Date()) {
 
   if (request.type === 'LaunchRequest') {
     return {
-      response: say(`Ciao, sono Calendary. ${HELP}`, { end: false, reprompt: 'Cosa faccio?', ...(needsPermission ? { card: permissionCard() } : {}) }),
+      response: say(`Ciao, sono AiCal, il tuo Calendary. ${HELP}`, { end: false, reprompt: 'Cosa faccio?', ...(needsPermission ? { card: permissionCard() } : {}) }),
     };
   }
   if (request.type === 'IntentRequest') {

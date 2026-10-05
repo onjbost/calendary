@@ -211,7 +211,7 @@ export async function requestSync({ force = false } = {}) {
   if (config.alexa.reminders === 'off') return { ok: true, skipped: 'promemoria Alexa disattivati' };
   const userId = getSetting('alexa_user_id');
   const endpoint = getSetting('alexa_api_endpoint');
-  if (!userId || !endpoint) return { ok: false, error: 'apri almeno una volta la skill dicendo "Alexa, apri Calendary"' };
+  if (!userId || !endpoint) return { ok: false, error: 'apri almeno una volta la skill dicendo "Alexa, apri AiCal"' };
   if (!canSyncOutOfSession()) return { ok: false, error: 'mancano alexa_client_id e alexa_client_secret' };
   // Permission denied: Alexa tells us again in the callback once it is granted, so just retry now and then.
   if (!remindersAllowed() && !force && Date.now() - lastMessageAt < 3600e3) return { ok: false, error: 'permesso Promemoria non concesso' };
@@ -230,7 +230,7 @@ export async function requestSync({ force = false } = {}) {
       signal: AbortSignal.timeout(8000),
     });
     if (res.status === 403 || res.status === 404) {
-      return fail(`Alexa non riconosce più l'utente (${res.status}): riapri la skill con "Alexa, apri Calendary"`);
+      return fail(`Alexa non riconosce più l'utente (${res.status}): riapri la skill con "Alexa, apri AiCal"`);
     }
     if (!res.ok) return fail(`Skill Messaging ha risposto ${res.status}`);
     return { ok: true, pending: create.length + remove.length };

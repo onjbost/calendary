@@ -208,7 +208,7 @@ export async function registerRoutes(app) {
 
   app.post('/alexa/sync', async () => requestSync({ force: true }));
 
-  app.post('/alexa/announce-test', async () => announce('Ciao, sono Calendary. Da ora ti avviso qui degli impegni importanti.', { strict: true }));
+  app.post('/alexa/announce-test', async () => announce('Ciao, sono AiCal. Da ora ti avviso qui degli impegni importanti.', { strict: true }));
 
   // -------------------------------------------------------------- goals
   const goalsChanged = (alsoEvents = true) => {
