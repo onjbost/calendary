@@ -19,7 +19,7 @@ const { desiredReminders, planDiff, reminderText, syncWithToken } = await import
 const { atTime, inMinutes } = await import('../src/alexa-speech.js');
 const { spokenText } = await import('../src/announce.js');
 const store = await import('../src/store.js');
-const { db } = await import('../src/db.js');
+const { db, getSetting, setSetting } = await import('../src/db.js');
 
 store.ensureDefaultCalendars();
 after(() => fs.rmSync(tmp, { recursive: true, force: true }));
@@ -183,6 +183,14 @@ describe('request verification', () => {
 describe('skill', () => {
   test('refuses other skills', async () => {
     await assert.rejects(handleAlexa(alexaRequest({ type: 'LaunchRequest' }, { appId: 'amzn1.ask.skill.other' })), /non autorizzata/);
+  });
+
+  test('a consent token alone counts as the reminders permission', async () => {
+    const body = alexaRequest({ type: 'SessionEndedRequest' });
+    body.context.System.user.permissions = { consentToken: 'consent-123' };
+    await handleAlexa(body);
+    assert.equal(getSetting('alexa_permission'), 'GRANTED');
+    setSetting('alexa_permission', 'unknown'); // back to "not granted" for the next tests
   });
 
   test('launch offers the reminders permission card', async () => {

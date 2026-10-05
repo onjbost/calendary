@@ -29,7 +29,10 @@ export function rememberAlexaUser(system) {
     setSetting('alexa_user_id', userId);
   }
   if (system.apiEndpoint) setSetting('alexa_api_endpoint', system.apiEndpoint);
-  const permission = system.user.permissions?.scopes?.[REMINDERS_SCOPE]?.status;
+  // Alexa reports the status per scope; older payloads only carry a consent token, which for this skill
+  // (it asks for reminders only) means the same thing.
+  const perms = system.user.permissions;
+  const permission = perms?.scopes?.[REMINDERS_SCOPE]?.status || (perms?.consentToken ? 'GRANTED' : null);
   if (permission) setSetting('alexa_permission', permission);
   setSetting('alexa_last_seen', nowIso());
 }
@@ -165,6 +168,7 @@ async function applyPlan(apiAccessToken, apiEndpoint) {
       error = `Alexa ha rifiutato "${r.text}" (${res.status}): ${(await res.text()).slice(0, 200)}`;
       continue;
     }
+    setPermission('GRANTED'); // Alexa accepted it: the permission is there, whatever the payloads said
     const { alertToken } = await res.json();
     insert.run(r.key, alertToken, new Date(r.fireAt).toISOString(), nowIso());
     created += 1;
