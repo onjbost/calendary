@@ -266,9 +266,15 @@ export async function registerAlexa(app) {
   });
 
   app.post('/alexa', async (req) => {
-    if (!config.alexa.skipVerify) await verifyAlexaRequest(req.headers, req.rawBody, req.body);
-    const { response, after } = await handleAlexa(req.body);
-    if (after) setImmediate(() => Promise.resolve(after()).catch((err) => req.log.error(err)));
-    return response;
+    try {
+      if (!config.alexa.skipVerify) await verifyAlexaRequest(req.headers, req.rawBody, req.body);
+      const { response, after } = await handleAlexa(req.body);
+      if (after) setImmediate(() => Promise.resolve(after()).catch((err) => req.log.error(err)));
+      return response;
+    } catch (err) {
+      // Amazon only says "invalid response": the reason is visible in the add-on log.
+      req.log.warn(`Richiesta Alexa rifiutata (${req.body?.request?.type || '?'}): ${err.message}`);
+      throw err;
+    }
   });
 }
