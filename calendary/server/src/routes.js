@@ -12,7 +12,7 @@ import { stockReminderAfterDose } from './notifier.js';
 import * as travel from './travel.js';
 import { forgetCalendar, syncCalendar } from './ics.js';
 import { planStudy } from './planner.js';
-import { moveoOverview, moveoToday, signTicket, suiteSecretOk } from './suite.js';
+import { moveoOverview, moveoToday, signTicket, suiteSecretOk, wardappToday } from './suite.js';
 import { countSubscriptions, removeSubscription, saveSubscription, sendToAll, vapidPublicKey } from './push.js';
 import * as store from './store.js';
 import { broadcast, streamHandler } from './stream.js';
@@ -184,15 +184,17 @@ export async function registerRoutes(app) {
   // ------------------------------------------------------------- weather (night mode widget)
   app.get('/weather', async () => weather());
 
-  // ------------------------------------------------------------- suite (Moveo)
+  // ---------------------------------------------------- suite (Moveo, WardApp)
   app.get('/suite/moveo', async () => moveoToday());
   app.get('/suite/moveo/overview', async () => moveoOverview());
+  app.get('/suite/wardapp', async () => wardappToday());
 
-  /** Link to Moveo that signs you in automatically (single-use ticket, valid 2 minutes). */
+  /** Link to Moveo or WardApp (`app`) that signs you in automatically (single-use ticket, valid 2 minutes). */
   app.post('/suite/link', async (req) => {
-    if (!suiteSecretOk()) throw httpError(400, 'Imposta api_token per collegare Moveo');
+    const target = req.body?.app === 'wardapp' ? 'wardapp' : 'moveo';
+    if (!suiteSecretOk()) throw httpError(400, `Imposta api_token per collegare ${target === 'wardapp' ? 'WardApp' : 'Moveo'}`);
     const ticket = signTicket('calendary', req.body?.next);
-    return { url: `${config.moveo.publicUrl}/sso?t=${encodeURIComponent(ticket)}` };
+    return { url: `${config[target].publicUrl}/sso?t=${encodeURIComponent(ticket)}` };
   });
 
   // -------------------------------------------------------------- notes

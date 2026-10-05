@@ -1,8 +1,8 @@
 import crypto from 'node:crypto';
 import { config } from './config.js';
 
-// "Suite": Calendary and Moveo are separate apps that share one secret (Calendary's api_token =
-// Moveo's calendary_token). With it they call each other's API and sign single-use login tickets,
+// "Suite": Calendary, Moveo and WardApp are separate apps that share one secret (Calendary's api_token =
+// the others' calendary_token). With it they call each other's API and sign single-use login tickets,
 // so a link from one app opens the other already signed in.
 
 const TICKET_TTL_MS = 2 * 60_000;
@@ -26,8 +26,9 @@ export function signTicket(issuer, next) {
   return `${payload}.${sig}`;
 }
 
-/** Returns the target path when the ticket is valid, unexpired, unused and issued by `issuer`; otherwise null. */
+/** Returns the target path when the ticket is valid, unexpired, unused and issued by `issuer` (one or a list); otherwise null. */
 export function verifyTicket(ticket, issuer) {
+  const issuers = Array.isArray(issuer) ? issuer : [issuer];
   if (!suiteSecretOk() || typeof ticket !== 'string') return null;
   const i = ticket.lastIndexOf('.');
   if (i < 0) return null;
@@ -41,10 +42,28 @@ export function verifyTicket(ticket, issuer) {
   } catch {
     return null;
   }
-  if (data.iss !== issuer || !(data.exp > Date.now()) || usedNonces.has(data.n)) return null;
+  if (!issuers.includes(data.iss) || !(data.exp > Date.now()) || usedNonces.has(data.n)) return null;
   usedNonces.set(data.n, data.exp);
   for (const [n, exp] of usedNonces) if (exp < Date.now()) usedNonces.delete(n);
   return safePath(data.next);
+}
+
+export const wardappEnabled = () => suiteSecretOk() && !!config.wardapp.url;
+
+/** What was worn today, from WardApp, for the dashboard card "Oggi indosso". */
+export async function wardappToday() {
+  if (!wardappEnabled()) return { enabled: false };
+  const base = { enabled: true, publicUrl: config.wardapp.publicUrl };
+  try {
+    const res = await fetch(`${config.wardapp.url}/api/suite/today`, {
+      headers: { authorization: `Bearer ${config.apiToken}` },
+      signal: AbortSignal.timeout(6000),
+    });
+    if (!res.ok) return { ...base, error: `WardApp ${res.status}` };
+    return { ...base, ...(await res.json()) };
+  } catch (err) {
+    return { ...base, error: `WardApp non raggiungibile (${err.cause?.code || err.message})` };
+  }
 }
 
 /** Today's training summary from Moveo, for the dashboard and kiosk card. */

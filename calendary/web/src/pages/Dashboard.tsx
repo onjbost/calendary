@@ -7,6 +7,7 @@ import { MiniMatrix } from '../components/Matrix';
 import { MoveoCard } from '../components/MoveoCard';
 import { PillsToday } from '../components/Pills';
 import { TipCard } from '../components/TipCard';
+import { WardappCard } from '../components/WardappCard';
 import { capitalize, countdown, fmt, greeting, hm, parseYmd, ymd } from '../dates';
 import { useEvents, useGoals, useNow, useTasks } from '../hooks';
 import { notifyChanged } from '../live';
@@ -97,6 +98,8 @@ export function Dashboard() {
           </div>
         )}
       </section>
+
+      <WardappCard className="span-12 glow-amber" />
 
       {goals.length > 0 && (
         <>

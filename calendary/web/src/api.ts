@@ -354,6 +354,16 @@ export interface MoveoToday {
   minutesWeek?: number;
 }
 
+/** What was worn today, from WardApp (card "Oggi indosso"). */
+export interface WardappToday {
+  enabled: boolean;
+  publicUrl?: string;
+  error?: string;
+  logged?: boolean;
+  items?: { id: string; name: string; thumbUrl: string }[];
+  url?: string;
+}
+
 export interface MoveoOverview extends MoveoToday {
   /** false: this Moveo version only gives today's summary */
   overview?: boolean;
@@ -404,7 +414,8 @@ export const api = {
   moveoToday: () => get<MoveoToday>('/suite/moveo'),
   moveoOverview: () => get<MoveoOverview>('/suite/moveo/overview'),
   weather: () => get<Weather>('/weather'),
-  suiteLink: (next: string) => post<{ url: string }>('/suite/link', { next }),
+  suiteLink: (next: string, app: 'moveo' | 'wardapp' = 'moveo') => post<{ url: string }>('/suite/link', { next, app }),
+  wardappToday: () => get<WardappToday>('/suite/wardapp'),
 
   notes: () => get<Note[]>('/notes'),
   noteFolders: () => get<NoteFolder[]>('/note-folders'),

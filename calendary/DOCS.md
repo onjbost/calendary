@@ -13,6 +13,8 @@ notifiche push e un assistente che pianifica lo studio.
 | `mcp_token` | Password (min. 24 caratteri) del collegamento con **Claude** (server MCP per le note). Vuoto = spento. |
 | `moveo_url` | Indirizzo interno di **Moveo** per la card *Allenamento* (`http://local-moveo:8788`). Vuoto = card nascosta. |
 | `moveo_public_url` | Indirizzo pubblico di Moveo, usato nei link (`https://moveo.gattucciocloud.it`). |
+| `wardapp_url` | Indirizzo interno di **WardApp** per la card *Oggi indosso* (`http://local-wardapp:8789`). Vuoto = card nascosta. |
+| `wardapp_public_url` | Indirizzo pubblico di WardApp, usato nei link (`https://wardapp.gattucciocloud.it`). |
 | `weather_entity` | Entità meteo di Home Assistant per il widget della modalità notte (default `weather.forecast_home`, creata da Met.no con l'installazione). Vuoto = niente meteo. |
 | `public_url` | Indirizzo pubblico (es. `https://calendary.gattucciocloud.it`). Serve per le notifiche push. |
 | `timezone` | Fuso orario, default `Europe/Rome`. |
@@ -64,6 +66,14 @@ Dalla 0.3.0 Calendary può essere usato da altre app di casa (ad esempio **Moveo
 - Gli eventi hanno i campi facoltativi `linkUrl` e `linkLabel`: nell'app compare il pulsante **▶ linkLabel** e la notifica push apre direttamente quel link.
 - `POST /api/notify` `{ title, body, url, tag, important }` invia una notifica push a tutti i dispositivi iscritti.
 - Gli eventi creati in blocco con lo stesso `planId` si eliminano insieme con `DELETE /api/plans/:planId`.
+
+## Suite con WardApp (0.9.1)
+
+WardApp, l'armadio digitale, usa lo stesso `api_token` (in WardApp: `calendary_token`).
+
+- **Card *Oggi indosso*** nella dashboard: Calendary legge `GET <wardapp_url>/api/suite/today` (Bearer `api_token`), che restituisce `{ logged, items: [{ id, name, thumbUrl }], url }`. Le miniature hanno un link firmato. Il pulsante **Registra** apre WardApp già autenticato su *Oggi ho messo*.
+- **Accesso unico** nei due sensi: `POST /api/suite/link` con `app: "wardapp"` firma il link verso WardApp; `/sso` accetta i ticket di Moveo e di WardApp.
+- **Notifiche**: WardApp invia la notifica serale "Cosa hai messo oggi?" con `POST /api/notify`.
 
 ## Suite con Moveo (0.4.0)
 

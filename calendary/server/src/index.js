@@ -38,9 +38,9 @@ await app.register(registerRoutes, { prefix: '/api' });
 await app.register(registerAlexa, { prefix: '/api' });
 await app.register(registerMcp, { prefix: '/api' });
 
-// Single sign-on from Moveo: /sso?t=<ticket signed by Moveo> → session cookie → redirect.
+// Single sign-on from Moveo or WardApp: /sso?t=<ticket signed by them> → session cookie → redirect.
 app.get('/sso', async (req, reply) => {
-  const next = verifyTicket(req.query.t, 'moveo');
+  const next = verifyTicket(req.query.t, ['moveo', 'wardapp']);
   if (!next) return reply.redirect('/?sso=scaduto');
   startSession(req, reply);
   return reply.redirect(next);

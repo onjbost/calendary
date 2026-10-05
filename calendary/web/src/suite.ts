@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { api, type MoveoToday } from './api';
+import { api, type MoveoToday, type WardappToday } from './api';
 import { isEco } from './device';
-import { openInSuiteApp } from './native';
+import { isNative, openInSuiteApp } from './native';
 
 // Calendary ↔ Moveo. Links to Moveo carry a single-use login ticket, so you never type the Moveo password.
 
@@ -63,4 +63,32 @@ export function openMoveoUrl(url: string) {
 /** Loads the Moveo summary once at startup, so Moveo links are recognised everywhere. */
 export function primeMoveo() {
   if (!cache) refresh();
+}
+
+// ------------------------------------------------------------------ WardApp
+
+/** WardApp's "Oggi indosso" summary, refreshed every 5 minutes while the card is shown. */
+export function useWardapp() {
+  const [data, setData] = useState<WardappToday | null>(null);
+  useEffect(() => {
+    const load = () => api.wardappToday().then(setData).catch(() => {});
+    load();
+    const id = window.setInterval(() => { if (!isEco()) load(); }, 300_000);
+    return () => window.clearInterval(id);
+  }, []);
+  return data;
+}
+
+/** Opens a WardApp page already signed in. WardApp has no Android app: it always opens in the browser. */
+export async function openWardapp(path: string, publicUrl?: string) {
+  const tab = isNative() ? null : window.open('about:blank', '_blank');
+  let url: string;
+  try {
+    url = (await api.suiteLink(path, 'wardapp')).url;
+  } catch {
+    if (!publicUrl) { tab?.close(); return; }
+    url = `${publicUrl}${path}`;
+  }
+  if (tab && !tab.closed) tab.location.href = url;
+  else window.open(url, '_blank');
 }

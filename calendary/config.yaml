@@ -1,5 +1,5 @@
 name: Calendary
-version: "0.9.0"
+version: "0.9.1"
 slug: calendary
 description: Calendario, promemoria, obiettivi con routine, matrice di Eisenhower, assistente e Alexa in stile neon
 url: https://calendary.gattucciocloud.it
@@ -23,6 +23,8 @@ options:
   mcp_token: ""
   moveo_url: "http://local-moveo:8788"
   moveo_public_url: "https://moveo.gattucciocloud.it"
+  wardapp_url: ""
+  wardapp_public_url: "https://wardapp.gattucciocloud.it"
   weather_entity: "weather.forecast_home"
   public_url: "https://calendary.gattucciocloud.it"
   timezone: "Europe/Rome"
@@ -43,6 +45,8 @@ schema:
   mcp_token: password
   moveo_url: str?
   moveo_public_url: str?
+  wardapp_url: str?
+  wardapp_public_url: str?
   weather_entity: str?
   public_url: url
   timezone: str
