@@ -785,3 +785,5 @@ html.eco .nightstand .ns-inner { transition: none; }
 .log-dose.ok { border-color: rgba(var(--lime-rgb), 0.35); }
 .log-dose.miss { border-color: rgba(var(--red-rgb), 0.45); color: var(--muted); }
 .log-dose.wait { border-color: rgba(var(--amber-rgb), 0.5); }
+.dose-name { border: 0; background: none; padding: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.dose-name:hover b { text-decoration: underline; text-underline-offset: 3px; }

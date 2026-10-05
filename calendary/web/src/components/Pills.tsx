@@ -21,11 +21,13 @@ export function daysLabel(days: number[]) {
 // ------------------------------------------------------------- today card
 
 /** Today's doses with a big "Presa ✓" button each (dashboard and tablet). */
-export function PillsToday({ className = '', kiosk = false }: { className?: string; kiosk?: boolean }) {
+export function PillsToday({ className = '', kiosk = false, managePage = false }: { className?: string; kiosk?: boolean; managePage?: boolean }) {
   const { toast } = useUI();
   const now = useNow(30_000);
   const day = ymd(now);
   const { data: doses, setData } = useDoses(day);
+  const { data: pills } = usePills();
+  const [editing, setEditing] = useState<Pill | null>(null);
 
   if (!doses.length) {
     if (kiosk) return null; // nothing scheduled: keep the tablet column for the rest
@@ -55,7 +57,7 @@ export function PillsToday({ className = '', kiosk = false }: { className?: stri
       <div className="card-title" style={kiosk ? { marginBottom: 8 } : undefined}>
         {kiosk ? <h3>💊 Pillole di oggi</h3> : <h2>💊 Pillole di oggi</h2>}
         <span className="chip">{left ? `${left} da prendere` : 'tutte prese ✓'}</span>
-        {!kiosk && <Link to="/pillole" className="btn sm ghost">Gestisci →</Link>}
+        {!kiosk && !managePage && <Link to="/pillole" className="btn sm ghost">Gestisci →</Link>}
       </div>
       <div className="stack" style={{ gap: 8 }}>
         {doses.map((d) => {
@@ -65,7 +67,9 @@ export function PillsToday({ className = '', kiosk = false }: { className?: stri
               <span className="dot" style={{ color: d.color }} />
               <span className="mono dose-time">{d.time}</span>
               <span className="grow">
-                <b>{d.name}</b>{d.dose && <span className="muted small"> · {d.dose}</span>}
+                <button className="dose-name" onClick={() => setEditing(pills.find((p) => p.id === d.pillId) || null)} title="Modifica la terapia">
+                  <b>{d.name}</b>{d.dose && <span className="muted small"> · {d.dose}</span>}
+                </button>
                 {late && <span className="neon-red small"> · in ritardo</span>}
               </span>
               <button className={`btn sm ${d.takenAt ? 'ghost' : late ? 'pink' : 'primary'}`} onClick={() => toggle(d)}
@@ -76,6 +80,7 @@ export function PillsToday({ className = '', kiosk = false }: { className?: stri
           );
         })}
       </div>
+      {editing && <PillModal pill={editing} onClose={() => setEditing(null)} />}
     </section>
   );
 }
@@ -233,7 +238,7 @@ export function PillsPage() {
         <button className="btn primary" onClick={() => setEditing('new')}>＋ Nuova pillola</button>
       </div>
       <div className="dash">
-        <PillsToday className="span-5 glow-pink" />
+        <PillsToday className="span-5 glow-pink" managePage />
         <section className="glass pad span-7">
           <div className="card-title"><h2>Terapie</h2></div>
           {!pills.length && <div className="empty">Nessuna pillola. Aggiungine una con “＋ Nuova pillola”.</div>}
@@ -247,7 +252,7 @@ export function PillsPage() {
                 </span>
                 {p.alexa && <span className="chip" title="Sveglia su Alexa">🔊</span>}
                 {!p.active && <span className="chip">in pausa</span>}
-                <span className="faint">›</span>
+                <button className="btn sm" onClick={(e) => { e.stopPropagation(); setEditing(p); }}>✎ Modifica</button>
               </div>
             ))}
           </div>
