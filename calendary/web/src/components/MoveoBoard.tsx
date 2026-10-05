@@ -73,7 +73,7 @@ export function MoveoBoard() {
         <section className="glass pad">
           <div className="card-title"><h2>✓ Ultimi allenamenti</h2></div>
           <div className="row" style={{ gap: 8, marginBottom: 10 }}>
-            {!!m.streak && <span className="chip">🔥 {m.streak} giorni di fila</span>}
+            {!!m.streak && <span className="chip">🔥 {m.streak} {m.streak === 1 ? 'giorno' : 'giorni'} di fila</span>}
             {m.minutesWeek !== undefined && <span className="chip">⏱ {m.minutesWeek} min questa settimana</span>}
           </div>
           {m.recent?.length ? (
