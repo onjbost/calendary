@@ -8,6 +8,7 @@ import * as goals from './goals.js';
 import * as notes from './notes.js';
 import { mcpEnabled } from './mcp.js';
 import * as pills from './pills.js';
+import * as travel from './travel.js';
 import { forgetCalendar, syncCalendar } from './ics.js';
 import { planStudy } from './planner.js';
 import { moveoOverview, moveoToday, signTicket, suiteSecretOk } from './suite.js';
@@ -284,6 +285,7 @@ export async function registerRoutes(app) {
       remindersMode: config.alexa.reminders,
       outOfSession: canSyncOutOfSession(),
       sessionOnly: sessionOnly(),
+      trip: travel.tripAt(),
       pending: plan ? plan.create.length + plan.remove.length : 0,
       ...syncStatus(),
       announce: announceStatus(),
@@ -291,6 +293,21 @@ export async function registerRoutes(app) {
   });
 
   app.post('/alexa/sync', async () => requestSync({ force: true }));
+
+  // travel mode: no Alexa reminders or announcements in these days
+  app.get('/travel', async () => ({ trips: travel.listTrips(), now: travel.tripAt() }));
+
+  app.post('/travel', async (req) => {
+    const t = travel.createTrip(req.body || {});
+    broadcast('events'); // re-plans the Alexa reminders
+    return t;
+  });
+
+  app.delete('/travel/:id', async (req) => {
+    travel.deleteTrip(req.params.id);
+    broadcast('events');
+    return { ok: true };
+  });
 
   app.post('/alexa/test-reminder', async () => scheduleTestReminder());
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { DeviceSettings } from '../components/DeviceSettings';
-import { api, type AlexaStatus, type Calendar } from '../api';
+import { api, type AlexaStatus, type Calendar, type Trip } from '../api';
 import { fmt } from '../dates';
 import { useCalendars } from '../hooks';
 import { notifyChanged } from '../live';
@@ -322,6 +322,62 @@ const Dot = ({ ok }: { ok: boolean | null }) => (
   <span className="dot" style={{ color: ok === null ? 'var(--amber)' : ok ? 'var(--lime)' : 'var(--red)' }} />
 );
 
+/** Travel mode: scheduled days with no Alexa reminders or announcements (push notifications keep working). */
+function TravelMode() {
+  const { toast } = useUI();
+  const [trips, setTrips] = useState<Trip[]>([]);
+  const [now, setNow] = useState<Trip | null>(null);
+  const today = new Date().toISOString().slice(0, 10);
+  const [startDate, setStart] = useState(today);
+  const [endDate, setEnd] = useState(today);
+  const [note, setNote] = useState('');
+  const load = () => api.trips().then((r) => { setTrips(r.trips); setNow(r.now); }).catch(() => {});
+  useEffect(() => { load(); }, []);
+
+  const add = async () => {
+    try {
+      await api.createTrip({ startDate, endDate, note });
+      setNote('');
+      toast('🧳 Modalità viaggio programmata: in quei giorni Alexa resta in silenzio');
+      load();
+    } catch (e) {
+      toast((e as Error).message, 'error');
+    }
+  };
+  const remove = async (id: string) => {
+    await api.deleteTrip(id).catch((e) => toast((e as Error).message, 'error'));
+    load();
+  };
+  const day = (s: string) => fmt(`${s}T12:00`, 'EEE d MMM yyyy');
+
+  return (
+    <div className="stack">
+      <div className="muted small">
+        Nei giorni di viaggio sugli Echo non suonano promemoria e non arrivano annunci (eventi 🔊, pillole, riepilogo del mattino).
+        Le notifiche push sul telefono continuano ad arrivare.
+      </div>
+      {now && <div className="alert small">🧳 Sei in modalità viaggio fino a {day(now.endDate)}{now.note ? ` · ${now.note}` : ''}.</div>}
+      {trips.length > 0 && (
+        <div className="stack" style={{ gap: 6 }}>
+          {trips.map((t) => (
+            <div key={t.id} className="dose">
+              <span>🧳</span>
+              <span className="grow">{day(t.startDate)} → {day(t.endDate)}{t.note && <span className="muted small"> · {t.note}</span>}</span>
+              <button className="btn sm danger" onClick={() => remove(t.id)}>Elimina</button>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="row">
+        <label className="field">Partenza<input className="input" type="date" value={startDate} min={today} onChange={(e) => { setStart(e.target.value); if (e.target.value > endDate) setEnd(e.target.value); }} /></label>
+        <label className="field">Ritorno<input className="input" type="date" value={endDate} min={startDate} onChange={(e) => setEnd(e.target.value)} /></label>
+        <label className="field grow">Nota<input className="input" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Es. Lisbona" /></label>
+        <button className="btn primary" style={{ alignSelf: 'flex-end' }} onClick={add}>＋ Programma viaggio</button>
+      </div>
+    </div>
+  );
+}
+
 /** Claude connector (MCP): lets Claude add notes ("annotalo su Calendary"). */
 function ClaudeSettings() {
   const [st, setSt] = useState<{ enabled: boolean; url: string } | null>(null);
@@ -417,6 +473,7 @@ function AlexaSettings() {
           <span className="chip"><Dot ok={granted ? true : st.permission ? false : null} /> Permesso promemoria: {granted ? 'concesso' : st.permission ? 'negato' : 'da concedere'}</span>
         )}
         <span className="chip">⏰ {st.scheduled} promemoria su Alexa{st.pending ? ` · ${st.pending} da aggiornare` : ''}</span>
+        {st.trip && <span className="chip">🧳 In viaggio fino al {fmt(`${st.trip.endDate}T12:00`, 'd MMM')}: Alexa in silenzio</span>}
         <span className="chip"><Dot ok={st.announce.enabled ? true : null} /> Annunci: {st.announce.enabled ? st.announce.services.join(', ') : 'non configurati'}</span>
       </div>
       <div className="faint small">Promemoria su Alexa: {modeLabel}.{st.lastSync ? ` Ultima sincronizzazione ${fmt(st.lastSync, 'HH:mm')}.` : ''}</div>
@@ -511,6 +568,10 @@ export function SettingsPage({ onLogout }: { onLogout: () => void }) {
         <section className="glass pad span-12 glow-cyan">
           <div className="card-title"><h2>Questo dispositivo · notte, sveglia e risparmio</h2></div>
           <DeviceSettings />
+        </section>
+        <section className="glass pad span-12 glow-amber">
+          <div className="card-title"><h2 className="neon-amber">🧳 Modalità viaggio</h2></div>
+          <TravelMode />
         </section>
         <section className="glass pad span-12 glow-cyan">
           <div className="card-title"><h2>Claude</h2></div>

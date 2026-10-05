@@ -135,3 +135,9 @@ Menu: **Dashboard · Pillole · Moveo · Calendario · Matrice · Obiettivi · N
   programmi arrivano da `GET <moveo_url>/api/suite/overview` (Bearer `api_token`), che deve restituire
   `{ recent: [{ title, category, emoji?, finishedAt, durationSec? }], upcoming: [sessioni come in /api/suite/today], programs: [{ id, title, category, emoji?, level?, minutes?, weeks?, path?, planned? }] }`.
   Con versioni di Moveo che non lo hanno la scheda usa i dati di `/api/suite/today` e mostra i collegamenti alle pagine di Moveo.
+
+## Modalità viaggio (0.8.5)
+
+In **Impostazioni → Modalità viaggio** programmi i giorni di partenza e ritorno (inclusi): in quei giorni sugli Echo non suonano
+promemoria e non arrivano annunci. Le notifiche push sul telefono restano attive. I promemoria Alexa già programmati per quei giorni
+vengono tolti alla prossima sincronizzazione (cioè la prossima volta che usi AiCal).

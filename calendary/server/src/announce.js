@@ -1,4 +1,5 @@
 import { config } from './config.js';
+import { tripAt } from './travel.js';
 import { httpError } from './util.js';
 
 // Spoken announcements on the Echo devices through Home Assistant, typically with the
@@ -29,6 +30,7 @@ export function spokenText(text) {
 /** Speaks `message` on every configured device. Never throws unless `strict` (used by the test button). */
 export async function announce(message, { strict = false } = {}) {
   const ha = homeAssistant();
+  if (!strict && tripAt()) return { sent: 0, skipped: 'modalità viaggio' }; // the test button still speaks
   if (!config.announce.services.length || !ha) {
     if (strict) throw httpError(400, 'Annunci Alexa non configurati: imposta alexa_announce_service');
     return { sent: 0 };

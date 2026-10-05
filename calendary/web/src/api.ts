@@ -175,6 +175,13 @@ export interface StudyPlanInput {
   calendarId?: string;
 }
 
+export interface Trip {
+  id: string;
+  startDate: string;
+  endDate: string;
+  note: string;
+}
+
 export interface AlexaStatus {
   skillConfigured: boolean;
   endpoint: string;
@@ -185,6 +192,7 @@ export interface AlexaStatus {
   outOfSession: boolean;
   /** Amazon only accepts reminders created while talking to the skill */
   sessionOnly?: boolean;
+  trip?: Trip | null;
   pending: number;
   scheduled: number;
   lastSync: string | null;
@@ -404,6 +412,9 @@ export const api = {
   pushUnsubscribe: (endpoint: string) => post('/push/unsubscribe', { endpoint }),
   alexaStatus: () => get<AlexaStatus>('/alexa/status'),
   alexaTestReminder: () => post<{ ok: boolean; error?: string; fireAt?: string; sessionOnly?: boolean }>('/alexa/test-reminder'),
+  trips: () => get<{ trips: Trip[]; now: Trip | null }>('/travel'),
+  createTrip: (t: Omit<Trip, 'id'>) => post<Trip>('/travel', t),
+  deleteTrip: (id: string) => del(`/travel/${id}`),
   alexaSync: () => post<{ ok: boolean; error?: string; pending?: number; skipped?: string }>('/alexa/sync'),
   alexaAnnounceTest: () => post<{ sent: number }>('/alexa/announce-test'),
   pushTest: () => post<{ sent: number; failed: number; errors: { service: string; status: number | null; message: string }[] }>('/push/test'),

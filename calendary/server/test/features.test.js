@@ -146,3 +146,27 @@ describe('events on Alexa', () => {
     assert.ok(!desiredReminders().some((r) => r.key.startsWith(`${ev.id}|`)));
   });
 });
+
+describe('travel mode', () => {
+  test('no Alexa reminders or announcements during a trip', async () => {
+    const travel = await import('../src/travel.js');
+    const { announce } = await import('../src/announce.js');
+    const tomorrow = new Date(Date.now() + 86400e3);
+    tomorrow.setHours(10, 0, 0, 0);
+    const ev = store.createEvent({ title: 'Riunione in sede', start: tomorrow, alexaMinutes: 10 });
+    const planned = () => desiredReminders().some((r) => r.key.startsWith(`${ev.id}|`));
+    assert.ok(planned());
+
+    assert.throws(() => travel.createTrip({ startDate: ymd(tomorrow), endDate: ymd(new Date()) }), /prima della partenza/);
+    const trip = travel.createTrip({ startDate: ymd(tomorrow), endDate: ymd(new Date(tomorrow.getTime() + 2 * 86400e3)), note: 'Lisbona' });
+    assert.equal(travel.tripAt(tomorrow).note, 'Lisbona');
+    assert.equal(travel.tripAt(new Date()), null);
+    assert.ok(!planned());
+
+    const today = travel.createTrip({ startDate: ymd(new Date()), endDate: ymd(new Date()) });
+    assert.equal((await announce('ciao')).skipped, 'modalità viaggio');
+    travel.deleteTrip(today.id);
+    travel.deleteTrip(trip.id);
+    assert.ok(planned());
+  });
+});
