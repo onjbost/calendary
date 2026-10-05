@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type MouseEvent } from 'react';
 import { addDays, addHours, startOfHour } from 'date-fns';
 import { api, type CalEvent, type EventDraft } from '../api';
 import { capitalize, fmt, hm, timeRange, ymd } from '../dates';
@@ -7,6 +7,7 @@ import { notifyChanged } from '../live';
 import { navigate } from '../router';
 import { useUI } from '../ui';
 import { Modal } from './Modal';
+import { isMoveoLink, openMoveoUrl } from '../suite';
 
 const REMINDERS: { value: string; label: string }[] = [
   { value: '', label: 'Automatico' },
@@ -32,6 +33,8 @@ interface Form {
   description: string;
   important: boolean;
   reminder: string;
+  linkUrl: string;
+  linkLabel: string;
 }
 
 function initialForm(event?: CalEvent, draft?: Partial<EventDraft>): Form {
@@ -51,7 +54,29 @@ function initialForm(event?: CalEvent, draft?: Partial<EventDraft>): Form {
     description: src.description || '',
     important: !!src.important,
     reminder: src.reminderMinutes === null || src.reminderMinutes === undefined ? '' : String(src.reminderMinutes),
+    linkUrl: src.linkUrl || '',
+    linkLabel: src.linkLabel || '',
   };
+}
+
+/** Big call-to-action for events that carry a deep link (a Moveo workout, a meeting URL…). */
+export function EventLinkButton({ event, onOpen }: { event: Pick<CalEvent, 'linkUrl' | 'linkLabel'>; onOpen?: () => void }) {
+  if (!event.linkUrl) return null;
+  const external = /^https?:\/\//i.test(event.linkUrl) && !event.linkUrl.startsWith(window.location.origin);
+  const click = (e: MouseEvent) => {
+    if (isMoveoLink(event.linkUrl)) {
+      // Moveo workout: open it signed in (and in the Moveo app on the tablet).
+      e.preventDefault();
+      openMoveoUrl(event.linkUrl!);
+    }
+    onOpen?.();
+  };
+  return (
+    <a className="btn primary" href={event.linkUrl} target={external ? '_blank' : undefined} rel="noopener"
+      onClick={click} style={{ alignSelf: 'flex-start', textDecoration: 'none' }}>
+      ▶ {event.linkLabel || 'Apri'}
+    </a>
+  );
 }
 
 export function EventModal({ event, draft, onClose }: {
@@ -125,6 +150,7 @@ export function EventModal({ event, draft, onClose }: {
           <div>{timeRange(event)}</div>
           {event.location && <div>📍 {event.location}</div>}
           {event.description && <div className="muted small" style={{ whiteSpace: 'pre-wrap' }}>{event.description}</div>}
+          <EventLinkButton event={event} onOpen={onClose} />
           {event.source === 'milestone' ? (
             <button className="btn sm" style={{ alignSelf: 'flex-start' }} onClick={() => { onClose(); navigate('/obiettivi'); }}>Apri obiettivi →</button>
           ) : (
@@ -148,6 +174,8 @@ export function EventModal({ event, draft, onClose }: {
       description: f.description,
       important: f.important,
       reminderMinutes: f.reminder === '' ? null : Number(f.reminder),
+      linkUrl: f.linkUrl.trim() || null,
+      linkLabel: f.linkLabel.trim() || null,
     };
   };
 
@@ -221,6 +249,7 @@ export function EventModal({ event, draft, onClose }: {
     >
       <div className="stack">
         {error && <div className="alert error">{error}</div>}
+        {event?.linkUrl && <EventLinkButton event={event} onOpen={onClose} />}
         <input
           className="input"
           placeholder="Titolo (es. Lezione master, Palestra…)"
@@ -263,6 +292,14 @@ export function EventModal({ event, draft, onClose }: {
         <label className="field">Luogo
           <input className="input" value={f.location} onChange={(e) => set('location', e.target.value)} placeholder="Opzionale" />
         </label>
+        <div className="grid-2">
+          <label className="field">Link
+            <input className="input" value={f.linkUrl} onChange={(e) => set('linkUrl', e.target.value)} placeholder="https://… (opzionale)" />
+          </label>
+          <label className="field">Testo del pulsante
+            <input className="input" value={f.linkLabel} onChange={(e) => set('linkLabel', e.target.value)} placeholder="Apri" />
+          </label>
+        </div>
         <label className="field">Note
           <textarea className="input" value={f.description} onChange={(e) => set('description', e.target.value)} placeholder="Opzionale" />
         </label>

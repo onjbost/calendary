@@ -7,10 +7,12 @@ import { assistantStatus, chat } from './assistant.js';
 import * as goals from './goals.js';
 import { forgetCalendar, syncCalendar } from './ics.js';
 import { planStudy } from './planner.js';
+import { moveoToday, signTicket, suiteSecretOk } from './suite.js';
 import { countSubscriptions, removeSubscription, saveSubscription, sendToAll, vapidPublicKey } from './push.js';
 import * as store from './store.js';
 import { broadcast, streamHandler } from './stream.js';
 import { httpError } from './util.js';
+import { weather } from './weather.js';
 
 export async function registerRoutes(app) {
   app.get('/health', async () => ({ ok: true }));
@@ -158,6 +160,34 @@ export async function registerRoutes(app) {
     url: '/',
     tag: `test-${Date.now()}`,
   }));
+
+  // Generic notification for other add-ons (Moveo stretching breaks…): reaches every subscribed device.
+  app.post('/notify', async (req) => {
+    const b = req.body || {};
+    const title = String(b.title || '').trim().slice(0, 120);
+    if (!title) throw httpError(400, 'Serve un titolo');
+    const url = typeof b.url === 'string' && /^(https?:\/\/|\/(?!\/))/i.test(b.url) ? b.url.slice(0, 2000) : '/';
+    return sendToAll({
+      title,
+      body: String(b.body || '').slice(0, 500),
+      url,
+      tag: String(b.tag || `notify-${Date.now()}`).slice(0, 120),
+      important: !!b.important,
+    });
+  });
+
+  // ------------------------------------------------------------- weather (night mode widget)
+  app.get('/weather', async () => weather());
+
+  // ------------------------------------------------------------- suite (Moveo)
+  app.get('/suite/moveo', async () => moveoToday());
+
+  /** Link to Moveo that signs you in automatically (single-use ticket, valid 2 minutes). */
+  app.post('/suite/link', async (req) => {
+    if (!suiteSecretOk()) throw httpError(400, 'Imposta api_token per collegare Moveo');
+    const ticket = signTicket('calendary', req.body?.next);
+    return { url: `${config.moveo.publicUrl}/sso?t=${encodeURIComponent(ticket)}` };
+  });
 
   // -------------------------------------------------------------- alexa
   app.get('/alexa/status', async () => {

@@ -128,6 +128,8 @@ function mapEvent(r) {
     busy: true,
     source: r.source,
     planId: r.plan_id,
+    linkUrl: r.link_url || null,
+    linkLabel: r.link_label || null,
   };
 }
 
@@ -168,7 +170,18 @@ function normalizeEvent(input, base = null) {
     allDay: bool(allDay),
     important: bool(merged.important),
     reminderMinutes: optInt(merged.reminderMinutes, 0, 10080),
+    linkUrl: normalizeLink(merged.linkUrl),
+    linkLabel: str(merged.linkLabel, 60) || null,
   };
+}
+
+/** Only http(s) links or same-origin paths: never javascript: or data: URLs. */
+function normalizeLink(url) {
+  const u = str(url, 2000);
+  if (!u) return null;
+  if (u.startsWith('/') && !u.startsWith('//')) return u;
+  if (!/^https?:\/\//i.test(u)) throw httpError(400, 'Il link deve iniziare con https:// o http://');
+  return u;
 }
 
 export function createEvent(input, { source = 'manual', planId = null } = {}) {
@@ -176,10 +189,10 @@ export function createEvent(input, { source = 'manual', planId = null } = {}) {
   const id = crypto.randomUUID();
   const now = nowIso();
   db.prepare(`INSERT INTO events (id, calendar_id, title, description, location, start_at, end_at, all_day, important,
-      reminder_minutes, source, plan_id, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
+      reminder_minutes, source, plan_id, link_url, link_label, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
     id, e.calendarId, e.title, e.description, e.location, e.start, e.end, e.allDay, e.important,
-    e.reminderMinutes, str(source, 20) || 'manual', planId || null, now, now,
+    e.reminderMinutes, str(source, 20) || 'manual', str(planId, 120) || null, e.linkUrl, e.linkLabel, now, now,
   );
   return getEvent(id);
 }
@@ -195,8 +208,9 @@ export function updateEvent(id, patch) {
   if (!current) throw httpError(404, 'Evento non trovato');
   const e = normalizeEvent(patch, current);
   db.prepare(`UPDATE events SET calendar_id = ?, title = ?, description = ?, location = ?, start_at = ?, end_at = ?,
-      all_day = ?, important = ?, reminder_minutes = ?, updated_at = ? WHERE id = ?`).run(
-    e.calendarId, e.title, e.description, e.location, e.start, e.end, e.allDay, e.important, e.reminderMinutes, nowIso(), id,
+      all_day = ?, important = ?, reminder_minutes = ?, link_url = ?, link_label = ?, updated_at = ? WHERE id = ?`).run(
+    e.calendarId, e.title, e.description, e.location, e.start, e.end, e.allDay, e.important, e.reminderMinutes,
+    e.linkUrl, e.linkLabel, nowIso(), id,
   );
   return getEvent(id);
 }

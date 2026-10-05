@@ -216,3 +216,21 @@ Test del server: `cd calendary/server && npm test`.
 - I dati sono in un file SQLite nella cartella `/data` dell'add-on, quindi rientrano nei **backup di Home Assistant**.
 - I link iCal segreti danno accesso ai calendari: trattali come password.
 - Gli eventi importati da iCal sono in sola lettura: si modificano nel calendario di origine. Quelli creati in Calendary vivono nei calendari interni (*Personale*, *Studio*, o altri che crei).
+
+## 7. Suite con Moveo e API per altre app
+
+[Moveo](https://github.com/onjbost/moveo) è l'app di allenamento che si integra con Calendary. Le due app restano separate e condividono un solo segreto: `api_token` di Calendary = `calendary_token` di Moveo.
+
+- **Da Moveo a Calendary**: le sessioni pianificate diventano eventi del calendario *Allenamento*, con il pulsante **▶ Avvia allenamento**.
+- **Da Calendary a Moveo**: la card *Allenamento* nella dashboard e nel kiosk mostra la sessione di oggi e le pause, con **▶ Avvia** e **Pausa adesso**. Imposta `moveo_url` e `moveo_public_url`.
+- **Accesso unico** in entrambe le direzioni: ticket firmati, monouso, validi 2 minuti.
+- **Tablet**: due app Android separate che si aprono a vicenda (`calendary://` e `moveo://`). Dopo l'aggiornamento ricompila l'APK di Calendary (`cd tablet; npm install; npx cap sync android; ...`): è stato aggiunto il plugin `@capacitor/app` per ricevere i link.
+
+API per altre app:
+
+- `api_token` (almeno 16 caratteri), inviato come `Authorization: Bearer <token>`;
+- eventi con `linkUrl` e `linkLabel` (pulsante **▶** nell'evento; la notifica push apre il link);
+- `POST /api/notify` `{ title, body, url, tag, important }`;
+- `DELETE /api/plans/:planId` per eliminare gli eventi creati insieme.
+
+Dettagli in [`calendary/DOCS.md`](calendary/DOCS.md).

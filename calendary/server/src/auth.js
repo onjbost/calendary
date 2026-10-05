@@ -59,7 +59,27 @@ function recordFailure(ip) {
   else a.count += 1;
 }
 
-export const isAuthenticated = (req) => config.noAuth || verifyToken(req.cookies?.[COOKIE]);
+function bearerMatches(req) {
+  if (config.apiToken.length < 16) return false; // short tokens are ignored on purpose
+  const h = req.headers.authorization || '';
+  if (!h.startsWith('Bearer ')) return false;
+  const a = crypto.createHash('sha256').update(h.slice(7).trim()).digest();
+  const b = crypto.createHash('sha256').update(config.apiToken).digest();
+  return crypto.timingSafeEqual(a, b);
+}
+
+export const isAuthenticated = (req) => config.noAuth || verifyToken(req.cookies?.[COOKIE]) || bearerMatches(req);
+
+/** Sets the long-lived session cookie (after a password login or a suite single sign-on ticket). */
+export function startSession(req, reply) {
+  reply.setCookie(COOKIE, makeToken(), {
+    path: '/',
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: req.protocol === 'https',
+    maxAge: SESSION_DAYS * 86400,
+  });
+}
 
 export function registerAuth(app) {
   if (config.noAuth) app.log.warn('CALENDARY_NO_AUTH=1: autenticazione disattivata (solo per sviluppo!)');
@@ -87,13 +107,7 @@ export function registerAuth(app) {
       return reply.code(401).send({ error: 'Password errata' });
     }
     attempts.delete(ip);
-    reply.setCookie(COOKIE, makeToken(), {
-      path: '/',
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: req.protocol === 'https',
-      maxAge: SESSION_DAYS * 86400,
-    });
+    startSession(req, reply);
     return { ok: true };
   });
 

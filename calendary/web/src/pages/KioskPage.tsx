@@ -6,12 +6,15 @@ import { AlertWatcher } from '../components/AlertWatcher';
 import { GoalsMini, WeekRoutines } from '../components/GoalWidgets';
 import { MatrixBoard, MiniMatrix } from '../components/Matrix';
 import { MonthView } from '../components/MonthView';
+import { MoveoCard } from '../components/MoveoCard';
 import { TimeGrid } from '../components/TimeGrid';
 import { TipCard } from '../components/TipCard';
 import { capitalize, countdown, eventsOnDay, fmt, hm, monthGrid, parseYmd, weekDays, WEEK, ymd } from '../dates';
 import { useEvents, useGoals, useNow, useSwipe, useTasks } from '../hooks';
 import { notifyChanged } from '../live';
 import { hideStatusBar, keepAwake } from '../native';
+import { NightStand } from '../components/NightStand';
+import { inWindow, useBattery, useEcoFlag, useLandscape, usePrefs } from '../device';
 import { Link } from '../router';
 import { tipOfTheDay } from '../tips';
 import { useUI } from '../ui';
@@ -46,7 +49,12 @@ function tabRange(tab: Tab, focus: Date) {
 
 export function KioskPage() {
   const { openEvent, newEvent, startFive } = useUI();
-  const now = useNow(1000);
+  const eco = useEcoFlag();
+  const now = useNow(eco ? 15_000 : 1000);
+  const [prefs] = usePrefs();
+  const battery = useBattery();
+  const landscape = useLandscape();
+  const [manualNight, setManualNight] = useState(false);
   const [tab, setTab] = useState<Tab>('today');
   const [focusKey, setFocusKey] = useState(() => ymd(new Date()));
   const [lastTouch, setLastTouch] = useState(Date.now());
@@ -65,20 +73,35 @@ export function KioskPage() {
   const { data: goals } = useGoals();
 
   useEffect(() => {
-    keepAwake(true);
     hideStatusBar();
-    const touch = () => setLastTouch(Date.now());
+    // touches inside the night stand (swiping between its pages) don't count: only a tap closes it
+    const touch = (e: Event) => { if (!(e.target as Element | null)?.closest?.('.nightstand')) setLastTouch(Date.now()); };
     window.addEventListener('pointerdown', touch);
     window.addEventListener('keydown', touch);
-    const onVisible = () => document.visibilityState === 'visible' && keepAwake(true);
+    return () => {
+      window.removeEventListener('pointerdown', touch);
+      window.removeEventListener('keydown', touch);
+    };
+  }, []);
+
+  // Screen always on, except in power saving away from the charger (if allowed): then Android's own timeout applies.
+  const letSleep = eco && prefs.ecoSleep && battery.charging === false;
+  useEffect(() => {
+    keepAwake(!letSleep);
+    const onVisible = () => document.visibilityState === 'visible' && keepAwake(!letSleep);
     document.addEventListener('visibilitychange', onVisible);
     return () => {
       keepAwake(false);
-      window.removeEventListener('pointerdown', touch);
-      window.removeEventListener('keydown', touch);
       document.removeEventListener('visibilitychange', onVisible);
     };
-  }, []);
+  }, [letSleep]);
+
+  // Night stand: by hand (🌙), or by itself after some idle time on charge + landscape / during the night hours.
+  const idle = now.getTime() - lastTouch >= prefs.nightIdleSec * 1000;
+  const autoNight = prefs.nightAuto === 'charging' ? battery.charging === true && landscape
+    : prefs.nightAuto === 'hours' ? inWindow(now, prefs.redFrom, prefs.redTo) : false;
+  const night = manualNight || (autoNight && idle && !document.querySelector('.modal-back'));
+  const exitNight = () => { setManualNight(false); setLastTouch(Date.now()); };
 
   // Back to "Today" after a couple of idle minutes, unless an editor is open.
   useEffect(() => {
@@ -163,6 +186,7 @@ export function KioskPage() {
         </div>
         <button className="btn primary" onClick={() => create()}>＋ Evento</button>
         <button className="btn pink" onClick={() => startFive(next?.title)}>⚡ 5 s</button>
+        <button className="btn icon" onClick={() => setManualNight(true)} aria-label="Modalità notte" title="Modalità notte">🌙</button>
         <Link to="/" className="btn icon" aria-label="App completa" title="App completa">☰</Link>
         <button className="btn icon" onClick={fullscreen} aria-label="Schermo intero">⛶</button>
       </header>
@@ -185,6 +209,7 @@ export function KioskPage() {
                 <div className="muted">Nessun impegno in vista ✨</div>
               )}
             </section>
+            <MoveoCard kiosk className="glow-cyan" />
             <TipCard key={tip.id} tip={tip} className="glow-amber" />
             <section className="glass pad scroll" style={{ flex: 1 }}>
               <div className="card-title" style={{ marginBottom: 8 }}><h3>⚡ Importanti in arrivo</h3></div>
@@ -276,7 +301,8 @@ export function KioskPage() {
       )}
 
       <AlertWatcher sound />
-      <div className="kiosk-dim" style={{ opacity: dim ? 0.6 : 0 }} />
+      <div className="kiosk-dim" style={{ opacity: dim && !night ? 0.6 : 0 }} />
+      {night && <NightStand onExit={exitNight} />}
     </div>
   );
 }

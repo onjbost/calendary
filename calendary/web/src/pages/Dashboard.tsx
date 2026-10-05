@@ -4,6 +4,7 @@ import { api, type Task } from '../api';
 import { Agenda } from '../components/Agenda';
 import { GoalsMini, WeekRoutines } from '../components/GoalWidgets';
 import { MiniMatrix } from '../components/Matrix';
+import { MoveoCard } from '../components/MoveoCard';
 import { TipCard } from '../components/TipCard';
 import { capitalize, countdown, fmt, greeting, hm, parseYmd, ymd } from '../dates';
 import { useEvents, useGoals, useNow, useTasks } from '../hooks';
@@ -78,6 +79,8 @@ export function Dashboard() {
         </div>
         <Agenda events={today} now={now} onEventClick={openEvent} empty="Giornata libera: pianifica qualcosa di importante (quadrante 2)." />
       </section>
+
+      <MoveoCard className="span-5 glow-cyan" />
 
       <section className="glass pad span-5 glow-violet">
         <div className="card-title">

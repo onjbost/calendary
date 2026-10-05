@@ -178,10 +178,48 @@ export async function scheduleNativeReminders(events: CalEvent[]) {
   try {
     // Replace only our reminders (a pending test notification must survive the refresh).
     const pending = await ln.getPending();
-    const old = (pending?.notifications || []).filter((n: { extra?: { calendary?: string } }) => n.extra?.calendary !== 'test');
+    const old = (pending?.notifications || []).filter((n: { extra?: { calendary?: string } }) => n.extra?.calendary !== 'test' && n.extra?.calendary !== 'alarm');
     if (old.length) await ln.cancel({ notifications: old.map((n: { id: number }) => ({ id: n.id })) });
     if (notifications.length) await ln.schedule({ notifications });
   } catch (err) {
     console.warn('Notifiche locali non pianificate', err);
   }
+}
+
+// ------------------------------------------------------------- suite links
+
+/**
+ * Opens a page of another app of the suite (Moveo). Inside the Android app the custom scheme
+ * (moveo://open?url=…) hands the link to the Moveo app; if it isn't installed, or in a normal
+ * browser, the page opens in a new tab instead.
+ */
+export function openInSuiteApp(url: string, scheme: 'moveo' | 'calendary', preopened?: Window | null) {
+  if (isNative()) {
+    let left = false;
+    const onHide = () => { left = true; };
+    document.addEventListener('visibilitychange', onHide, { once: true });
+    window.location.href = `${scheme}://open?url=${encodeURIComponent(url)}`;
+    window.setTimeout(() => {
+      document.removeEventListener('visibilitychange', onHide);
+      if (!left && document.visibilityState === 'visible') window.open(url, '_blank');
+    }, 1500);
+    return;
+  }
+  if (preopened && !preopened.closed) preopened.location.href = url;
+  else window.open(url, '_blank', 'noopener');
+}
+
+/** calendary://open?url=https://calendary…/path → shows that page in this app (links coming from Moveo). */
+export function listenDeepLinks() {
+  const app = plugin('App');
+  if (!app || !isNative()) return;
+  const handle = (raw?: string) => {
+    if (!raw) return;
+    try {
+      const target = new URL(new URL(raw).searchParams.get('url') || '');
+      if (target.origin === window.location.origin) window.location.href = target.href;
+    } catch { /* malformed link */ }
+  };
+  app.addListener('appUrlOpen', (e: { url: string }) => handle(e.url));
+  app.getLaunchUrl?.().then((r: { url?: string } | undefined) => handle(r?.url)).catch(() => {});
 }

@@ -30,6 +30,15 @@ export const config = {
   port: Number(pick('PORT', 'port', 8787)),
   password: String(pick('CALENDARY_PASSWORD', 'password', '')),
   noAuth: process.env.CALENDARY_NO_AUTH === '1',
+  // Server-to-server access for other add-ons (e.g. Moveo): "Authorization: Bearer <api_token>".
+  apiToken: String(pick('CALENDARY_API_TOKEN', 'api_token', '')),
+  // Suite: the training app Moveo (internal address for the API, public one for the links).
+  moveo: {
+    url: String(pick('MOVEO_URL', 'moveo_url', '')).replace(/\/$/, ''),
+    publicUrl: String(pick('MOVEO_PUBLIC_URL', 'moveo_public_url', 'https://moveo.gattucciocloud.it')).replace(/\/$/, ''),
+  },
+  // Weather widget of the night mode (Home Assistant weather entity, empty = off).
+  weatherEntity: String(pick('WEATHER_ENTITY', 'weather_entity', 'weather.forecast_home')).trim(),
   publicUrl: String(pick('PUBLIC_URL', 'public_url', 'https://calendary.gattucciocloud.it')).replace(/\/$/, ''),
   timezone: String(pick('TZ_OVERRIDE', 'timezone', process.env.TZ || 'Europe/Rome')),
   icsSyncMinutes: Math.max(5, Number(pick('ICS_SYNC_MINUTES', 'ics_sync_minutes', 15))),

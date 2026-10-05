@@ -155,6 +155,15 @@ db.exec(`
   );
 `);
 
+// Lightweight migrations for columns added after the first release.
+function addColumn(table, column, ddl) {
+  const cols = db.prepare(`PRAGMA table_info(${table})`).all().map((c) => c.name);
+  if (!cols.includes(column)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${ddl}`);
+}
+// 0.3.0: events can carry a link (e.g. "open this workout in Moveo").
+addColumn('events', 'link_url', 'link_url TEXT');
+addColumn('events', 'link_label', 'link_label TEXT');
+
 export function getSetting(key) {
   const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(key);
   return row ? row.value : null;
