@@ -7,7 +7,7 @@ import { GoalsMini, WeekRoutines } from '../components/GoalWidgets';
 import { MatrixBoard, MiniMatrix } from '../components/Matrix';
 import { MonthView } from '../components/MonthView';
 import { MoveoCard } from '../components/MoveoCard';
-import { NotesBoard } from '../components/Notes';
+import { NotesBoard, NotesMini } from '../components/Notes';
 import { PillsBoard, PillsToday } from '../components/Pills';
 import { MoveoBoard } from '../components/MoveoBoard';
 import { TimeGrid } from '../components/TimeGrid';
@@ -278,6 +278,7 @@ export function KioskPage() {
                 })}
               </div>
             </section>
+            <NotesMini onOpen={() => setTab('notes')} />
             <section className="glass pad glow-violet">
               <div className="card-title" style={{ marginBottom: 10 }}>
                 <h3>Matrice di oggi</h3>

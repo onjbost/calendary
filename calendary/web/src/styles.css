@@ -814,3 +814,7 @@ html.eco .nightstand .ns-inner { transition: none; }
 .mv-program { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius-sm); border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.04); color: inherit; font: inherit; cursor: pointer; text-align: left; }
 .mv-program:hover, .mv-program.on { border-color: rgba(var(--cyan-rgb), 0.5); }
 .kiosk-tab-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+
+/* tablet dashboard: notes card */
+.note-mini { padding: 7px 10px; border-radius: 8px; border-left: 3px solid var(--note); background: color-mix(in srgb, var(--note) 8%, transparent); cursor: pointer; min-width: 0; }
+.note-mini .ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

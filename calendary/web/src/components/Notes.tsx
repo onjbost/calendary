@@ -288,3 +288,39 @@ export function NotesBoard() {
     </div>
   );
 }
+
+/** Compact list for the tablet dashboard: open notes (pinned first), tap to open the Note tab. */
+export function NotesMini({ onOpen, max = 6 }: { onOpen: () => void; max?: number }) {
+  const { data: notes } = useNotes();
+  const { data: folders } = useNoteFolders();
+  const open = notes.filter((n) => !n.done && (n.title || n.text));
+  const byId = new Map(folders.map((f) => [f.id, f]));
+  return (
+    <section className="glass pad glow-amber">
+      <div className="card-title" style={{ marginBottom: 10 }}>
+        <h3>✎ Note</h3>
+        <span className="chip">{open.length}</span>
+        <button className="btn sm ghost" onClick={onOpen}>Apri →</button>
+      </div>
+      {!open.length ? (
+        <div className="muted small" onClick={onOpen} style={{ cursor: 'pointer' }}>Nessuna nota. Tocca per scriverne una.</div>
+      ) : (
+        <div className="stack" style={{ gap: 6 }}>
+          {open.slice(0, max).map((n) => {
+            const folder = n.folderId ? byId.get(n.folderId) : null;
+            return (
+              <div key={n.id} className="note-mini" style={{ ['--note' as string]: n.color }} onClick={onOpen}>
+                <div className="ellipsis">{n.pinned ? '📌 ' : ''}<b>{n.title || n.text.split('\n')[0]}</b></div>
+                <div className="faint tiny ellipsis">
+                  {folder && <span><span className="dot" style={{ color: folder.color, width: 7, height: 7, display: 'inline-block' }} /> {folder.name}</span>}
+                  {folder && n.title && n.text ? ' · ' : ''}{n.title ? n.text.replace(/\s+/g, ' ') : ''}
+                </div>
+              </div>
+            );
+          })}
+          {open.length > max && <div className="faint tiny" onClick={onOpen} style={{ cursor: 'pointer' }}>+{open.length - max} altre</div>}
+        </div>
+      )}
+    </section>
+  );
+}
