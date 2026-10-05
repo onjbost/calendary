@@ -148,7 +148,7 @@ L'integrazione ha due direzioni, indipendenti tra loro:
 |---|---|---|
 | **Alexa → Calendary** | *“Alexa, chiedi ad AiCal di ricordarmi di chiamare Marco domani alle 18”*, *“…aggiungi dentista giovedì alle 15:30, importante”*, *“…cosa ho domani?”*, *“…qual è il prossimo impegno?”*, *“…aggiungi consegnare la tesina alla matrice come urgente e importante”* | una skill personale (gratuita) nella console Alexa |
 | **Calendary → Alexa: promemoria** | gli eventi ⚡ importanti e i promemoria dettati ad Alexa diventano **promemoria Alexa**: suonano su tutti gli Echo e arrivano nell'app Alexa, anche se l'evento l'hai creato dal PC o dal tablet | la stessa skill + il permesso *Promemoria* + le credenziali *Skill Messaging* |
-| **Calendary → Alexa: annunci** | gli eventi importanti e il riepilogo del mattino vengono **annunciati a voce** sull'Echo | Home Assistant con l'integrazione *Alexa Media Player* (HACS) |
+| **Calendary → Alexa: annunci** | gli eventi importanti e il riepilogo del mattino vengono **annunciati a voce** sull'Echo | Home Assistant con l'integrazione ufficiale *Alexa Devices* |
 
 > Amazon non permette alle skill di creare **sveglie**: i promemoria Alexa sono l'equivalente più vicino (suonano con il loro segnale e leggono il testo).
 > Un evento già gestito come promemoria Alexa non viene annunciato una seconda volta.
@@ -178,7 +178,7 @@ L'integrazione ha due direzioni, indipendenti tra loro:
 
 > **Limite di Amazon:** i promemoria Alexa si possono creare **solo mentre parli con la skill**. Calendary programma quelli dei
 > prossimi 3 giorni ogni volta che usi AiCal: basta dire *“Alexa, chiedi ad AiCal di aggiornare i promemoria”* (anche una volta al giorno).
-> Per avvisi del tutto automatici usa gli **annunci** con Alexa Media Player (`alexa_announce_service`): Calendary annuncia
+> Per avvisi del tutto automatici usa gli **annunci** con Alexa Devices (`alexa_announce_service`): Calendary annuncia
 > gli eventi con la spunta Alexa e le pillole che non sono già programmati come promemoria.
 
 Cosa suona sugli Echo si decide **dall'app**: nell'editor di un evento attiva *🔊 Riproduci notifica su Alexa* e scegli quanti minuti prima;
@@ -192,12 +192,12 @@ Se proteggi il dominio con **Cloudflare Access**, aggiungi un'applicazione *Bypa
 
 ### Annunci vocali con Home Assistant (facoltativo)
 
-1. Installa **Alexa Media Player** da HACS e collegalo al tuo account Amazon.
-2. In **Strumenti per sviluppatori → Azioni** cerca `notify.alexa_media_…` e annota il nome dell'Echo (es. `notify.alexa_media_echo_cucina`).
+1. Aggiungi l'integrazione ufficiale **Alexa Devices** (Impostazioni → Dispositivi e servizi) e collegala al tuo account Amazon.
+2. Apri il tuo Echo: tra le entità c'è *Annuncia* (es. `notify.echo_dot_announce`). Copia l'ID entità.
 3. Scrivilo in `alexa_announce_service` (più Echo separati da virgola) e riavvia l'add-on.
 4. **Impostazioni → Alexa → Prova annuncio**.
 
-Funziona anche con altri servizi (`script.annuncio`, `tts.…`): Calendary li chiama passando il testo in `message`.
+Calendary chiama `notify.send_message` con quell'entità e il testo da leggere.
 Fuori da Home Assistant (Docker o PC) imposta `HA_URL` e `HA_TOKEN` (token di lunga durata).
 
 ## 7. Sviluppo in locale (PC)

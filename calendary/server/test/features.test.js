@@ -172,26 +172,24 @@ describe('travel mode', () => {
 });
 
 describe('announcements through Home Assistant', () => {
-  test('notify entities (Alexa Devices) use notify.send_message, legacy services get data.type', async () => {
+  test('Alexa Devices notify entities are sent with notify.send_message', async () => {
     process.env.SUPERVISOR_TOKEN = 'sv-token';
     const { config } = await import('../src/config.js');
     const { announce } = await import('../src/announce.js');
-    config.announce.services = ['notify.echo_dot_announce', 'notify.alexa_media_cucina'];
+    config.announce.services = ['notify.echo_dot_announce'];
     const calls = [];
     const realFetch = globalThis.fetch;
     globalThis.fetch = async (url, init = {}) => {
-      calls.push({ url, body: init.body ? JSON.parse(init.body) : null });
-      if (url.endsWith('/states/notify.echo_dot_announce')) return new Response('{}', { status: 200 });
-      if (url.includes('/states/')) return new Response('{}', { status: 404 });
+      calls.push({ url, auth: init.headers?.authorization, body: init.body ? JSON.parse(init.body) : null });
       return new Response('[]', { status: 200 });
     };
     try {
       const r = await announce('🔔 Prova\nda Calendary', { strict: true });
-      assert.equal(r.sent, 2);
-      const entity = calls.find((c) => c.url.endsWith('/services/notify/send_message'));
-      assert.deepEqual(entity.body, { entity_id: 'notify.echo_dot_announce', message: 'Prova. da Calendary' });
-      const legacy = calls.find((c) => c.url.endsWith('/services/notify/alexa_media_cucina'));
-      assert.deepEqual(legacy.body, { message: 'Prova. da Calendary', data: { type: 'announce' } });
+      assert.equal(r.sent, 1);
+      assert.equal(calls.length, 1);
+      assert.equal(calls[0].url, 'http://supervisor/core/api/services/notify/send_message');
+      assert.equal(calls[0].auth, 'Bearer sv-token');
+      assert.deepEqual(calls[0].body, { entity_id: 'notify.echo_dot_announce', message: 'Prova. da Calendary' });
     } finally {
       globalThis.fetch = realFetch;
       delete process.env.SUPERVISOR_TOKEN;

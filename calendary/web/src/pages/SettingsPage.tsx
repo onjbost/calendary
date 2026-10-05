@@ -528,7 +528,7 @@ function AlexaSettings() {
           <li>Copia lo <b>Skill ID</b> (amzn1.ask.skill…) nell’opzione <code>alexa_skill_id</code> dell’add-on e riavvialo.</li>
           <li>In <i>Permissions</i> attiva <b>Reminders</b>; in fondo alla stessa pagina copia <i>Alexa Client Id</i> e <i>Client Secret</i> in <code>alexa_client_id</code> / <code>alexa_client_secret</code>.</li>
           <li>Nella scheda <i>Test</i> attiva <i>Development</i>, poi nell’app Alexa apri <i>Altro → Skill e giochi → Le tue skill → Sviluppatore → AiCal → Impostazioni</i> e concedi il permesso <b>Promemoria</b>.</li>
-          <li>Per gli annunci vocali installa <i>Alexa Media Player</i> (HACS) in Home Assistant e scrivi il servizio in <code>alexa_announce_service</code>, es. <code>notify.alexa_media_echo_cucina</code>.</li>
+          <li>Per gli annunci vocali usa l'integrazione ufficiale <i>Alexa Devices</i> di Home Assistant e scrivi in <code>alexa_announce_service</code> l'entità <i>Annuncia</i> del tuo Echo, es. <code>notify.echo_dot_announce</code>.</li>
         </ol>
         <div className="faint tiny">Se usi Cloudflare Access, escludi il percorso <code>/api/alexa</code>: Amazon non può fare il login. La richiesta è comunque protetta dalla firma di Amazon e dallo Skill ID.</div>
       </details>

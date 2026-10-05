@@ -65,9 +65,9 @@ export const config = {
     skipVerify: process.env.ALEXA_SKIP_VERIFY === '1',
   },
   announce: {
-    // Home Assistant service(s) that speak on the Echo, e.g. notify.alexa_media_echo_cucina (comma separated)
+    // "Alexa Devices" notify entities that speak on the Echo, e.g. notify.echo_dot_announce (comma separated)
     services: String(pick('ALEXA_ANNOUNCE_SERVICE', 'alexa_announce_service', ''))
-      .split(',').map((s) => s.trim()).filter((s) => /^[a-z0-9_]+\.[a-z0-9_]+$/.test(s)),
+      .split(',').map((s) => s.trim()).filter((s) => /^notify\.[a-z0-9_]+$/.test(s)),
     // Outside the add-on (plain Docker / PC) Home Assistant is reached with a long-lived token.
     haUrl: String(pick('HA_URL', 'ha_url', '')).replace(/\/$/, ''),
     haToken: String(pick('HA_TOKEN', 'ha_token', '')),

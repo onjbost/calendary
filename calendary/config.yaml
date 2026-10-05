@@ -1,5 +1,5 @@
 name: Calendary
-version: "0.8.6"
+version: "0.8.7"
 slug: calendary
 description: Calendario, promemoria, obiettivi con routine, matrice di Eisenhower, assistente e Alexa in stile neon
 url: https://calendary.gattucciocloud.it
@@ -9,7 +9,7 @@ arch:
 startup: application
 boot: auto
 init: true
-# Speak on the Echo devices through Home Assistant services (Alexa Media Player)
+# Speak on the Echo devices through Home Assistant (Alexa Devices notify entities)
 homeassistant_api: true
 ports:
   8787/tcp: 8787

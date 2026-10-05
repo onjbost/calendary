@@ -24,7 +24,7 @@ notifiche push e un assistente che pianifica lo studio.
 | `alexa_skill_id` | ID della skill Alexa *Calendary* (`amzn1.ask.skill…`). Vuoto = integrazione Alexa spenta. |
 | `alexa_client_id` / `alexa_client_secret` | Credenziali *Alexa Skill Messaging* (console Alexa → Permissions). Servono per mandare i promemoria su Alexa in automatico. |
 | `alexa_reminders` | Quali eventi suonano sugli Echo come promemoria Alexa: `important` (default: gli eventi con la spunta *🔊 Riproduci notifica su Alexa*, le pillole con *Sveglia su Alexa* e i promemoria dettati ad Alexa), `all` (tutti quelli con promemoria), `off`. |
-| `alexa_announce_service` | Cosa usare per parlare sull'Echo: l'entità dell'integrazione ufficiale **Alexa Devices** (es. `notify.echo_dot_announce`) oppure il servizio di **Alexa Media Player** (es. `notify.alexa_media_echo_cucina`). Più valori separati da virgola. Vuoto = nessun annuncio. |
+| `alexa_announce_service` | Entità *Annuncia* dell'integrazione ufficiale **Alexa Devices** di Home Assistant, es. `notify.echo_dot_announce` (più Echo separati da virgola). Vuoto = nessun annuncio. |
 | `ai_fallback_models` | Modelli di riserva, separati da virgola, provati quando quello principale è sovraccarico o ha finito la quota gratuita. Default `gemini-2.5-flash-lite`. |
 
 ### Assistente AI a costo (quasi) zero
@@ -45,7 +45,7 @@ Due direzioni, configurabili separatamente:
 - **Alexa → Calendary** (skill personale *AiCal*): *“Alexa, chiedi ad AiCal di ricordarmi di chiamare Marco domani alle 18”*,
   *“…aggiungi dentista giovedì alle 15:30”*, *“…cosa ho domani?”*, *“…qual è il prossimo impegno?”*, *“…aggiungi fare la spesa alla matrice”*.
 - **Calendary → Alexa**: i promemoria degli eventi importanti (e quelli dettati ad Alexa) diventano **promemoria Alexa** e suonano su tutti gli Echo,
-  anche se modifichi il calendario dal PC o dal tablet. Con *Alexa Media Player* gli eventi importanti e il riepilogo del mattino vengono anche **annunciati a voce**.
+  anche se modifichi il calendario dal PC o dal tablet. Con l'integrazione *Alexa Devices* di Home Assistant gli eventi importanti e il riepilogo del mattino vengono anche **annunciati a voce**.
 
 La guida passo passo è nel README del repository (sezione *Alexa*). Il modello vocale da importare è in `alexa/skill-package/`.
 
