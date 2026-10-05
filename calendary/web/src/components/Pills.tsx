@@ -337,7 +337,11 @@ export function PillsBoard({ adding = false, onAdded, kiosk = false }: { adding?
                   <div key={p.pillId} className="ph-card">
                     <div className="row" style={{ gap: 8 }}><span className="dot" style={{ color: p.color }} /><b>{p.name}</b></div>
                     <div className={`ph-pct mono ${pctClass(p.percent)}`}>{p.percent}%</div>
-                    <div className="muted small">{p.taken} prese su {p.scheduled}{p.scheduled - p.taken ? ` · ${p.scheduled - p.taken} saltate` : ''}</div>
+                    <div className="muted small">
+                      {p.taken} prese su {p.scheduled}
+                      {p.scheduled - p.taken - p.pending > 0 ? ` · ${p.scheduled - p.taken - p.pending} saltate` : ''}
+                      {p.pending ? ` · ${p.pending} da prendere oggi` : ''}
+                    </div>
                     <div className="faint small">{p.streak ? `🔥 ${p.streak} ${p.streak === 1 ? 'giorno' : 'giorni'} di fila` : 'Serie interrotta'} · dal {fmt(parseYmd(p.firstDate), 'd MMM yyyy')}</div>
                   </div>
                 ))}

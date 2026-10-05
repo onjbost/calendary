@@ -200,13 +200,16 @@ export function pillHistory({ days = 14, all = false } = {}) {
   const oldest = addDays(today, -(MAX_HISTORY_DAYS - 1));
   if (from < oldest) from = oldest;
   const now = Date.now();
-  // future doses of today aren't "missed" yet (unless already taken)
-  const doses = dosesBetween(from, addDays(today, 1), { history: true }).filter((d) => Date.parse(d.at) <= now || d.takenAt);
+  // Today counts as a whole day (1 of 2 doses taken = 50%, not 100% because the evening one isn't due yet);
+  // its doses still to come are "pending", not missed.
+  const todayYmd = ymd(today);
+  const doses = dosesBetween(from, addDays(today, 1), { history: true });
   const byPill = new Map();
   for (const d of doses) {
-    const s = byPill.get(d.pillId) || { pillId: d.pillId, name: d.name, color: d.color, scheduled: 0, taken: 0, firstDate: d.date, days: {} };
+    const s = byPill.get(d.pillId) || { pillId: d.pillId, name: d.name, color: d.color, scheduled: 0, taken: 0, pending: 0, firstDate: d.date, days: {} };
     s.scheduled += 1;
     if (d.takenAt) s.taken += 1;
+    else if (d.date === todayYmd && Date.parse(d.at) > now) s.pending += 1;
     const day = (s.days[d.date] ||= { scheduled: 0, taken: 0 });
     day.scheduled += 1;
     if (d.takenAt) day.taken += 1;
@@ -235,6 +238,6 @@ export function pillLog(month) {
   const from = new Date(y, m - 1, 1);
   const end = new Date(y, m, 1);
   const today = addDays(startOfDay(new Date()), 1);
-  const now = Date.now();
-  return dosesBetween(from, end < today ? end : today, { history: true }).filter((d) => Date.parse(d.at) <= now || d.takenAt);
+  // today's doses still to come are listed too (shown as "da prendere")
+  return dosesBetween(from, end < today ? end : today, { history: true });
 }

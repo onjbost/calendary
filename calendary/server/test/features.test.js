@@ -99,6 +99,22 @@ describe('pills', () => {
 });
 
 describe('pill history', () => {
+  test('a day with two doses and one taken is 50%, even before the second is due', () => {
+    const late = new Date(Date.now() + 2 * 3600e3);
+    const lateTime = `${String(late.getHours()).padStart(2, '0')}:${String(late.getMinutes()).padStart(2, '0')}`;
+    if (ymd(late) !== ymd(new Date())) return; // too close to midnight to test today
+    const p = pills.createPill({ name: 'Keppra', dose: '1,5 compresse', times: ['00:00', lateTime], startDate: ymd(new Date()) });
+    pills.setDose(p.id, ymd(new Date()), '00:00', true);
+    const h = pills.pillHistory({ days: 1 }).pills.find((x) => x.pillId === p.id);
+    assert.equal(h.scheduled, 2);
+    assert.equal(h.taken, 1);
+    assert.equal(h.pending, 1);
+    assert.equal(h.percent, 50);
+    assert.deepEqual(h.days[ymd(new Date())], { scheduled: 2, taken: 1 });
+    assert.equal(pills.pillLog(ymd(new Date()).slice(0, 7)).filter((d) => d.pillId === p.id).length, 2);
+    pills.deletePill(p.id);
+  });
+
   test('all-time history since the therapy started, with streak and monthly log', () => {
     const day = (n) => ymd(new Date(Date.now() - n * 86400e3));
     const p = pills.createPill({ name: 'Ferro', times: ['00:01'], startDate: day(60) });
@@ -108,7 +124,7 @@ describe('pill history', () => {
     assert.ok(all.from <= day(60));
     const h = all.pills.find((x) => x.pillId === p.id);
     assert.equal(h.firstDate, day(60));
-    assert.ok(h.scheduled >= 61); // 60 past days + today (00:01 already passed)
+    assert.equal(h.scheduled, 61); // 60 past days + today
     assert.ok(h.taken === 59);
     assert.equal(h.streak, 39 + (h.days[day(0)]?.taken ? 1 : 0)); // days 39..1 (today is not complete yet)
     assert.equal(pills.pillHistory({ days: 14 }).pills.find((x) => x.pillId === p.id).scheduled, 14);

@@ -256,7 +256,7 @@ export interface PillHistory {
   from: string;
   to: string;
   pills: {
-    pillId: string; name: string; color: string; scheduled: number; taken: number; percent: number; streak: number; firstDate: string;
+    pillId: string; name: string; color: string; scheduled: number; taken: number; pending: number; percent: number; streak: number; firstDate: string;
     days: Record<string, { scheduled: number; taken: number }>;
   }[];
 }
