@@ -1,6 +1,6 @@
 import type { CalEvent } from '../api';
 import { fmt, hm } from '../dates';
-import { isMoveoLink, openMoveoUrl } from '../suite';
+import { isMoveoLink, openMoveoUrl, openWardapp, useWardappInfo, wardappAskPath } from '../suite';
 
 /** Vertical list of events, highlighting the one in progress and dimming past ones. */
 export function Agenda({ events, now, onEventClick, empty = 'Niente in programma', showDay = false }: {
@@ -11,6 +11,7 @@ export function Agenda({ events, now, onEventClick, empty = 'Niente in programma
   /** prefix the time with the weekday, for lists spanning several days */
   showDay?: boolean;
 }) {
+  const wardapp = useWardappInfo();
   if (!events.length) return <div className="empty">{empty}</div>;
   const t = now.getTime();
   return (
@@ -19,6 +20,7 @@ export function Agenda({ events, now, onEventClick, empty = 'Niente in programma
         const s = Date.parse(ev.start);
         const e = Date.parse(ev.end);
         const state = ev.allDay ? '' : e < t ? 'past' : s <= t ? 'now' : '';
+        const ask = wardapp && state !== 'past' ? wardappAskPath(ev) : null;
         return (
           <div key={ev.id} className={`agenda-item ${state} ${ev.done ? 'is-done' : ''}`} onClick={() => onEventClick(ev)}>
             <div className="bar" style={{ color: ev.color }} />
@@ -36,6 +38,10 @@ export function Agenda({ events, now, onEventClick, empty = 'Niente in programma
                   e.stopPropagation();
                   if (isMoveoLink(ev.linkUrl)) { e.preventDefault(); openMoveoUrl(ev.linkUrl!); }
                 }} style={{ alignSelf: 'center', textDecoration: 'none' }}>▶</a>
+            )}
+            {ask && (
+              <button className="btn sm" title="Cosa mi metto? (WardApp)" aria-label="Cosa mi metto?" style={{ alignSelf: 'center' }}
+                onClick={(e) => { e.stopPropagation(); openWardapp(ask, wardapp?.publicUrl); }}>👕</button>
             )}
             {state === 'now' && <span className="chip neon-pink" style={{ alignSelf: 'center' }}>ORA</span>}
           </div>

@@ -7,7 +7,7 @@ import { notifyChanged } from '../live';
 import { navigate } from '../router';
 import { useUI } from '../ui';
 import { Modal } from './Modal';
-import { isMoveoLink, openMoveoUrl } from '../suite';
+import { isMoveoLink, openMoveoUrl, openWardapp, useWardappInfo, wardappAskPath } from '../suite';
 
 const REMINDERS: { value: string; label: string }[] = [
   { value: '', label: 'Automatico' },
@@ -91,6 +91,7 @@ export function EventModal({ event, draft, onClose }: {
   onClose: () => void;
 }) {
   const { toast, startFive } = useUI();
+  const wardapp = useWardappInfo();
   const { data: calendars } = useCalendars();
   const localCals = useMemo(() => calendars.filter((c) => c.type === 'local'), [calendars]);
   const [f, setF] = useState<Form>(() => initialForm(event, draft));
@@ -257,6 +258,9 @@ export function EventModal({ event, draft, onClose }: {
       <div className="stack">
         {error && <div className="alert error">{error}</div>}
         {event?.linkUrl && <EventLinkButton event={event} onOpen={onClose} />}
+        {event && wardapp && wardappAskPath(event) && (
+          <button className="btn" onClick={() => openWardapp(wardappAskPath(event)!, wardapp.publicUrl)}>👕 Cosa mi metto?</button>
+        )}
         <input
           className="input"
           placeholder="Titolo (es. Lezione master, Palestra…)"

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { api, type MoveoToday, type WardappToday } from './api';
+import { api, type CalEvent, type MoveoToday, type WardappToday } from './api';
+import { hm, ymd } from './dates';
 import { isEco } from './device';
 import { isNative, openInSuiteApp } from './native';
 
@@ -91,4 +92,30 @@ export async function openWardapp(path: string, publicUrl?: string) {
   }
   if (tab && !tab.closed) tab.location.href = url;
   else window.open(url, '_blank');
+}
+
+let wardappInfo: Promise<WardappToday | null> | null = null;
+
+/** WardApp link status, asked once per page load (the 👕 buttons appear only when WardApp is connected). */
+export function useWardappInfo() {
+  const [info, setInfo] = useState<WardappToday | null>(null);
+  useEffect(() => {
+    wardappInfo ||= api.wardappToday().catch(() => null);
+    let alive = true;
+    wardappInfo.then((d) => { if (alive) setInfo(d); });
+    return () => { alive = false; };
+  }, []);
+  return info?.enabled ? info : null;
+}
+
+/**
+ * WardApp "Cosa mi metto?" page for an event, or null when it makes no sense:
+ * all-day events and the workouts created by Moveo.
+ */
+export function wardappAskPath(ev: Pick<CalEvent, 'allDay' | 'planId' | 'start' | 'end' | 'title' | 'location'>): string | null {
+  if (ev.allDay || ev.planId?.startsWith('moveo:')) return null;
+  const q = new URLSearchParams({ date: ymd(ev.start), start: hm(ev.start), title: ev.title });
+  if (ymd(ev.end) === ymd(ev.start)) q.set('end', hm(ev.end));
+  if (ev.location) q.set('location', ev.location);
+  return `/ask?${q.toString()}`;
 }

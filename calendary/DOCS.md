@@ -74,6 +74,7 @@ WardApp, l'armadio digitale, usa lo stesso `api_token` (in WardApp: `calendary_t
 - **Card *Oggi indosso*** nella dashboard: Calendary legge `GET <wardapp_url>/api/suite/today` (Bearer `api_token`), che restituisce `{ logged, items: [{ id, name, thumbUrl }], url }`. Le miniature hanno un link firmato. Il pulsante **Registra** apre WardApp già autenticato su *Oggi ho messo*.
 - **Accesso unico** nei due sensi: `POST /api/suite/link` con `app: "wardapp"` firma il link verso WardApp; `/sso` accetta i ticket di Moveo e di WardApp.
 - **Notifiche**: WardApp invia la notifica serale "Cosa hai messo oggi?" con `POST /api/notify`.
+- **👕 Cosa mi metto?** (0.10.0): nella finestra di un evento e accanto agli eventi dell'agenda (non quelli di tutto il giorno, non gli allenamenti di Moveo, non quelli già passati) apre WardApp già autenticato su `/ask?date=…&start=…&end=…&title=…&location=…`: WardApp sceglie la categoria di outfit dall'evento e propone 3 outfit con il meteo di quella fascia oraria. Il pulsante compare solo se `wardapp_url` è impostato.
 
 ## Suite con Moveo (0.4.0)
 
