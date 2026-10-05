@@ -170,3 +170,32 @@ describe('travel mode', () => {
     assert.ok(planned());
   });
 });
+
+describe('announcements through Home Assistant', () => {
+  test('notify entities (Alexa Devices) use notify.send_message, legacy services get data.type', async () => {
+    process.env.SUPERVISOR_TOKEN = 'sv-token';
+    const { config } = await import('../src/config.js');
+    const { announce } = await import('../src/announce.js');
+    config.announce.services = ['notify.echo_dot_announce', 'notify.alexa_media_cucina'];
+    const calls = [];
+    const realFetch = globalThis.fetch;
+    globalThis.fetch = async (url, init = {}) => {
+      calls.push({ url, body: init.body ? JSON.parse(init.body) : null });
+      if (url.endsWith('/states/notify.echo_dot_announce')) return new Response('{}', { status: 200 });
+      if (url.includes('/states/')) return new Response('{}', { status: 404 });
+      return new Response('[]', { status: 200 });
+    };
+    try {
+      const r = await announce('🔔 Prova\nda Calendary', { strict: true });
+      assert.equal(r.sent, 2);
+      const entity = calls.find((c) => c.url.endsWith('/services/notify/send_message'));
+      assert.deepEqual(entity.body, { entity_id: 'notify.echo_dot_announce', message: 'Prova. da Calendary' });
+      const legacy = calls.find((c) => c.url.endsWith('/services/notify/alexa_media_cucina'));
+      assert.deepEqual(legacy.body, { message: 'Prova. da Calendary', data: { type: 'announce' } });
+    } finally {
+      globalThis.fetch = realFetch;
+      delete process.env.SUPERVISOR_TOKEN;
+      config.announce.services = [];
+    }
+  });
+});

@@ -27,6 +27,31 @@ export function spokenText(text) {
     .trim();
 }
 
+// Each configured name is either a notify *entity* (the official "Alexa Devices" integration creates
+// notify.<echo>_announce / notify.<echo>_speak, used with notify.send_message) or a legacy *service*
+// (Alexa Media Player: notify.alexa_media_<echo> with data.type = announce; tts.*, script.* get just the message).
+const entityCache = new Map(); // name -> boolean
+
+async function isEntity(ha, name) {
+  if (entityCache.has(name)) return entityCache.get(name);
+  let found = false;
+  try {
+    const res = await fetch(`${ha.url}/states/${name}`, { headers: { authorization: `Bearer ${ha.token}` }, signal: AbortSignal.timeout(5000) });
+    found = res.ok;
+  } catch { /* unreachable: try it as a service */ }
+  entityCache.set(name, found);
+  return found;
+}
+
+async function target(ha, name, text) {
+  const [domain, service] = name.split('.');
+  if (domain === 'notify' && await isEntity(ha, name)) {
+    return { url: `${ha.url}/services/notify/send_message`, body: { entity_id: name, message: text } };
+  }
+  const body = domain === 'notify' ? { message: text, data: { type: 'announce' } } : { message: text };
+  return { url: `${ha.url}/services/${domain}/${service}`, body };
+}
+
 /** Speaks `message` on every configured device. Never throws unless `strict` (used by the test button). */
 export async function announce(message, { strict = false } = {}) {
   const ha = homeAssistant();
@@ -39,11 +64,9 @@ export async function announce(message, { strict = false } = {}) {
   let sent = 0;
   const errors = [];
   await Promise.all(config.announce.services.map(async (svc) => {
-    const [domain, service] = svc.split('.');
-    // Alexa Media Player's notify services want data.type; anything else (tts.*, script.*) just gets the message.
-    const body = domain === 'notify' ? { message: text, data: { type: 'announce' } } : { message: text };
     try {
-      const res = await fetch(`${ha.url}/services/${domain}/${service}`, {
+      const { url, body } = await target(ha, svc, text);
+      const res = await fetch(url, {
         method: 'POST',
         headers: { authorization: `Bearer ${ha.token}`, 'content-type': 'application/json' },
         body: JSON.stringify(body),
