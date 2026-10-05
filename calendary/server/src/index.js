@@ -7,6 +7,9 @@ import fastifyStatic from '@fastify/static';
 import { config } from './config.js';
 import { registerAuth } from './auth.js';
 import { registerRoutes } from './routes.js';
+import { registerAlexa } from './alexa.js';
+import { scheduleSync, startAlexaReminders } from './alexa-reminders.js';
+import { onChange } from './stream.js';
 import { initPush } from './push.js';
 import { startIcsSync } from './ics.js';
 import { startNotifier } from './notifier.js';
@@ -30,6 +33,7 @@ app.setErrorHandler((err, req, reply) => {
 await app.register(fastifyCookie);
 registerAuth(app);
 await app.register(registerRoutes, { prefix: '/api' });
+await app.register(registerAlexa, { prefix: '/api' });
 
 const hasWeb = fs.existsSync(path.join(webDist, 'index.html'));
 if (hasWeb) {
@@ -57,6 +61,10 @@ ensureDefaultCalendars();
 initPush();
 startIcsSync();
 startNotifier();
+startAlexaReminders();
+onChange((scope) => {
+  if (scope === 'events' || scope === 'goals' || scope === 'calendars') scheduleSync();
+});
 
 await app.listen({ port: config.port, host: '0.0.0.0' });
 app.log.info(`Calendary pronto su http://localhost:${config.port} (fuso ${config.timezone})`);

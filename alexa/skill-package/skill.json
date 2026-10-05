@@ -1,0 +1,77 @@
+{
+  "manifest": {
+    "publishingInformation": {
+      "locales": {
+        "it-IT": {
+          "name": "Calendary",
+          "summary": "Il tuo calendario Calendary con la voce: promemoria, impegni, agenda e matrice di Eisenhower.",
+          "description": "Collega Alexa al tuo Calendary su Home Assistant. Aggiungi promemoria e impegni a voce, chiedi cosa hai in programma e ricevi sui dispositivi Echo i promemoria degli eventi importanti.",
+          "examplePhrases": [
+            "Alexa, apri Calendary",
+            "Alexa, chiedi a Calendary cosa ho domani",
+            "Alexa, chiedi a Calendary di ricordarmi di chiamare Marco alle 18"
+          ],
+          "keywords": [
+            "calendario",
+            "promemoria",
+            "agenda"
+          ]
+        }
+      },
+      "isAvailableWorldwide": false,
+      "distributionCountries": [
+        "IT"
+      ],
+      "testingInstructions": "Skill privata collegata a un'istanza Calendary self-hosted.",
+      "category": "ORGANIZERS_AND_ASSISTANTS"
+    },
+    "apis": {
+      "custom": {
+        "endpoint": {
+          "uri": "https://calendary.gattucciocloud.it/api/alexa",
+          "sslCertificateType": "Trusted"
+        },
+        "interfaces": []
+      }
+    },
+    "permissions": [
+      {
+        "name": "alexa::alerts:reminders:skill:readwrite"
+      }
+    ],
+    "events": {
+      "endpoint": {
+        "uri": "https://calendary.gattucciocloud.it/api/alexa",
+        "sslCertificateType": "Trusted"
+      },
+      "subscriptions": [
+        {
+          "eventName": "SKILL_PERMISSION_ACCEPTED"
+        },
+        {
+          "eventName": "SKILL_PERMISSION_CHANGED"
+        },
+        {
+          "eventName": "SKILL_DISABLED"
+        },
+        {
+          "eventName": "SKILL_ENABLED"
+        }
+      ]
+    },
+    "privacyAndCompliance": {
+      "allowsPurchases": false,
+      "usesPersonalInfo": false,
+      "isChildDirected": false,
+      "isExportCompliant": true,
+      "containsAds": false,
+      "locales": {
+        "it-IT": {
+          "privacyPolicyUrl": "https://calendary.gattucciocloud.it",
+          "termsOfUseUrl": "https://calendary.gattucciocloud.it"
+        }
+      }
+    }
+  },
+  "manifestVersion": "1.0"
+}

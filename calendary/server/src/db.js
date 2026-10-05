@@ -145,6 +145,14 @@ db.exec(`
     done_at TEXT NOT NULL,
     PRIMARY KEY (routine_id, date)
   );
+
+  -- Reminders currently scheduled on the user's Alexa devices (one row per event occurrence).
+  CREATE TABLE IF NOT EXISTS alexa_reminders (
+    key TEXT PRIMARY KEY,
+    alert_token TEXT NOT NULL,
+    fire_at TEXT NOT NULL,
+    created_at TEXT NOT NULL
+  );
 `);
 
 export function getSetting(key) {
@@ -154,6 +162,10 @@ export function getSetting(key) {
 
 export function setSetting(key, value) {
   db.prepare('INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value').run(key, String(value));
+}
+
+export function deleteSetting(key) {
+  db.prepare('DELETE FROM settings WHERE key = ?').run(key);
 }
 
 export function transaction(fn) {

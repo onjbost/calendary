@@ -1,0 +1,622 @@
+{
+  "interactionModel": {
+    "languageModel": {
+      "invocationName": "calendary",
+      "intents": [
+        {
+          "name": "AMAZON.CancelIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.HelpIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.StopIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.NavigateHomeIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.FallbackIntent",
+          "samples": []
+        },
+        {
+          "name": "AddReminderIntent",
+          "slots": [
+            {
+              "name": "what",
+              "type": "TESTO_LIBERO",
+              "samples": [
+                "{what}",
+                "di {what}",
+                "ricordami di {what}"
+              ]
+            },
+            {
+              "name": "date",
+              "type": "AMAZON.DATE"
+            },
+            {
+              "name": "time",
+              "type": "AMAZON.TIME",
+              "samples": [
+                "alle {time}",
+                "{time}",
+                "per le {time}"
+              ]
+            }
+          ],
+          "samples": [
+            "ricordami di {what}",
+            "ricordami di {what} alle {time}",
+            "ricordami di {what} {date} alle {time}",
+            "ricordami di {what} {date}",
+            "ricordami {date} alle {time} di {what}",
+            "ricordami {date} di {what}",
+            "ricordami alle {time} di {what}",
+            "di ricordarmi di {what}",
+            "di ricordarmi di {what} alle {time}",
+            "di ricordarmi di {what} {date} alle {time}",
+            "di ricordarmi {date} alle {time} di {what}",
+            "aggiungi un promemoria",
+            "crea un promemoria",
+            "aggiungi un promemoria per {what}",
+            "aggiungi un promemoria per {what} alle {time}",
+            "aggiungi un promemoria per {what} {date} alle {time}",
+            "crea un promemoria per {what} {date} alle {time}",
+            "imposta un promemoria per {what} {date} alle {time}",
+            "promemoria {what} {date} alle {time}",
+            "metti un promemoria {date} alle {time} per {what}"
+          ]
+        },
+        {
+          "name": "AddEventIntent",
+          "slots": [
+            {
+              "name": "what",
+              "type": "TESTO_LIBERO",
+              "samples": [
+                "{what}"
+              ]
+            },
+            {
+              "name": "date",
+              "type": "AMAZON.DATE"
+            },
+            {
+              "name": "time",
+              "type": "AMAZON.TIME",
+              "samples": [
+                "alle {time}",
+                "{time}"
+              ]
+            },
+            {
+              "name": "duration",
+              "type": "AMAZON.DURATION"
+            },
+            {
+              "name": "importance",
+              "type": "IMPORTANZA"
+            }
+          ],
+          "samples": [
+            "aggiungi {what} {date} alle {time}",
+            "aggiungi {what} alle {time}",
+            "aggiungi l'impegno {what} {date} alle {time}",
+            "aggiungi un impegno",
+            "aggiungi un evento",
+            "aggiungi un impegno {importance} {what} {date} alle {time}",
+            "aggiungi un evento {what} {date} alle {time}",
+            "aggiungi un evento {importance} {what} {date} alle {time}",
+            "aggiungi {what} {date} alle {time} per {duration}",
+            "aggiungi {what} {date} alle {time} {importance}",
+            "segna {what} {date} alle {time}",
+            "segna {what} alle {time}",
+            "segna {what} {date} alle {time} per {duration}",
+            "segna in calendario {what} {date} alle {time}",
+            "metti in calendario {what} {date} alle {time}",
+            "fissa {what} {date} alle {time}",
+            "ho {what} {date} alle {time}",
+            "di aggiungere {what} {date} alle {time}",
+            "di segnare {what} {date} alle {time}"
+          ]
+        },
+        {
+          "name": "GetAgendaIntent",
+          "slots": [
+            {
+              "name": "date",
+              "type": "AMAZON.DATE"
+            }
+          ],
+          "samples": [
+            "cosa ho {date}",
+            "cosa ho in programma {date}",
+            "cosa c'è in agenda {date}",
+            "che impegni ho {date}",
+            "quali impegni ho {date}",
+            "leggimi l'agenda di {date}",
+            "leggimi l'agenda",
+            "com'è la mia giornata",
+            "com'è la giornata di {date}",
+            "la mia agenda",
+            "l'agenda di {date}",
+            "cosa devo fare {date}",
+            "sono libero {date}"
+          ]
+        },
+        {
+          "name": "NextEventIntent",
+          "slots": [],
+          "samples": [
+            "qual è il prossimo impegno",
+            "qual è il mio prossimo impegno",
+            "qual è il prossimo appuntamento",
+            "prossimo impegno",
+            "prossimo evento",
+            "cosa ho dopo",
+            "cosa viene dopo",
+            "quando è il prossimo impegno"
+          ]
+        },
+        {
+          "name": "AddTaskIntent",
+          "slots": [
+            {
+              "name": "task",
+              "type": "TESTO_LIBERO",
+              "samples": [
+                "{task}"
+              ]
+            },
+            {
+              "name": "quadrant",
+              "type": "QUADRANTE"
+            },
+            {
+              "name": "date",
+              "type": "AMAZON.DATE"
+            }
+          ],
+          "samples": [
+            "aggiungi {task} alla matrice",
+            "aggiungi {task} alla matrice di {date}",
+            "aggiungi {task} alla matrice come {quadrant}",
+            "aggiungi l'attività {task}",
+            "aggiungi l'attività {task} come {quadrant}",
+            "aggiungi un'attività",
+            "aggiungi {task} alle cose da fare",
+            "aggiungi {task} alle cose da fare {date}",
+            "metti {task} nella matrice",
+            "metti {task} tra le cose {quadrant}",
+            "aggiungi {task} tra le cose {quadrant}",
+            "nuova attività {task}",
+            "devo {task}",
+            "devo {task} {date}"
+          ]
+        }
+      ],
+      "types": [
+        {
+          "name": "TESTO_LIBERO",
+          "values": [
+            {
+              "name": {
+                "value": "chiamare marco"
+              }
+            },
+            {
+              "name": {
+                "value": "comprare il latte"
+              }
+            },
+            {
+              "name": {
+                "value": "fare la spesa"
+              }
+            },
+            {
+              "name": {
+                "value": "pagare la bolletta della luce"
+              }
+            },
+            {
+              "name": {
+                "value": "prendere le medicine"
+              }
+            },
+            {
+              "name": {
+                "value": "portare fuori il cane"
+              }
+            },
+            {
+              "name": {
+                "value": "buttare la plastica"
+              }
+            },
+            {
+              "name": {
+                "value": "ritirare il pacco in posta"
+              }
+            },
+            {
+              "name": {
+                "value": "mandare la mail al professore"
+              }
+            },
+            {
+              "name": {
+                "value": "prenotare il dentista"
+              }
+            },
+            {
+              "name": {
+                "value": "annaffiare le piante"
+              }
+            },
+            {
+              "name": {
+                "value": "rispondere alle mail"
+              }
+            },
+            {
+              "name": {
+                "value": "preparare la presentazione per la riunione"
+              }
+            },
+            {
+              "name": {
+                "value": "andare in palestra"
+              }
+            },
+            {
+              "name": {
+                "value": "studiare il capitolo tre"
+              }
+            },
+            {
+              "name": {
+                "value": "telefonare alla mamma"
+              }
+            },
+            {
+              "name": {
+                "value": "riunione con il team"
+              }
+            },
+            {
+              "name": {
+                "value": "dentista"
+              }
+            },
+            {
+              "name": {
+                "value": "cena da luca"
+              }
+            },
+            {
+              "name": {
+                "value": "esame di statistica"
+              }
+            },
+            {
+              "name": {
+                "value": "consegnare la tesina"
+              }
+            },
+            {
+              "name": {
+                "value": "lezione di inglese"
+              }
+            },
+            {
+              "name": {
+                "value": "appuntamento dal medico"
+              }
+            },
+            {
+              "name": {
+                "value": "partita di calcetto"
+              }
+            },
+            {
+              "name": {
+                "value": "compleanno di giulia"
+              }
+            },
+            {
+              "name": {
+                "value": "colloquio di lavoro"
+              }
+            },
+            {
+              "name": {
+                "value": "revisione della macchina"
+              }
+            },
+            {
+              "name": {
+                "value": "fare il bucato"
+              }
+            },
+            {
+              "name": {
+                "value": "prendere i bambini a scuola"
+              }
+            },
+            {
+              "name": {
+                "value": "comprare il regalo per sara"
+              }
+            },
+            {
+              "name": {
+                "value": "pagare l'affitto"
+              }
+            },
+            {
+              "name": {
+                "value": "controllare il timesheet"
+              }
+            },
+            {
+              "name": {
+                "value": "aggiornare il curriculum"
+              }
+            },
+            {
+              "name": {
+                "value": "fare benzina"
+              }
+            },
+            {
+              "name": {
+                "value": "ritirare le analisi"
+              }
+            }
+          ]
+        },
+        {
+          "name": "QUADRANTE",
+          "values": [
+            {
+              "id": "1",
+              "name": {
+                "value": "urgente e importante",
+                "synonyms": [
+                  "urgenti e importanti",
+                  "urgentissima",
+                  "prioritaria",
+                  "da fare subito",
+                  "fuoco"
+                ]
+              }
+            },
+            {
+              "id": "2",
+              "name": {
+                "value": "importante",
+                "synonyms": [
+                  "importanti",
+                  "da pianificare",
+                  "importante non urgente"
+                ]
+              }
+            },
+            {
+              "id": "3",
+              "name": {
+                "value": "urgente",
+                "synonyms": [
+                  "urgenti",
+                  "da delegare",
+                  "urgente non importante"
+                ]
+              }
+            },
+            {
+              "id": "4",
+              "name": {
+                "value": "non importante",
+                "synonyms": [
+                  "né urgente né importante",
+                  "da eliminare",
+                  "poco importante",
+                  "non urgente"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "IMPORTANZA",
+          "values": [
+            {
+              "id": "important",
+              "name": {
+                "value": "importante",
+                "synonyms": [
+                  "urgente",
+                  "prioritario",
+                  "fondamentale"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "dialog": {
+      "intents": [
+        {
+          "name": "AddReminderIntent",
+          "delegationStrategy": "ALWAYS",
+          "confirmationRequired": false,
+          "prompts": {},
+          "slots": [
+            {
+              "name": "what",
+              "type": "TESTO_LIBERO",
+              "elicitationRequired": true,
+              "confirmationRequired": false,
+              "prompts": {
+                "elicitation": "Elicit.Reminder.What"
+              }
+            },
+            {
+              "name": "date",
+              "type": "AMAZON.DATE",
+              "elicitationRequired": false,
+              "confirmationRequired": false,
+              "prompts": {}
+            },
+            {
+              "name": "time",
+              "type": "AMAZON.TIME",
+              "elicitationRequired": true,
+              "confirmationRequired": false,
+              "prompts": {
+                "elicitation": "Elicit.Reminder.Time"
+              }
+            }
+          ]
+        },
+        {
+          "name": "AddEventIntent",
+          "delegationStrategy": "ALWAYS",
+          "confirmationRequired": false,
+          "prompts": {},
+          "slots": [
+            {
+              "name": "what",
+              "type": "TESTO_LIBERO",
+              "elicitationRequired": true,
+              "confirmationRequired": false,
+              "prompts": {
+                "elicitation": "Elicit.Event.What"
+              }
+            },
+            {
+              "name": "date",
+              "type": "AMAZON.DATE",
+              "elicitationRequired": false,
+              "confirmationRequired": false,
+              "prompts": {}
+            },
+            {
+              "name": "time",
+              "type": "AMAZON.TIME",
+              "elicitationRequired": true,
+              "confirmationRequired": false,
+              "prompts": {
+                "elicitation": "Elicit.Event.Time"
+              }
+            },
+            {
+              "name": "duration",
+              "type": "AMAZON.DURATION",
+              "elicitationRequired": false,
+              "confirmationRequired": false,
+              "prompts": {}
+            },
+            {
+              "name": "importance",
+              "type": "IMPORTANZA",
+              "elicitationRequired": false,
+              "confirmationRequired": false,
+              "prompts": {}
+            }
+          ]
+        },
+        {
+          "name": "AddTaskIntent",
+          "delegationStrategy": "ALWAYS",
+          "confirmationRequired": false,
+          "prompts": {},
+          "slots": [
+            {
+              "name": "task",
+              "type": "TESTO_LIBERO",
+              "elicitationRequired": true,
+              "confirmationRequired": false,
+              "prompts": {
+                "elicitation": "Elicit.Task.What"
+              }
+            },
+            {
+              "name": "quadrant",
+              "type": "QUADRANTE",
+              "elicitationRequired": false,
+              "confirmationRequired": false,
+              "prompts": {}
+            },
+            {
+              "name": "date",
+              "type": "AMAZON.DATE",
+              "elicitationRequired": false,
+              "confirmationRequired": false,
+              "prompts": {}
+            }
+          ]
+        }
+      ],
+      "delegationStrategy": "ALWAYS"
+    },
+    "prompts": [
+      {
+        "id": "Elicit.Reminder.What",
+        "variations": [
+          {
+            "type": "PlainText",
+            "value": "Cosa ti devo ricordare?"
+          }
+        ]
+      },
+      {
+        "id": "Elicit.Reminder.Time",
+        "variations": [
+          {
+            "type": "PlainText",
+            "value": "A che ora te lo ricordo?"
+          },
+          {
+            "type": "PlainText",
+            "value": "Per che ora?"
+          }
+        ]
+      },
+      {
+        "id": "Elicit.Event.What",
+        "variations": [
+          {
+            "type": "PlainText",
+            "value": "Che impegno aggiungo?"
+          }
+        ]
+      },
+      {
+        "id": "Elicit.Event.Time",
+        "variations": [
+          {
+            "type": "PlainText",
+            "value": "A che ora?"
+          }
+        ]
+      },
+      {
+        "id": "Elicit.Task.What",
+        "variations": [
+          {
+            "type": "PlainText",
+            "value": "Che attività aggiungo alla matrice?"
+          }
+        ]
+      }
+    ]
+  }
+}

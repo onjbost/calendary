@@ -4,7 +4,8 @@ import { getSetting, setSetting } from './db.js';
 
 const COOKIE = 'calendary_session';
 const SESSION_DAYS = 365; // the kiosk tablet should stay logged in
-const PUBLIC_PATHS = new Set(['/api/login', '/api/logout', '/api/session', '/api/health']);
+// /api/alexa is called by Amazon: it is protected by the request signature and the skill id (alexa.js).
+const PUBLIC_PATHS = new Set(['/api/login', '/api/logout', '/api/session', '/api/health', '/api/alexa']);
 
 const authConfigured = () => config.noAuth || config.password.length > 0;
 

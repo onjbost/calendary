@@ -1,4 +1,8 @@
 import { getAllEvents } from './agenda.js';
+import { canSyncOutOfSession, planDiff, requestSync, syncStatus } from './alexa-reminders.js';
+import { announce, announceStatus } from './announce.js';
+import { config } from './config.js';
+import { getSetting } from './db.js';
 import { assistantStatus, chat } from './assistant.js';
 import * as goals from './goals.js';
 import { forgetCalendar, syncCalendar } from './ics.js';
@@ -154,6 +158,27 @@ export async function registerRoutes(app) {
     url: '/',
     tag: `test-${Date.now()}`,
   }));
+
+  // -------------------------------------------------------------- alexa
+  app.get('/alexa/status', async () => {
+    const plan = config.alexa.reminders === 'off' ? null : planDiff();
+    return {
+      skillConfigured: !!config.alexa.skillId,
+      endpoint: `${config.publicUrl}/api/alexa`,
+      linked: !!getSetting('alexa_user_id'),
+      lastSeen: getSetting('alexa_last_seen'),
+      permission: getSetting('alexa_permission'),
+      remindersMode: config.alexa.reminders,
+      outOfSession: canSyncOutOfSession(),
+      pending: plan ? plan.create.length + plan.remove.length : 0,
+      ...syncStatus(),
+      announce: announceStatus(),
+    };
+  });
+
+  app.post('/alexa/sync', async () => requestSync({ force: true }));
+
+  app.post('/alexa/announce-test', async () => announce('Ciao, sono Calendary. Da ora ti avviso qui degli impegni importanti.', { strict: true }));
 
   // -------------------------------------------------------------- goals
   const goalsChanged = (alsoEvents = true) => {

@@ -1,6 +1,8 @@
 import { db, getSetting, setSetting } from './db.js';
 import { config } from './config.js';
 import { effectiveReminder, getAllEvents } from './agenda.js';
+import { inMinutes } from './alexa-speech.js';
+import { announce } from './announce.js';
 import { sendToAll } from './push.js';
 import { fmtTime, nowIso, ymd } from './util.js';
 
@@ -39,6 +41,12 @@ async function checkReminders() {
       tag: key,
       important: ev.important,
     });
+    // Important events are also spoken on the Echo, unless Alexa already rings them as a reminder.
+    const prefix = `${key}|`;
+    const onAlexa = db.prepare('SELECT 1 FROM alexa_reminders WHERE substr(key, 1, ?) = ?').get(prefix.length, prefix);
+    if (ev.important && !onAlexa) {
+      announce(`${minutesLeft ? `${inMinutes(minutesLeft)}, alle ${fmtTime(ev.start)}` : 'Adesso'}: ${ev.title}${where ? `, ${ev.location}` : ''}`);
+    }
   }
 
   db.prepare('DELETE FROM notified WHERE sent_at < ?').run(new Date(now - 14 * 86400e3).toISOString());
@@ -69,6 +77,7 @@ async function checkMorningSummary() {
   if (events.length) lines.push(`${events.length} ${events.length === 1 ? 'evento' : 'eventi'} oggi${timed.length ? ': ' + timed.join(', ') : ''}`);
   if (urgent.length) lines.push(`🔥 ${urgent.length} urgenti e importanti: ${urgent.slice(0, 3).map((t) => t.title).join(', ')}`);
   await sendToAll({ title: '☀️ Buongiorno! Ecco la tua giornata', body: lines.join('\n'), url: '/', tag: `summary-${today}` });
+  announce(`Buongiorno! ${lines.join('. ')}`);
 }
 
 async function tick() {

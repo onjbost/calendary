@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { api, type Calendar } from '../api';
+import { api, type AlexaStatus, type Calendar } from '../api';
 import { fmt } from '../dates';
 import { useCalendars } from '../hooks';
 import { notifyChanged } from '../live';
@@ -316,6 +316,88 @@ function Notifications() {
   return isNative() ? <NativeNotifications /> : <WebNotifications />;
 }
 
+const Dot = ({ ok }: { ok: boolean | null }) => (
+  <span className="dot" style={{ color: ok === null ? 'var(--amber)' : ok ? 'var(--lime)' : 'var(--red)' }} />
+);
+
+/** Alexa: the "Calendary" skill (voice → app) and reminders/announcements on the Echo devices (app → voice). */
+function AlexaSettings() {
+  const { toast } = useUI();
+  const [st, setSt] = useState<AlexaStatus | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const refresh = () => api.alexaStatus().then(setSt).catch(() => setSt(null));
+  useEffect(() => {
+    refresh();
+  }, []);
+
+  const run = async (fn: () => Promise<{ ok?: boolean; error?: string } | unknown>, ok: string) => {
+    setBusy(true);
+    try {
+      const r = (await fn()) as { ok?: boolean; error?: string };
+      if (r && r.ok === false) toast(r.error || 'Operazione non riuscita', 'error');
+      else toast(ok);
+    } catch (e) {
+      toast((e as Error).message, 'error');
+    } finally {
+      await refresh();
+      setBusy(false);
+    }
+  };
+
+  if (!st) return <div className="muted small">Caricamento…</div>;
+  const granted = st.permission === 'GRANTED';
+  const modeLabel = { off: 'disattivati', important: 'solo eventi ⚡ importanti e promemoria vocali', all: 'tutti gli eventi con promemoria' }[st.remindersMode];
+
+  return (
+    <div className="stack">
+      <div className="muted small">
+        Con la skill <b>Calendary</b> puoi dire <i>“Alexa, chiedi a Calendary di ricordarmi di chiamare Marco domani alle 18”</i>,
+        <i> “Alexa, chiedi a Calendary cosa ho domani”</i> o <i>“…aggiungi fare la spesa alla matrice”</i>.
+        I promemoria di Calendary suonano sui tuoi Echo e, se colleghi Home Assistant, gli eventi importanti vengono anche annunciati a voce.
+      </div>
+      <div className="row small">
+        <span className="chip"><Dot ok={st.skillConfigured} /> Skill: {st.skillConfigured ? 'configurata' : 'manca alexa_skill_id'}</span>
+        <span className="chip"><Dot ok={st.linked ? true : st.skillConfigured ? null : false} /> {st.linked ? `Usata l'ultima volta ${st.lastSeen ? fmt(st.lastSeen, "d MMM 'alle' HH:mm") : ''}` : 'Mai usata: di’ “Alexa, apri Calendary”'}</span>
+        {st.remindersMode !== 'off' && (
+          <span className="chip"><Dot ok={granted ? true : st.permission ? false : null} /> Permesso promemoria: {granted ? 'concesso' : st.permission ? 'negato' : 'da concedere'}</span>
+        )}
+        <span className="chip">⏰ {st.scheduled} promemoria su Alexa{st.pending ? ` · ${st.pending} da aggiornare` : ''}</span>
+        <span className="chip"><Dot ok={st.announce.enabled ? true : null} /> Annunci: {st.announce.enabled ? st.announce.services.join(', ') : 'non configurati'}</span>
+      </div>
+      <div className="faint small">Promemoria su Alexa: {modeLabel}.{st.lastSync ? ` Ultima sincronizzazione ${fmt(st.lastSync, 'HH:mm')}.` : ''}</div>
+      {st.lastError && <div className="alert error small">Ultimo errore: {st.lastError}</div>}
+      {st.remindersMode !== 'off' && st.linked && !st.outOfSession && (
+        <div className="alert small">
+          Senza <code>alexa_client_id</code> e <code>alexa_client_secret</code> i promemoria arrivano su Alexa solo quando parli con la skill.
+          Aggiungili per sincronizzarli in automatico ogni volta che modifichi il calendario.
+        </div>
+      )}
+      <div className="row">
+        {st.remindersMode !== 'off' && (
+          <button className="btn primary" disabled={busy || !st.linked} onClick={() => run(api.alexaSync, 'Richiesta inviata ad Alexa: i promemoria si aggiornano entro pochi secondi')}>
+            ⏰ Sincronizza promemoria
+          </button>
+        )}
+        <button className="btn" disabled={busy || !st.announce.enabled} onClick={() => run(api.alexaAnnounceTest, 'Annuncio inviato: dovresti sentirlo sull’Echo')}>📣 Prova annuncio</button>
+      </div>
+      <details className="help">
+        <summary>Come collegare Alexa</summary>
+        <ol>
+          <li>Su <b>developer.amazon.com/alexa/console/ask</b> crea una skill <i>Custom</i>, lingua <i>Italiano</i>, hosting <i>Provision your own</i>.</li>
+          <li>In <i>Interaction Model → JSON Editor</i> incolla <code>alexa/skill-package/interactionModels/custom/it-IT.json</code> del repository, poi <i>Build Model</i>.</li>
+          <li>In <i>Endpoint</i> scegli HTTPS e inserisci <code>{st.endpoint}</code>, certificato: <i>“My development endpoint has a certificate from a trusted certificate authority”</i>.</li>
+          <li>Copia lo <b>Skill ID</b> (amzn1.ask.skill…) nell’opzione <code>alexa_skill_id</code> dell’add-on e riavvialo.</li>
+          <li>In <i>Permissions</i> attiva <b>Reminders</b>; in fondo alla stessa pagina copia <i>Alexa Client Id</i> e <i>Client Secret</i> in <code>alexa_client_id</code> / <code>alexa_client_secret</code>.</li>
+          <li>Nella scheda <i>Test</i> attiva <i>Development</i>, poi nell’app Alexa apri <i>Altro → Skill e giochi → Le tue skill → Sviluppatore → Calendary → Impostazioni</i> e concedi il permesso <b>Promemoria</b>.</li>
+          <li>Per gli annunci vocali installa <i>Alexa Media Player</i> (HACS) in Home Assistant e scrivi il servizio in <code>alexa_announce_service</code>, es. <code>notify.alexa_media_echo_cucina</code>.</li>
+        </ol>
+        <div className="faint tiny">Se usi Cloudflare Access, escludi il percorso <code>/api/alexa</code>: Amazon non può fare il login. La richiesta è comunque protetta dalla firma di Amazon e dallo Skill ID.</div>
+      </details>
+    </div>
+  );
+}
+
 export function SettingsPage({ onLogout }: { onLogout: () => void }) {
   const { data: calendars } = useCalendars();
 
@@ -344,6 +426,10 @@ export function SettingsPage({ onLogout }: { onLogout: () => void }) {
               <code className="faint">{location.origin}/kiosk</code>
             </div>
           </div>
+        </section>
+        <section className="glass pad span-12 glow-pink">
+          <div className="card-title"><h2 className="neon-pink">Alexa</h2></div>
+          <AlexaSettings />
         </section>
         <section className="glass pad span-12">
           <div className="row">

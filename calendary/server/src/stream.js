@@ -2,6 +2,12 @@
 // after any mutation, so the tablet updates as soon as something is edited from the PC.
 
 const clients = new Set();
+const listeners = new Set();
+
+/** Server-side subscribers (e.g. the Alexa reminder sync) get the same change notifications. */
+export function onChange(fn) {
+  listeners.add(fn);
+}
 
 export function streamHandler(req, reply) {
   reply.hijack();
@@ -23,6 +29,7 @@ export function streamHandler(req, reply) {
 }
 
 export function broadcast(scope) {
+  for (const fn of listeners) fn(scope);
   const payload = `event: changed\ndata: ${JSON.stringify({ scope, at: Date.now() })}\n\n`;
   for (const c of clients) {
     try {

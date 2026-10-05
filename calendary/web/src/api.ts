@@ -166,6 +166,21 @@ export interface StudyPlanInput {
   calendarId?: string;
 }
 
+export interface AlexaStatus {
+  skillConfigured: boolean;
+  endpoint: string;
+  linked: boolean;
+  lastSeen: string | null;
+  permission: string | null;
+  remindersMode: 'off' | 'important' | 'all';
+  outOfSession: boolean;
+  pending: number;
+  scheduled: number;
+  lastSync: string | null;
+  lastError: string | null;
+  announce: { enabled: boolean; services: string[]; homeAssistant: boolean };
+}
+
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
     super(message);
@@ -244,6 +259,9 @@ export const api = {
   pushStatus: () => get<{ publicKey: string; subscriptions: number }>('/push/status'),
   pushSubscribe: (sub: PushSubscriptionJSON) => post('/push/subscribe', sub),
   pushUnsubscribe: (endpoint: string) => post('/push/unsubscribe', { endpoint }),
+  alexaStatus: () => get<AlexaStatus>('/alexa/status'),
+  alexaSync: () => post<{ ok: boolean; error?: string; pending?: number; skipped?: string }>('/alexa/sync'),
+  alexaAnnounceTest: () => post<{ sent: number }>('/alexa/announce-test'),
   pushTest: () => post<{ sent: number; failed: number; errors: { service: string; status: number | null; message: string }[] }>('/push/test'),
 
   goals: () => get<Goal[]>('/goals'),

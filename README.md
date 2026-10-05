@@ -11,11 +11,13 @@ Si modifica da **PC via web**, mentre il **tablet** fa da bacheca sempre accesa.
 - **Tips motivazionali**: regola dei 5 secondi (con conto alla rovescia a schermo intero), mangia il ranocchio, pomodoro, 2 minuti…
 - **Assistente virtuale** con AI gratuita o quasi: pianifica lo studio, aggiunge impegni e riempie la matrice. **Ogni modifica va approvata.**
 - **Pianificatore di studio** (funziona anche senza AI): *“corso di 15 ore in 5 moduli da 3 ore entro il 31/10”* → sessioni distribuite negli slot liberi, evitando gli impegni già presenti.
+- **Alexa**: aggiungi promemoria, impegni e attività a voce con la skill *Calendary*, chiedi cosa hai in programma, e senti sugli Echo i promemoria e gli annunci che arrivano da Calendary.
 - **Vista tablet (kiosk)**: orologio, prossimo impegno con conto alla rovescia, agenda del giorno, prossimi giorni, matrice e tips a rotazione. Si aggiorna in tempo reale quando modifichi dal PC.
 
 ```
 Calendary/
 ├── repository.yaml        ← repository di add-on per Home Assistant
+├── alexa/                 ← skill Alexa: modello vocale (it-IT) e manifest
 ├── calendary/             ← l'add-on
 │   ├── config.yaml        ← opzioni dell'add-on
 │   ├── Dockerfile
@@ -135,7 +137,59 @@ Consuma pochissimo perché il modello interpreta soltanto la richiesta, mentre i
 
 Per nuove funzioni dell'assistente si aggiunge uno strumento in `calendary/server/src/assistant.js` (array `tools` + `runTool`).
 
-## 6. Sviluppo in locale (PC)
+## 6. Alexa
+
+L'integrazione ha due direzioni, indipendenti tra loro:
+
+| | Cosa fa | Cosa serve |
+|---|---|---|
+| **Alexa → Calendary** | *“Alexa, chiedi a Calendary di ricordarmi di chiamare Marco domani alle 18”*, *“…aggiungi dentista giovedì alle 15:30, importante”*, *“…cosa ho domani?”*, *“…qual è il prossimo impegno?”*, *“…aggiungi consegnare la tesina alla matrice come urgente e importante”* | una skill personale (gratuita) nella console Alexa |
+| **Calendary → Alexa: promemoria** | gli eventi ⚡ importanti e i promemoria dettati ad Alexa diventano **promemoria Alexa**: suonano su tutti gli Echo e arrivano nell'app Alexa, anche se l'evento l'hai creato dal PC o dal tablet | la stessa skill + il permesso *Promemoria* + le credenziali *Skill Messaging* |
+| **Calendary → Alexa: annunci** | gli eventi importanti e il riepilogo del mattino vengono **annunciati a voce** sull'Echo | Home Assistant con l'integrazione *Alexa Media Player* (HACS) |
+
+> Amazon non permette alle skill di creare **sveglie**: i promemoria Alexa sono l'equivalente più vicino (suonano con il loro segnale e leggono il testo).
+> Un evento già gestito come promemoria Alexa non viene annunciato una seconda volta.
+
+### Creare la skill (una volta sola, ~10 minuti)
+
+1. Vai su <https://developer.amazon.com/alexa/console/ask> con lo **stesso account Amazon dei tuoi Echo** → **Create Skill**:
+   nome `Calendary`, lingua **Italian (IT)**, tipo **Other → Custom**, hosting **Provision your own**, template *Start from scratch*.
+2. **Build → Interaction Model → JSON Editor**: incolla il contenuto di [`alexa/skill-package/interactionModels/custom/it-IT.json`](alexa/skill-package/interactionModels/custom/it-IT.json) → **Save** → **Build skill**.
+   La frase di attivazione è *“calendary”*: se Alexa la capisce male puoi cambiarla in `invocationName` (es. *“agenda neon”*).
+3. **Endpoint** → **HTTPS** → Default Region: `https://calendary.gattucciocloud.it/api/alexa`,
+   certificato: *My development endpoint has a certificate from a trusted certificate authority* (quello di Cloudflare va bene) → **Save**.
+4. Copia lo **Skill ID** (`amzn1.ask.skill.…`, in alto nella pagina Endpoint) nell'opzione `alexa_skill_id` dell'add-on.
+5. **Permissions**: attiva **Reminders**. In fondo alla stessa pagina, in *Alexa Skill Messaging*, copia **Alexa Client Id** e **Alexa Client Secret**
+   in `alexa_client_id` e `alexa_client_secret`. *(Senza queste due chiavi i promemoria arrivano su Alexa solo quando parli con la skill.)*
+6. *(Facoltativo)* Con l'[ASK CLI](https://developer.amazon.com/docs/smapi/quick-start-alexa-skills-kit-command-line-interface.html) puoi caricare tutto in un colpo
+   con il manifest [`alexa/skill-package/skill.json`](alexa/skill-package/skill.json): include endpoint, permessi e gli *eventi della skill*
+   (permesso concesso/revocato, skill disattivata), che dalla console web non si possono attivare. Senza eventi va bene lo stesso:
+   Calendary legge lo stato del permesso a ogni richiesta di Alexa.
+7. **Salva** le opzioni dell'add-on e **riavvialo**.
+8. Scheda **Test** della console → *Skill testing is enabled in*: **Development**. La skill compare subito sui tuoi Echo (solo sul tuo account).
+9. Nell'app Alexa: **Altro → Skill e giochi → Le tue skill → Sviluppatore → Calendary → Impostazioni → Gestisci autorizzazioni** → attiva **Promemoria**.
+   In alternativa di' *“Alexa, apri Calendary”*: se il permesso manca ti arriva una scheda nell'app per concederlo.
+10. Di' *“Alexa, apri Calendary”* almeno una volta: da quel momento Calendary sa a chi mandare i promemoria.
+    In **Impostazioni → Alexa** della webapp vedi lo stato, quanti promemoria sono programmati e il pulsante **Sincronizza promemoria**.
+
+Con `alexa_reminders` scegli cosa suona sugli Echo: `important` (default: eventi ⚡ e promemoria dettati ad Alexa), `all` (ogni evento con un promemoria,
+compresi quelli dei calendari iCal) oppure `off`. Calendary tiene programmati i promemoria dei prossimi 3 giorni e li aggiorna da solo quando sposti o cancelli un evento.
+
+**Sicurezza**: `/api/alexa` è l'unico indirizzo raggiungibile senza password, perché lo chiama Amazon. Il server accetta solo richieste **firmate da Amazon**
+(certificato `echo-api.amazon.com`, firma del corpo, timestamp entro 150 s) e con il **tuo Skill ID**.
+Se proteggi il dominio con **Cloudflare Access**, aggiungi un'applicazione *Bypass* per il percorso `calendary.gattucciocloud.it/api/alexa`.
+
+### Annunci vocali con Home Assistant (facoltativo)
+
+1. Installa **Alexa Media Player** da HACS e collegalo al tuo account Amazon.
+2. In **Strumenti per sviluppatori → Azioni** cerca `notify.alexa_media_…` e annota il nome dell'Echo (es. `notify.alexa_media_echo_cucina`).
+3. Scrivilo in `alexa_announce_service` (più Echo separati da virgola) e riavvia l'add-on.
+4. **Impostazioni → Alexa → Prova annuncio**.
+
+Funziona anche con altri servizi (`script.annuncio`, `tts.…`): Calendary li chiama passando il testo in `message`.
+Fuori da Home Assistant (Docker o PC) imposta `HA_URL` e `HA_TOKEN` (token di lunga durata).
+
+## 7. Sviluppo in locale (PC)
 
 ```bash
 cd calendary/server && npm install
@@ -151,7 +205,11 @@ $env:CALENDARY_PASSWORD="demo"; node --disable-warning=ExperimentalWarning calen
 Poi apri http://localhost:8787. Per lavorare sull'interfaccia con hot reload: `npm run dev` in `calendary/web`
 (http://localhost:5173, fa da proxy verso il server sulla porta 8787).
 
-Variabili utili: `CALENDARY_PASSWORD`, `DATA_DIR`, `PORT`, `AI_BASE_URL`, `AI_API_KEY`, `AI_MODEL`, `CALENDARY_NO_AUTH=1` (solo sviluppo).
+Variabili utili: `CALENDARY_PASSWORD`, `DATA_DIR`, `PORT`, `AI_BASE_URL`, `AI_API_KEY`, `AI_MODEL`, `CALENDARY_NO_AUTH=1` (solo sviluppo),
+`ALEXA_SKILL_ID`, `ALEXA_CLIENT_ID`, `ALEXA_CLIENT_SECRET`, `ALEXA_REMINDERS`, `ALEXA_ANNOUNCE_SERVICE`, `HA_URL`, `HA_TOKEN`,
+`ALEXA_SKIP_VERIFY=1` (solo sviluppo: accetta richieste Alexa non firmate, per provarle con curl).
+
+Test del server: `cd calendary/server && npm test`.
 
 ## Note
 

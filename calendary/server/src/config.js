@@ -23,6 +23,8 @@ const pick = (envName, optName, fallback) => {
   return fallback;
 };
 
+const oneOf = (value, allowed, fallback) => (allowed.includes(value) ? value : fallback);
+
 export const config = {
   dataDir,
   port: Number(pick('PORT', 'port', 8787)),
@@ -39,6 +41,25 @@ export const config = {
     // Tried in order when the main model is overloaded / rate-limited (comma separated).
     fallbackModels: String(pick('AI_FALLBACK_MODELS', 'ai_fallback_models', 'gemini-2.5-flash-lite'))
       .split(',').map((s) => s.trim()).filter(Boolean),
+  },
+  alexa: {
+    // Custom skill "Calendary": its id comes from the Alexa developer console.
+    skillId: String(pick('ALEXA_SKILL_ID', 'alexa_skill_id', '')).trim(),
+    // Skill Messaging credentials (console → Permissions): let the server push reminders to Alexa on its own.
+    clientId: String(pick('ALEXA_CLIENT_ID', 'alexa_client_id', '')).trim(),
+    clientSecret: String(pick('ALEXA_CLIENT_SECRET', 'alexa_client_secret', '')).trim(),
+    // Which events ring on the Echo devices as Alexa reminders: off | important | all
+    reminders: oneOf(pick('ALEXA_REMINDERS', 'alexa_reminders', 'important'), ['off', 'important', 'all'], 'important'),
+    // Development only: accept requests without Amazon's signature (curl tests).
+    skipVerify: process.env.ALEXA_SKIP_VERIFY === '1',
+  },
+  announce: {
+    // Home Assistant service(s) that speak on the Echo, e.g. notify.alexa_media_echo_cucina (comma separated)
+    services: String(pick('ALEXA_ANNOUNCE_SERVICE', 'alexa_announce_service', ''))
+      .split(',').map((s) => s.trim()).filter((s) => /^[a-z0-9_]+\.[a-z0-9_]+$/.test(s)),
+    // Outside the add-on (plain Docker / PC) Home Assistant is reached with a long-lived token.
+    haUrl: String(pick('HA_URL', 'ha_url', '')).replace(/\/$/, ''),
+    haToken: String(pick('HA_TOKEN', 'ha_token', '')),
   },
 };
 
