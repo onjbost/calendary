@@ -7,6 +7,12 @@ const SESSION_DAYS = 365; // the kiosk tablet should stay logged in
 // /api/alexa is called by Amazon: it is protected by the request signature and the skill id (alexa.js).
 const PUBLIC_PATHS = new Set(['/api/login', '/api/logout', '/api/session', '/api/health', '/api/alexa']);
 
+/**
+ * Only the local reverse proxies (Cloudflared / HA ingress on the Docker network) are trusted, so req.ip is the
+ * address they appended and not one the client wrote in X-Forwarded-For (the login limit counts per IP).
+ */
+export const TRUST_PROXY = 'loopback, linklocal, uniquelocal';
+
 const authConfigured = () => config.noAuth || config.password.length > 0;
 
 let secretKey = null;
@@ -86,9 +92,12 @@ export function registerAuth(app) {
   else if (!config.password) app.log.warn('Nessuna password configurata: le API resteranno bloccate finché non la imposti.');
 
   app.addHook('onRequest', async (req, reply) => {
-    const path = req.url.split('?')[0];
-    if (!path.startsWith('/api/') || PUBLIC_PATHS.has(path)) return;
-    if (path === '/api/mcp' || path.startsWith('/api/mcp/')) return; // checks its own token (mcp.js)
+    // Decide on the route the router actually matched: the raw URL may be percent-encoded (/%61pi/notes is
+    // routed to /api/notes). Unmatched requests are API 404s or the web app's files.
+    const route = req.routeOptions?.url;
+    const apiLike = route ? route.startsWith('/api/') : /^\/api(\/|$)/i.test(decodePath(req.url.split('?')[0]));
+    if (!apiLike || PUBLIC_PATHS.has(route)) return;
+    if (route === '/api/mcp' || route === '/api/mcp/:token') return; // checks its own token (mcp.js)
     if (!authConfigured()) return reply.code(503).send({ error: "Imposta una password nelle opzioni dell'add-on" });
     if (!isAuthenticated(req)) return reply.code(401).send({ error: 'Accesso richiesto' });
   });
@@ -116,4 +125,12 @@ export function registerAuth(app) {
     reply.clearCookie(COOKIE, { path: '/' });
     return { ok: true };
   });
+}
+
+function decodePath(p) {
+  try {
+    return decodeURIComponent(p);
+  } catch {
+    return p;
+  }
 }
