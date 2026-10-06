@@ -22,7 +22,8 @@ const store = await import('../src/store.js');
 const { db, getSetting, setSetting } = await import('../src/db.js');
 
 store.ensureDefaultCalendars();
-after(() => fs.rmSync(tmp, { recursive: true, force: true }));
+const { db: openDb } = await import('../src/db.js');
+after(() => { openDb.close(); fs.rmSync(tmp, { recursive: true, force: true }); }); // Windows: an open database can't be removed
 
 const ymdOf = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 

@@ -16,7 +16,8 @@ const store = await import('../src/store.js');
 const { ymd } = await import('../src/util.js');
 
 store.ensureDefaultCalendars();
-after(() => fs.rmSync(tmp, { recursive: true, force: true }));
+const { db } = await import('../src/db.js');
+after(() => { db.close(); fs.rmSync(tmp, { recursive: true, force: true }); }); // Windows: an open database can't be removed
 
 const hhmm = (d) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 

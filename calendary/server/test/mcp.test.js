@@ -11,7 +11,8 @@ process.env.CALENDARY_MCP_TOKEN = 'test-token-0123456789-abcdef';
 
 const { handleMessage, mcpEnabled } = await import('../src/mcp.js');
 const notes = await import('../src/notes.js');
-after(() => fs.rmSync(tmp, { recursive: true, force: true }));
+const { db: openDb } = await import('../src/db.js');
+after(() => { openDb.close(); fs.rmSync(tmp, { recursive: true, force: true }); }); // Windows: an open database can't be removed
 
 let seq = 0;
 const call = (name, args = {}) => handleMessage({ jsonrpc: '2.0', id: ++seq, method: 'tools/call', params: { name, arguments: args } }).result;
