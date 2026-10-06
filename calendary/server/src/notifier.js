@@ -8,6 +8,7 @@ import { announce } from './announce.js';
 import { sendToAll } from './push.js';
 import { fmtTime, nowIso, ymd } from './util.js';
 import { tripDaySummary } from './trips/days.js';
+import { checkTripReminders } from './trips/reminders.js';
 
 function minutesLabel(min) {
   if (min <= 0) return 'Adesso';
@@ -161,6 +162,7 @@ async function tick() {
   try {
     await checkReminders();
     await checkAnnouncements();
+    await checkTripReminders();
     await checkPills();
     await checkMorningSummary();
     await checkStock(); // after the summary, so Alexa says it right after the good morning
