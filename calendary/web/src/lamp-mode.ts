@@ -40,6 +40,10 @@ export function useLampMode(nightAuto = false) {
   const battery = useBattery();
   const [override, setOverride] = useState<LampOverride | null>(memory);
   const [now, setNow] = useState(() => new Date());
+  // the battery state arrives a moment after the page opens: judge the manual choice only after that
+  const [waited, setWaited] = useState(false);
+  useEffect(() => { const id = window.setTimeout(() => setWaited(true), 2000); return () => window.clearTimeout(id); }, []);
+  const settled = waited || battery.supported;
 
   useEffect(() => {
     const f = () => setOverride(memory);
@@ -55,7 +59,7 @@ export function useLampMode(nightAuto = false) {
   }, []);
 
   const cond = { ecoAuto: ecoActive(prefs, battery), charging: battery.charging, nightHours: inWindow(now, prefs.redFrom, prefs.redTo) };
-  const r = resolveMode({ ...cond, nightAuto, override });
+  const r = resolveMode({ ...cond, nightAuto, override, settled });
 
   // a choice made under other conditions is dropped for good
   useEffect(() => { if (override && !r.override) save(null); }, [override, r.override]);

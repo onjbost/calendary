@@ -31,3 +31,17 @@ test('la firma non dipende dall\'inattività del kiosk: tutte le pagine la calco
   assert.equal(autoSignature({ ecoAuto: true, charging: true, nightHours: false }), autoSignature({ ecoAuto: true, charging: true, nightHours: false }));
   assert.notEqual(autoSignature({ ...base, nightHours: true }), autoSignature(base));
 });
+
+test('finché la batteria non è nota (pagina appena aperta) la scelta manuale resta', () => {
+  const override = { mode: 'normal' as const, sig: autoSignature({ ...base, charging: true, nightHours: true }) };
+  const loading = { ecoAuto: false, charging: null, nightHours: true, nightAuto: true, override };
+  assert.deepEqual(resolveMode({ ...loading, settled: false }), { mode: 'normal', override });
+  assert.equal(resolveMode({ ...loading, nightHours: false, settled: true }).override, null);
+});
+
+test('una batteria sconosciuta non basta a cancellare la scelta manuale', () => {
+  const override = { mode: 'normal' as const, sig: autoSignature({ ...base, charging: true, nightHours: true }) };
+  const r = resolveMode({ ecoAuto: false, charging: null, nightHours: true, nightAuto: true, override, settled: true });
+  assert.equal(r.mode, 'normal');
+  assert.equal(resolveMode({ ecoAuto: false, charging: null, nightHours: false, nightAuto: false, override, settled: true }).override, null);
+});

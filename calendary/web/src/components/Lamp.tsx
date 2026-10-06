@@ -108,6 +108,9 @@ function useBulbPosition(ref: RefObject<SVGCircleElement | null>, enabled: boole
         setPos((p) => (p && Math.abs(p.x - (r.x + r.width / 2)) < 1 && Math.abs(p.y - (r.y + r.height / 2)) < 1 ? p : { x: r.x + r.width / 2, y: r.y + r.height / 2 }));
       });
     };
+    // first position right away (rAF does not run while the page is hidden), then follow changes
+    const r0 = ref.current?.getBoundingClientRect();
+    if (r0 && r0.width > 0) setPos({ x: r0.x + r0.width / 2, y: r0.y + r0.height / 2 });
     measure();
     window.addEventListener('resize', measure);
     window.addEventListener('scroll', measure, true);

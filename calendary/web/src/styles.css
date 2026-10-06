@@ -804,3 +804,9 @@ html.eco .nightstand .ns-inner { transition: none; }
   .lamp.phone-lamp { display: inline-block; position: fixed; top: calc(10px + env(safe-area-inset-top)); right: 14px; z-index: 45; }
 }
 @media (max-width: 700px) { .lamp.kiosk-lamp { width: 92px; height: 100px; } }
+
+/* night page: the lamp stays there, switched off; a tap switches it on */
+.ns-lamp { position: absolute; left: 2.4vw; bottom: 2vh; width: min(22vh, 15vw); height: min(24vh, 16vw); }
+.ns-lamp .lamp { width: 100%; height: 100%; }
+.nightstand.red .ns-lamp { filter: none; }
+@media (orientation: portrait) { .ns-lamp { width: 26vw; height: 28vw; } }

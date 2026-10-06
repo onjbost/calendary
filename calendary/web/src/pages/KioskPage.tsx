@@ -347,7 +347,7 @@ export function KioskPage() {
 
       <AlertWatcher sound />
       <div className="kiosk-dim" style={{ opacity: dim && !night ? 0.6 : 0 }} />
-      {night && <NightStand onExit={exitNight} />}
+      {night && <NightStand onExit={exitNight} onWake={() => { lamp.set('normal'); setLastTouch(Date.now()); }} />}
     </div>
   );
 }

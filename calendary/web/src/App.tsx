@@ -3,7 +3,7 @@ import { api } from './api';
 import { AlertWatcher } from './components/AlertWatcher';
 import { DeviceLayer } from './components/DeviceLayer';
 import { NightStand } from './components/NightStand';
-import { clearLampOverride } from './lamp-mode';
+import { clearLampOverride, useLampMode } from './lamp-mode';
 import { Background, Shell } from './components/Shell';
 import { connectLive, disconnectLive } from './live';
 import { AssistantPage } from './pages/AssistantPage';
@@ -91,9 +91,21 @@ export function App() {
   return (
     <UIProvider>
       <Background />
-      {night ? <NightStand onExit={() => { clearLampOverride(); if (history.length > 1) history.back(); else navigate('/kiosk'); }} />
+      {night ? <NightRoute />
         : kiosk ? <KioskPage /> : <Routes path={path} query={query} onLogout={check} />}
       <DeviceLayer />
     </UIProvider>
+  );
+}
+
+/** /notte outside the kiosk: a tap goes back to the automatic mode, a tap on the lamp switches it on. */
+function NightRoute() {
+  const lamp = useLampMode();
+  const back = () => (history.length > 1 ? history.back() : navigate('/kiosk'));
+  return (
+    <NightStand
+      onExit={() => { clearLampOverride(); back(); }}
+      onWake={() => { lamp.set('normal'); back(); }}
+    />
   );
 }

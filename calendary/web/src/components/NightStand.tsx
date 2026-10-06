@@ -7,6 +7,7 @@ import { inWindow, isEco, setBrightness, useBattery, usePrefs } from '../device'
 import { useEvents, useNow, useSwipe } from '../hooks';
 import { keepAwake } from '../native';
 import { useMoveo } from '../suite';
+import { Lamp } from './Lamp';
 
 type Page = 'widgets' | 'clock' | 'agenda';
 const PAGES: Page[] = ['widgets', 'clock', 'agenda'];
@@ -83,6 +84,20 @@ function NextEvent({ events, now }: { events: CalEvent[]; now: Date }) {
   );
 }
 
+/** The next bedside alarm if there is one, otherwise the next event. */
+function AlarmOrEvent({ alarm, events, now }: { alarm: Date | null; events: CalEvent[]; now: Date }) {
+  if (!alarm) return <NextEvent events={events} now={now} />;
+  return (
+    <div className="ns-widget">
+      <div className="ns-label">Prossima sveglia</div>
+      <div className="ns-big-line">⏰ {hm(alarm)}</div>
+      <div className="ns-dim">
+        {isSameDay(alarm, now) ? 'Oggi' : isSameDay(alarm, addDays(now, 1)) ? 'Domani' : capitalize(fmt(alarm, 'EEEE'))} · tra {countdown(alarm.getTime() - now.getTime())}
+      </div>
+    </div>
+  );
+}
+
 function TrainingWidget() {
   const m = useMoveo();
   const s = m?.enabled ? m.session || m.next : null;
@@ -131,7 +146,7 @@ function DayList({ title, events, now }: { title: string; events: CalEvent[]; no
  * Night stand ("modalità notte"), inspired by iPhone StandBy: a landscape clock with a few widgets,
  * red and dim at night, slowly shifting to avoid burn-in. Swipe to change page, tap to go back.
  */
-export function NightStand({ onExit }: { onExit: () => void }) {
+export function NightStand({ onExit, onWake = onExit }: { onExit: () => void; /** tap on the lamp: back to Normal */ onWake?: () => void }) {
   const now = useNow(isEco() ? 30_000 : 1000);
   const [prefs] = usePrefs();
   const battery = useBattery();
@@ -182,8 +197,7 @@ export function NightStand({ onExit }: { onExit: () => void }) {
               <div className="ns-date">{capitalize(fmt(now, 'EEEE d MMMM'))}</div>
             </div>
             <div className="ns-right">
-              <WeatherWidget w={weather} />
-              <NextEvent events={sorted} now={now} />
+              <AlarmOrEvent alarm={alarm} events={sorted} now={now} />
               <TrainingWidget />
             </div>
           </div>
@@ -201,6 +215,7 @@ export function NightStand({ onExit }: { onExit: () => void }) {
               <div className="ns-small-clock">{hm(now)}</div>
             </div>
             <div className="ns-right">
+              <WeatherWidget w={weather} />
               <DayList title="Oggi" events={today} now={now} />
               <DayList title="Domani" events={tomorrow} now={new Date(0)} />
             </div>
@@ -208,10 +223,14 @@ export function NightStand({ onExit }: { onExit: () => void }) {
         )}
       </div>
 
+      <div className="ns-lamp" onClick={stop}>
+        <Lamp size="large" mode="night" onToggle={onWake} light={false} />
+      </div>
+
       <div className="ns-dots" onClick={stop}>
         {PAGES.map((p) => <button key={p} className={p === page ? 'on' : ''} onClick={() => setPage(p)} aria-label={`Pagina ${p}`} />)}
       </div>
-      <div className="ns-hint">Scorri per cambiare vista · tocca per uscire</div>
+      <div className="ns-hint">Scorri per cambiare vista · tocca per uscire · tocca la lampada per accenderla</div>
     </div>
   );
 }
