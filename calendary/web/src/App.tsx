@@ -17,6 +17,8 @@ import { NotesPage } from './pages/NotesPage';
 import { PillsPage } from './components/Pills';
 import { SettingsPage } from './pages/SettingsPage';
 import { TipsPage } from './pages/TipsPage';
+import { TripPage } from './trips/TripPage';
+import { TripsPage } from './trips/TripsPage';
 import { listenDeepLinks } from './native';
 import { navigate, useLocation } from './router';
 import { primeMoveo } from './suite';
@@ -28,6 +30,8 @@ function Routes({ path, query, onLogout }: { path: string; query: URLSearchParam
   const { newEvent } = useUI();
   let page;
   if (path.startsWith('/calendario')) page = <CalendarPage query={query} />;
+  else if (/^\/viaggi\/[\w-]+\/?$/.test(path)) page = <TripPage id={path.split('/')[2]} />;
+  else if (path.startsWith('/viaggi')) page = <TripsPage />;
   else if (path.startsWith('/matrice')) page = <MatrixPage query={query} />;
   else if (path.startsWith('/obiettivi')) page = <GoalsPage />;
   else if (path.startsWith('/note')) page = <NotesPage />;

@@ -1,7 +1,7 @@
 // Live updates: the server sends "changed" over SSE after every mutation,
 // so the tablet refreshes as soon as something is edited from the PC.
 
-export type Scope = 'events' | 'calendars' | 'tasks' | 'goals' | 'notes' | 'pills';
+export type Scope = 'events' | 'calendars' | 'tasks' | 'goals' | 'notes' | 'pills' | 'trips';
 
 const bus = new EventTarget();
 let source: EventSource | null = null;
@@ -24,6 +24,7 @@ export function connectLive() {
     notifyChanged('goals');
     notifyChanged('notes');
     notifyChanged('pills');
+    notifyChanged('trips');
   });
 }
 

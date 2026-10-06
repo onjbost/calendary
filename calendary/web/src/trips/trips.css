@@ -1,0 +1,55 @@
+/* Trips module (glass + clay, black and orange; the trips colour is a sea blue). */
+.trips-page { --trip: #38bdf8; --trip-rgb: 56, 189, 248; }
+.trips-sections { gap: 22px; }
+.trip-field { display: flex; flex-direction: column; gap: 6px; font-size: 0.85rem; color: var(--muted); }
+
+.trip-card { display: flex; align-items: center; gap: 14px; width: 100%; padding: 16px 18px; text-align: left; cursor: pointer; color: inherit; font: inherit; border-left: 3px solid var(--trip, #38bdf8); }
+.trip-card:hover { background: var(--glass-hi); }
+.trip-card-main { flex: 1; min-width: 0; }
+.trip-card-name { font-family: 'Unbounded', sans-serif; font-size: 1.05rem; margin-bottom: 4px; }
+.trip-card-side { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+
+.trip-head { align-items: flex-start; }
+.trip-title { flex: 1; min-width: 0; }
+.trip-title h1 { margin: 0 0 4px; }
+.trip-tabs { margin-bottom: 16px; }
+.trip-day { padding: 14px 16px; }
+.trip-day .card-title { margin-bottom: 8px; }
+.trip-item { display: grid; grid-template-columns: 54px 1fr auto; gap: 10px; align-items: center; width: 100%; padding: 8px 6px; border: 0; border-top: 1px solid rgba(255, 255, 255, 0.06); background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; border-radius: 8px; }
+.trip-item:hover { background: rgba(255, 255, 255, 0.05); }
+.trip-item.leg { color: #bfe9ff; }
+.leg-card .card-title { margin-bottom: 6px; }
+.chip.booking { border: 0; color: inherit; cursor: pointer; align-self: flex-start; font-family: 'JetBrains Mono', monospace; }
+.trip-notes { min-height: 220px; }
+
+.trip-weather { display: flex; flex-direction: column; gap: 6px; }
+.trip-weather-days { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+.trip-weather-day { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 66px; padding: 8px 6px; border-radius: 14px; background: rgba(var(--trip-rgb, 56, 189, 248), 0.08); }
+.trip-weather-ico { font-size: 1.4rem; }
+
+.bag-pick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.bag-opt { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 4px; border-radius: 14px; border: 1px solid var(--glass-border); background: rgba(0, 0, 0, 0.25); color: var(--muted); cursor: pointer; font-size: 1.5rem; }
+.bag-opt.on { border-color: var(--cyan); color: var(--text, #fff); box-shadow: 0 0 0 3px rgba(var(--cyan-rgb), 0.18); }
+.bag-small { font-size: 1.1rem; }
+.tag-pick { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag-pick .chip { border: 0; color: inherit; cursor: pointer; }
+.tag-pick .chip.on { background: var(--cyan); color: #2a1302; }
+.mode-seg { flex-wrap: wrap; }
+
+.place-search { position: relative; display: flex; flex-direction: column; gap: 4px; }
+.place-hits { position: absolute; top: 44px; left: 0; right: 0; z-index: 5; display: flex; flex-direction: column; padding: 4px; }
+.place-hit { border: 0; background: transparent; color: inherit; font: inherit; text-align: left; padding: 8px 10px; border-radius: 10px; cursor: pointer; }
+.place-hit:hover { background: rgba(255, 255, 255, 0.08); }
+
+/* Day strips in the calendar views and the dashboard */
+.trip-strip { display: flex; align-items: center; gap: 5px; width: 100%; min-width: 0; padding: 2px 7px; border: 0; border-radius: 7px; cursor: pointer; font: inherit; font-size: 0.72rem; line-height: 1.35; text-align: left; color: #d8f3ff; background: rgba(56, 189, 248, 0.16); box-shadow: inset 0 0 0 1px rgba(56, 189, 248, 0.35); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.trip-strip > span:last-child { overflow: hidden; text-overflow: ellipsis; }
+.trip-strip:hover { background: rgba(56, 189, 248, 0.26); }
+.trip-strip.big { font-size: 0.9rem; padding: 6px 12px; border-radius: 12px; }
+.trip-strips { display: flex; flex-direction: column; gap: 2px; }
+
+@media (max-width: 700px) {
+  .bag-pick { grid-template-columns: repeat(2, 1fr); }
+  .trip-item { grid-template-columns: 46px 1fr; }
+  .trip-item > :nth-child(3) { grid-column: 2; }
+}

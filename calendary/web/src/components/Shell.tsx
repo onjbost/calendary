@@ -18,6 +18,7 @@ export function Background() {
 const NAV = [
   { to: '/', label: 'Oggi', ico: '◉' },
   { to: '/calendario', label: 'Calendario', ico: '▦' },
+  { to: '/viaggi', label: 'Viaggi', ico: '🧳' },
   { to: '/matrice', label: 'Matrice', ico: '⊞' },
   { to: '/obiettivi', label: 'Obiettivi', ico: '◎' },
   { to: '/note', label: 'Note', ico: '✎' },
