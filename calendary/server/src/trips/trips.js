@@ -168,9 +168,9 @@ export function deleteTrip(id) {
 }
 
 /** Stores the destination weather (trips/weather.js). */
-export function saveWeather(id, { weather, kind, changed }) {
+export function saveWeather(id, { weather, kind, changed, at = nowIso() }) {
   db.prepare('UPDATE trips SET weather = ?, weather_at = ?, weather_kind = ?, weather_changed = ? WHERE id = ?')
-    .run(weather ? JSON.stringify(weather) : null, nowIso(), kind ?? null, changed ? 1 : 0, String(id));
+    .run(weather ? JSON.stringify(weather) : null, at, kind ?? null, changed ? 1 : 0, String(id));
 }
 
 // ---------------------------------------------------------------- legs
