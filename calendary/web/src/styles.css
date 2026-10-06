@@ -793,3 +793,14 @@ html.eco .nightstand .ns-inner { transition: none; }
 .md-tab { padding-top: 22px !important; color: color-mix(in srgb, var(--note, var(--cyan)) 30%, #ffffff); }
 .md-tab-label { position: absolute; top: 4px; left: 10px; font-size: 0.62rem; letter-spacing: 0.15em; color: var(--faint); }
 
+
+/* ------------------------------------------------ the lamp in the pages (Lamp.tsx / lamp.css) */
+/* .lamp.x: lamp.css is loaded after this file */
+.lamp.hero-lamp { flex: none; margin: -14px 0 -20px -8px; }
+.lamp.kiosk-lamp { flex: none; width: 128px; height: 138px; margin: 0 -6px -16px -8px; }
+.lamp.phone-lamp { display: none; }
+@media (max-width: 860px) {
+  .lamp.hero-lamp { display: none; }
+  .lamp.phone-lamp { display: inline-block; position: fixed; top: calc(10px + env(safe-area-inset-top)); right: 14px; z-index: 45; }
+}
+@media (max-width: 700px) { .lamp.kiosk-lamp { width: 92px; height: 100px; } }

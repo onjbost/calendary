@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { isNative } from '../native';
 import { Link } from '../router';
+import { HubLamp } from './HubLamp';
 import { openMoveo, useMoveo } from '../suite';
 
 export function Background() {
@@ -64,7 +65,10 @@ export function Shell({ path, children }: { path: string; children: ReactNode })
           </a>
         )}
       </nav>
-      <main className="main">{children}</main>
+      <main className="main">
+        <HubLamp size="small" className="phone-lamp" />
+        {children}
+      </main>
     </div>
   );
 }

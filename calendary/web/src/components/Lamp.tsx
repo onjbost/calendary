@@ -103,7 +103,9 @@ function useBulbPosition(ref: RefObject<SVGCircleElement | null>, enabled: boole
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
         const r = ref.current?.getBoundingClientRect();
-        if (r) setPos((p) => (p && Math.abs(p.x - (r.x + r.width / 2)) < 1 && Math.abs(p.y - (r.y + r.height / 2)) < 1 ? p : { x: r.x + r.width / 2, y: r.y + r.height / 2 }));
+        // a hidden lamp (display: none on this screen size) gives no light
+        if (!r || r.width === 0) { setPos(null); return; }
+        setPos((p) => (p && Math.abs(p.x - (r.x + r.width / 2)) < 1 && Math.abs(p.y - (r.y + r.height / 2)) < 1 ? p : { x: r.x + r.width / 2, y: r.y + r.height / 2 }));
       });
     };
     measure();

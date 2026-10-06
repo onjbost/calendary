@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { addDays } from 'date-fns';
 import { api, type Task } from '../api';
 import { Agenda } from '../components/Agenda';
+import { HubLamp } from '../components/HubLamp';
 import { GoalsMini, WeekRoutines } from '../components/GoalWidgets';
 import { MiniMatrix } from '../components/Matrix';
 import { MoveoCard } from '../components/MoveoCard';
@@ -46,6 +47,7 @@ export function Dashboard() {
     <div className="dash">
       <section className="glass pad span-8 glow-cyan">
         <div className="hero">
+          <HubLamp size="large" className="hero-lamp" />
           <div className="grow">
             <div className="muted mono small">{greeting(now).toUpperCase()}</div>
             <div className="big-clock neon-cyan">{hm(now)}<span className="sec">{fmt(now, 'ss')}</span></div>

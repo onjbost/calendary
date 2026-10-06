@@ -19,6 +19,7 @@ import { hideStatusBar, keepAwake } from '../native';
 import { NightStand } from '../components/NightStand';
 import { inWindow, useBattery, useEcoFlag, useLandscape, usePrefs } from '../device';
 import { clearLampOverride, useLampMode } from '../lamp-mode';
+import { Lamp } from '../components/Lamp';
 import { Link } from '../router';
 import { tipOfTheDay } from '../tips';
 import { useUI } from '../ui';
@@ -199,6 +200,7 @@ export function KioskPage() {
   return (
     <div className="kiosk">
       <header className="kiosk-top">
+        <Lamp size="large" mode={lamp.mode} onToggle={lamp.cycle} className="kiosk-lamp" />
         <div className="kiosk-clock neon-cyan">{hm(now)}</div>
         <div className="stack" style={{ gap: 2 }}>
           <div className="kiosk-date neon-violet">{capitalize(fmt(now, 'EEEE'))}</div>
