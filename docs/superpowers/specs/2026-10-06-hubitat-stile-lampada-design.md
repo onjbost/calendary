@@ -5,20 +5,28 @@ Origine: nota "Restyling ecosistema Hubitat" (cartella Hubitat in Calendary) e d
 
 ## 1. Obiettivo
 
-Calendary passa allo stile comune dell'ecosistema Hubitat: **sfondo nero, arancione come colore e come luce**. Al centro c'è una **lampada da terra ad arco** che "illumina" l'app e che con un tocco passa tra le tre modalità **Normale → Risparmio energetico → Notte**.
+Calendary passa allo stile comune dell'ecosistema Hubitat: **sfondo nero, arancione come colore e come luce**, con superfici di vetro a rifrazioni colorate e comandi in argilla (§2). Al centro c'è una **lampada da terra ad arco** che "illumina" l'app e che con un tocco passa tra le tre modalità **Normale → Risparmio energetico → Notte**.
 
 Lo stesso componente lampada andrà poi nella homepage dell'hub Hubitat (progetto futuro): è scritto per essere copiato così com'è (un componente React + un file CSS, senza dipendenze da Calendary).
 
-## 2. Un solo tema
+## 2. Un solo tema: "Hubitat" (vetro e argilla)
 
-- Il tema **Hubitat** sostituisce **Neon** e **Minimal**, che vengono eliminati (CSS, selettore nelle Impostazioni, `theme.ts`). Una preferenza salvata `neon`/`minimal` viene ignorata.
-- Palette (token CSS):
-  - sfondo `#070605`, superfici `#12100d` / `#1a1713`, bordi `#2b2620`;
-  - testo `#f3ece4`, secondario `#a89c8f`;
-  - arancione `#ff8a1f` e `#ffad5c` per testi accesi e titoli; luce `rgba(255,138,31,…)`.
-- Effetto luce: titoli e numeri importanti (orologio, conto alla rovescia) hanno un leggero alone arancione; card e pulsanti principali prendono un riflesso arancione sul bordo **dal lato della lampada**.
-- I colori dei calendari restano quelli scelti dall'utente (servono a distinguerli).
-- Restano i caratteri attuali. Il fondo animato a macchie del Neon sparisce: il "movimento" è solo quello della luce.
+Stile comune a **tutte le app dell'ecosistema** (Calendary, Moveo, WardApp, il futuro hub): **Glassmorphism con rifrazioni colorate** per le superfici e **Claymorphism** per gli elementi da toccare. Nero e arancione restano i colori predominanti.
+
+- **Tema unico**: Hubitat sostituisce Neon e Minimal, che vengono eliminati (CSS, selettore nelle Impostazioni, `theme.ts`). Una preferenza salvata `neon`/`minimal` viene ignorata.
+- **Fondo**: nero `#070605` con poche macchie di luce arancione sfocate e ferme (in Calendary sono la luce della lampada). Il vetro "rifrange" su di esse.
+- **Vetro** (card, pannelli, finestre, barre):
+  - superficie trasparente con sfumatura bianca 10% → 3%, `backdrop-filter: blur(18px) saturate(160%)`;
+  - un riflesso in alto a sinistra e un'ombra profonda;
+  - **bordo prismatico**: gradiente conico sottile (1,5 px) arancione → ambra → rosa → viola → azzurro → arancione, come la luce scomposta da un vetro. È l'unico punto in cui compaiono colori diversi da nero e arancione, sempre tenui.
+- **Argilla** (pulsanti, chip, interruttori, segmenti):
+  - forme morbide e "gonfie" (raggio 18 px), con luce interna in alto a sinistra e ombra interna in basso a destra, più ombra esterna;
+  - principali **arancioni** `#ff8a1f` con testo scuro `#2a1302`, secondari **neri caldi** `#1d1915`;
+  - alla pressione si "schiacciano" (scala 0,96, ombre interne invertite).
+- **Testi**: `#f3ece4`, secondari `#b9ab9c`; numeri e titoli importanti in arancione chiaro `#ffb46a` con alone. I colori dei calendari restano quelli scelti dall'utente.
+- **Risparmio energetico**: vetro senza sfocatura (superficie opaca `#14110e`), niente aloni, rifrazioni e ombre esterne, argilla appiattita. È il punto in cui si risparmia batteria sui tablet.
+- Campione di riferimento (da confermare da Mattia): card a vetro con bordo prismatico + pulsanti e chip in argilla arancione/nera, prototipo del 6/10.
+- I caratteri restano quelli attuali di ogni app.
 
 ## 3. La lampada
 
@@ -78,8 +86,7 @@ Lampada da terra ad arco come nella foto di riferimento:
 
 ## 6. Fuori da questo lavoro
 
-- **Moveo**: stessa palette nero/arancione, senza lampada (lavoro a parte, "adattato" al suo stile).
-- **WardApp**: palette già fatta nella 0.2.0, senza lampada.
+- **Moveo** e **WardApp**: stesso tema vetro + argilla (§2), senza lampada, in un lavoro a parte che riusa gli stessi token CSS (WardApp 0.3.0 insieme alla vista tablet, Moveo 0.7.0).
 - **Hub Hubitat**: riuserà `Lamp.tsx` + `lamp.css` quando verrà sviluppato.
 
 ## 7. Verifica
