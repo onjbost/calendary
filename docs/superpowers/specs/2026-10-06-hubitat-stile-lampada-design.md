@@ -26,7 +26,11 @@ Stile comune a **tutte le app dell'ecosistema** (Calendary, Moveo, WardApp, il f
 - **Testi**: `#f3ece4`, secondari `#b9ab9c`; numeri e titoli importanti in arancione chiaro `#ffb46a` con alone. I colori dei calendari restano quelli scelti dall'utente.
 - **Risparmio energetico**: vetro senza sfocatura (superficie opaca `#14110e`), niente aloni, rifrazioni e ombre esterne, argilla appiattita. È il punto in cui si risparmia batteria sui tablet.
 - Campione di riferimento (da confermare da Mattia): card a vetro con bordo prismatico + pulsanti e chip in argilla arancione/nera, prototipo del 6/10.
-- I caratteri restano quelli attuali di ogni app.
+- **Caratteri** (uguali in tutte le app, scelti da Mattia il 6/10):
+  - **Unbounded** per titoli, orologio e numeri grandi, in peso 500-700 con cifre a larghezza fissa;
+  - **Outfit** per testi, pulsanti e moduli, in peso 400-500.
+  - Inclusi nel pacchetto dell'app con `@fontsource`, senza chiamate a Google Fonts, così funzionano anche offline e nell'app Android.
+  - Sostituiscono i font attuali di Calendary, Moveo e WardApp (in WardApp spariscono Fraunces nei titoli).
 
 ## 3. La lampada
 
