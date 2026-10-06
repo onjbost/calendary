@@ -7,6 +7,7 @@ import { dosesBetween, getPill, listPills, stockInfo } from './pills.js';
 import { announce } from './announce.js';
 import { sendToAll } from './push.js';
 import { fmtTime, nowIso, ymd } from './util.js';
+import { tripDaySummary } from './trips/days.js';
 
 function minutesLabel(min) {
   if (min <= 0) return 'Adesso';
@@ -142,10 +143,12 @@ async function checkMorningSummary() {
   const events = getAllEvents(dayStart, dayEnd);
   const urgent = db.prepare('SELECT title FROM tasks WHERE date = ? AND quadrant = 1 AND done = 0').all(today);
   const doses = dosesBetween(dayStart, dayEnd);
-  if (!events.length && !urgent.length && !doses.length) return;
+  const trip = tripDaySummary(today);
+  if (!events.length && !urgent.length && !doses.length && !trip) return;
 
   const timed = events.filter((e) => !e.allDay).slice(0, 4).map((e) => `${fmtTime(e.start)} ${e.title}`);
   const lines = [];
+  if (trip) lines.push(`🧳 ${trip}`);
   if (events.length) lines.push(`${events.length} ${events.length === 1 ? 'evento' : 'eventi'} oggi${timed.length ? ': ' + timed.join(', ') : ''}`);
   if (urgent.length) lines.push(`🔥 ${urgent.length} urgenti e importanti: ${urgent.slice(0, 3).map((t) => t.title).join(', ')}`);
   if (doses.length) lines.push(`💊 Pillole: ${doses.map((d) => `${d.time} ${d.name}`).join(', ')}`);
