@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { syncNativeAlarm, useAlarm } from '../alarm';
 import { hm } from '../dates';
-import { setBrightness, useEcoMode } from '../device';
+import { applyEco, setBrightness, usePrefs } from '../device';
+import { useLampMode } from '../lamp-mode';
 import { useNow } from '../hooks';
 
 /**
@@ -9,7 +10,11 @@ import { useNow } from '../hooks';
  * the bedside alarm (rings on any page while Hubitat is open) and its backup notification.
  */
 export function DeviceLayer() {
-  const { eco, prefs } = useEcoMode();
+  const [prefs] = usePrefs();
+  const { mode } = useLampMode();
+  // power saving follows the lamp: dimmed (eco) or off (night)
+  const eco = mode !== 'normal';
+  useEffect(() => { applyEco(eco); }, [eco]);
   const alarm = useAlarm();
 
   useEffect(() => {

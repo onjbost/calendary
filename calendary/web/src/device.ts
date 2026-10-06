@@ -143,18 +143,13 @@ export function ecoActive(prefs: DevicePrefs, battery: BatteryState) {
 
 /**
  * Applies power saving to the whole page: `html.eco` switches off blurs, glows and animations
- * (see styles.css), and the slower refresh rates read `isEco()`.
+ * (see styles.css), and the slower refresh rates read `isEco()`. Driven by the lamp mode (lamp-mode.ts).
  */
-export function useEcoMode() {
-  const [prefs] = usePrefs();
-  const battery = useBattery();
-  const on = ecoActive(prefs, battery);
-  useEffect(() => {
-    document.documentElement.classList.toggle('eco', on);
-    ecoFlag = on;
-    bus.dispatchEvent(new Event('eco'));
-  }, [on]);
-  return { eco: on, battery, prefs };
+export function applyEco(on: boolean) {
+  if (on === ecoFlag && document.documentElement.classList.contains('eco') === on) return;
+  document.documentElement.classList.toggle('eco', on);
+  ecoFlag = on;
+  bus.dispatchEvent(new Event('eco'));
 }
 
 let ecoFlag = false;

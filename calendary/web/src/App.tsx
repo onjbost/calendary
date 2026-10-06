@@ -3,6 +3,7 @@ import { api } from './api';
 import { AlertWatcher } from './components/AlertWatcher';
 import { DeviceLayer } from './components/DeviceLayer';
 import { NightStand } from './components/NightStand';
+import { clearLampOverride } from './lamp-mode';
 import { Background, Shell } from './components/Shell';
 import { connectLive, disconnectLive } from './live';
 import { AssistantPage } from './pages/AssistantPage';
@@ -90,7 +91,7 @@ export function App() {
   return (
     <UIProvider>
       <Background />
-      {night ? <NightStand onExit={() => (history.length > 1 ? history.back() : navigate('/kiosk'))} />
+      {night ? <NightStand onExit={() => { clearLampOverride(); if (history.length > 1) history.back(); else navigate('/kiosk'); }} />
         : kiosk ? <KioskPage /> : <Routes path={path} query={query} onLogout={check} />}
       <DeviceLayer />
     </UIProvider>

@@ -18,6 +18,7 @@ import { notifyChanged } from '../live';
 import { hideStatusBar, keepAwake } from '../native';
 import { NightStand } from '../components/NightStand';
 import { inWindow, useBattery, useEcoFlag, useLandscape, usePrefs } from '../device';
+import { clearLampOverride, useLampMode } from '../lamp-mode';
 import { Link } from '../router';
 import { tipOfTheDay } from '../tips';
 import { useUI } from '../ui';
@@ -67,7 +68,6 @@ export function KioskPage() {
   const [prefs] = usePrefs();
   const battery = useBattery();
   const landscape = useLandscape();
-  const [manualNight, setManualNight] = useState(false);
   const [tab, setTabState] = useState<Tab>('today');
   const [calView, setCalView] = useState<CalView>('day');
   const setTab = (t: Tab) => {
@@ -118,8 +118,10 @@ export function KioskPage() {
   const idle = now.getTime() - lastTouch >= prefs.nightIdleSec * 1000;
   const autoNight = prefs.nightAuto === 'charging' ? battery.charging === true && landscape
     : prefs.nightAuto === 'hours' ? inWindow(now, prefs.redFrom, prefs.redTo) : false;
-  const night = manualNight || (autoNight && idle && !document.querySelector('.modal-back, .note-view'));
-  const exitNight = () => { setManualNight(false); setLastTouch(Date.now()); };
+  const lamp = useLampMode(autoNight && idle && !document.querySelector('.modal-back, .note-view'));
+  const night = lamp.mode === 'night';
+  // a tap on the night page: back to the automatic behaviour, the idle time starts again
+  const exitNight = () => { clearLampOverride(); setLastTouch(Date.now()); };
 
   // Back to "Today" after a couple of idle minutes, unless an editor is open.
   useEffect(() => {
@@ -211,7 +213,7 @@ export function KioskPage() {
         </div>
         <button className="btn primary" onClick={() => create()}>＋ Evento</button>
         <button className="btn pink" onClick={() => startFive(next?.title)}>⚡ 5 s</button>
-        <button className="btn icon" onClick={() => setManualNight(true)} aria-label="Modalità notte" title="Modalità notte">🌙</button>
+        <button className="btn icon" onClick={() => lamp.set('night')} aria-label="Modalità notte" title="Modalità notte">🌙</button>
         <Link to="/" className="btn icon" aria-label="App completa" title="App completa">☰</Link>
         <button className="btn icon" onClick={fullscreen} aria-label="Schermo intero">⛶</button>
       </header>
