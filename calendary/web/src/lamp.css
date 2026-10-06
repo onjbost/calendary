@@ -38,9 +38,10 @@
 .lamp[data-mode='night'] .lamp-halo, .lamp[data-mode='night'] .lamp-rim, .lamp[data-mode='night'] .lamp-glass { transition-delay: 0s; }
 .lamp[data-mode='night'] .lamp-filament { transition-delay: 0.9s; }
 
-/* the light on the app: a warm cone from the bulb, above the content, never blocking touches */
+/* the light on the app: a warm cone from the bulb on the background, under the content (the glass
+   cards refract it); the page content must sit in a layer above (position: relative; z-index: 1) */
 .lamp-light {
-  position: fixed; inset: 0; z-index: 30; pointer-events: none;
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
   background:
     radial-gradient(ellipse 30vmax 24vmax at var(--lx) calc(var(--ly) + 10vmax), rgba(255, 160, 70, 0.22), transparent 70%),
     radial-gradient(ellipse 75vmax 60vmax at var(--lx) var(--ly), rgba(255, 138, 31, 0.12), transparent 65%);

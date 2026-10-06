@@ -55,3 +55,8 @@ test('sul tablet, dopo l\'inattività, la notte automatica torna anche se avevi 
   // while you are using it (no idle night yet) the tap still counts
   assert.equal(resolveMode({ ecoAuto: false, charging: true, nightHours: true, nightAuto: false, override: { mode: 'eco', sig } }).mode, 'eco');
 });
+
+test('una scelta fatta prima che la batteria rispondesse resta quando la batteria diventa nota', () => {
+  const override = { mode: 'eco' as const, sig: autoSignature({ ...base, charging: null }) };
+  assert.equal(resolveMode({ ...base, charging: true, nightAuto: false, override }).mode, 'eco');
+});

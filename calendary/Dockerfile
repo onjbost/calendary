@@ -25,6 +25,6 @@ EXPOSE 8787
 
 LABEL io.hass.type="addon" \
       io.hass.name="Hubitat" \
-      io.hass.description="Calendario, promemoria e pianificazione in stile neon"
+      io.hass.description="Hubitat (ex Calendary): calendario, promemoria e pianificazione"
 
 CMD ["node", "--disable-warning=ExperimentalWarning", "src/index.js"]

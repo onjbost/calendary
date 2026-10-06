@@ -9,8 +9,8 @@
   --bg: #070605;
   --bg-2: #12100d;
   --text: #f3ece4;
-  --muted: #b9ab9c;
-  --faint: #7d7064;
+  --muted: #cbbdae;
+  --faint: #9e9083;
 
   --cyan: #ff8a1f;   --cyan-rgb: 255, 138, 31;     /* main accent: orange */
   --pink: #ffa24a;   --pink-rgb: 255, 162, 74;     /* warm second accent */
@@ -188,7 +188,7 @@ label.field { display: flex; flex-direction: column; gap: 6px; font-size: 0.85re
 
 /* ------------------------------------------------ app shell */
 
-.shell { display: grid; grid-template-columns: 236px 1fr; min-height: 100%; }
+.shell { display: grid; grid-template-columns: 236px 1fr; min-height: 100%; position: relative; z-index: 1; }
 .sidebar { position: sticky; top: 0; height: 100vh; padding: 22px 14px; display: flex; flex-direction: column; gap: 6px; border-radius: 0; border-width: 0 1px 0 0; }
 .brand { display: flex; align-items: center; gap: 10px; padding: 4px 10px 22px; }
 .brand img { width: 38px; height: 38px; }
@@ -302,7 +302,7 @@ label.field { display: flex; flex-direction: column; gap: 6px; font-size: 0.85re
 
 .tg-ev {
   position: absolute; border-radius: 10px; padding: 4px 8px; overflow: hidden; cursor: pointer; font-size: 0.78rem; line-height: 1.25;
-  background: color-mix(in srgb, var(--c) 22%, rgba(10, 6, 30, 0.7));
+  background: color-mix(in srgb, var(--c) 22%, rgba(12, 10, 8, 0.75));
   border: 1px solid color-mix(in srgb, var(--c) 70%, transparent);
   box-shadow: 0 0 12px color-mix(in srgb, var(--c) 35%, transparent), inset 0 0 12px color-mix(in srgb, var(--c) 12%, transparent);
   backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
@@ -316,8 +316,8 @@ label.field { display: flex; flex-direction: column; gap: 6px; font-size: 0.85re
 
 /* ------------------------------------------------ modal */
 
-.modal-back { position: fixed; inset: 0; background: rgba(3, 1, 10, 0.6); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); z-index: 100; display: grid; place-items: center; padding: 16px; animation: fade 0.15s ease; }
-.modal { width: min(560px, 100%); max-height: calc(100vh - 32px); overflow-y: auto; padding: 24px; background: linear-gradient(135deg, rgba(30, 20, 70, 0.8), rgba(10, 6, 30, 0.85)); }
+.modal-back { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); z-index: 100; display: grid; place-items: center; padding: 16px; animation: fade 0.15s ease; }
+.modal { width: min(560px, 100%); max-height: calc(100vh - 32px); overflow-y: auto; padding: 24px; background: linear-gradient(135deg, rgba(36, 30, 24, 0.92), rgba(12, 10, 8, 0.95)); }
 .modal.wide { width: min(820px, 100%); }
 .modal-head { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
 .modal-head h2 { margin-right: auto; }
@@ -363,7 +363,7 @@ label.field { display: flex; flex-direction: column; gap: 6px; font-size: 0.85re
 .tip-how { padding: 10px 12px; border-radius: 12px; background: rgba(var(--cyan-rgb), 0.06); border-left: 3px solid var(--cyan); font-size: 0.9rem; }
 .tips-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 16px; }
 
-.five-overlay { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; background: radial-gradient(circle at center, rgba(40, 10, 80, 0.75), rgba(3, 1, 10, 0.94)); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); animation: fade 0.2s; cursor: pointer; text-align: center; padding: 20px; }
+.five-overlay { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; background: radial-gradient(circle at center, rgba(90, 40, 0, 0.7), rgba(0, 0, 0, 0.94)); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); animation: fade 0.2s; cursor: pointer; text-align: center; padding: 20px; }
 .five-ring { width: min(62vmin, 420px); height: min(62vmin, 420px); border-radius: 50%; display: grid; place-items: center; border: 3px solid var(--pink); box-shadow: 0 0 40px var(--pink), inset 0 0 40px rgba(var(--pink-rgb), 0.4); animation: pulse 1s ease-in-out infinite; }
 .five-ring.go { border-color: var(--lime); box-shadow: 0 0 60px var(--lime), inset 0 0 50px rgba(var(--lime-rgb), 0.45); animation: none; }
 .five-num { font-family: var(--font-display); font-size: min(34vmin, 230px); font-weight: 800; line-height: 1; }
@@ -418,7 +418,7 @@ details.help ol { margin: 8px 0 0; padding-left: 20px; color: var(--muted); font
 
 /* ------------------------------------------------ kiosk */
 
-.kiosk { height: 100vh; display: flex; flex-direction: column; padding: 18px 22px; gap: 16px; overflow: hidden; user-select: none; }
+.kiosk { height: 100vh; display: flex; flex-direction: column; padding: 18px 22px; gap: 16px; overflow: hidden; user-select: none; position: relative; z-index: 1; }
 .kiosk-top { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
 .kiosk-clock { font-family: var(--font-display); font-size: clamp(2.8rem, 7.5vw, 5.8rem); font-weight: 700; line-height: 0.95; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
 .kiosk-date { font-family: var(--font-display); font-size: clamp(0.95rem, 1.8vw, 1.35rem); letter-spacing: 0; }
@@ -535,8 +535,8 @@ details.help ol { margin: 8px 0 0; padding-left: 20px; color: var(--muted); font
 @media (max-width: 1100px) { .kiosk-goals { grid-template-columns: 1fr; } }
 
 /* upcoming-event alert */
-.alert-overlay { position: fixed; inset: 0; z-index: 180; display: grid; place-items: center; padding: 20px; background: rgba(3, 1, 10, 0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); animation: fade 0.3s; }
-.alert-card { width: min(640px, 100%); padding: 34px; background: linear-gradient(135deg, rgba(40, 14, 70, 0.92), rgba(10, 5, 28, 0.95)); text-align: center; display: flex; flex-direction: column; gap: 14px; align-items: center; animation: alertGlow 2s ease-in-out infinite; }
+.alert-overlay { position: fixed; inset: 0; z-index: 180; display: grid; place-items: center; padding: 20px; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); animation: fade 0.3s; }
+.alert-card { width: min(640px, 100%); padding: 34px; background: linear-gradient(135deg, rgba(60, 30, 8, 0.92), rgba(12, 8, 4, 0.96)); text-align: center; display: flex; flex-direction: column; gap: 14px; align-items: center; animation: alertGlow 2s ease-in-out infinite; }
 @keyframes alertGlow {
   0%, 100% { box-shadow: 0 0 30px rgba(var(--pink-rgb), 0.35), inset 0 0 20px rgba(var(--pink-rgb), 0.1); }
   50% { box-shadow: 0 0 70px rgba(var(--pink-rgb), 0.7), inset 0 0 30px rgba(var(--pink-rgb), 0.2); }
@@ -616,6 +616,8 @@ html.eco *, html.eco *::before, html.eco *::after { animation: none !important; 
 html.eco .glass { backdrop-filter: none; -webkit-backdrop-filter: none; background: #14110e; border-color: #2b2620; }
 html.eco .glass::before { display: none; }
 html.eco .btn, html.eco .chip { border: 1px solid #2b2620; }
+html.eco .tg-ev, html.eco .modal-back, html.eco .alert-overlay, html.eco .five-overlay { backdrop-filter: none; -webkit-backdrop-filter: none; }
+html.eco .gitem-ring, html.eco .tip-icon { filter: none; }
 html.eco .ns-clock { text-shadow: none; }
 html.eco .nightstand .ns-inner { transition: none; }
 

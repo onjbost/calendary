@@ -11,11 +11,11 @@ export const nextMode = (m: LampMode): LampMode => (m === 'normal' ? 'eco' : m =
 /** Changes whenever the automatic conditions change: a manual choice lasts until then. */
 export const autoSignature = (c: AutoConditions) => `${c.ecoAuto ? 1 : 0}|${c.charging === null ? '-' : c.charging ? 1 : 0}|${c.nightHours ? 1 : 0}`;
 
-/** An unknown charging state ('-') cannot prove that the conditions changed. */
+/** An unknown charging state ('-', now or when the choice was made) cannot prove that the conditions changed. */
 function sameConditions(sig: string, c: AutoConditions) {
   const now = autoSignature(c).split('|');
   const then = sig.split('|');
-  return now.length === then.length && now.every((v, i) => v === then[i] || (i === 1 && v === '-'));
+  return now.length === then.length && now.every((v, i) => v === then[i] || (i === 1 && (v === '-' || then[i] === '-')));
 }
 
 /**
