@@ -205,6 +205,24 @@ export function createEvents(list, opts) {
   return transaction(() => list.map((item) => createEvent(item, opts)));
 }
 
+// ---------------------------------------------------------------- listeners
+
+const eventListeners = new Set();
+/** Called after an event is changed or deleted (e.g. the trips module mirrors edits of its own events). */
+export function onEventChange(fn) {
+  eventListeners.add(fn);
+  return () => eventListeners.delete(fn);
+}
+function notifyEventChange(change) {
+  for (const fn of eventListeners) {
+    try {
+      fn(change);
+    } catch (err) {
+      console.warn('Ascoltatore degli eventi:', err.message);
+    }
+  }
+}
+
 export function updateEvent(id, patch) {
   const current = getEvent(id);
   if (!current) throw httpError(404, 'Evento non trovato');
@@ -214,13 +232,16 @@ export function updateEvent(id, patch) {
     e.calendarId, e.title, e.description, e.location, e.start, e.end, e.allDay, e.important, e.reminderMinutes,
     e.linkUrl, e.linkLabel, e.alexaMinutes, nowIso(), id,
   );
+  notifyEventChange({ type: 'update', before: current, after: getEvent(id) });
   return getEvent(id);
 }
 
 export function deleteEvent(id) {
   if (String(id).startsWith('ics:')) throw httpError(400, 'Gli eventi importati da iCal vanno eliminati dal calendario di origine');
+  const before = getEvent(id);
   const res = db.prepare('DELETE FROM events WHERE id = ?').run(id);
   if (!res.changes) throw httpError(404, 'Evento non trovato');
+  notifyEventChange({ type: 'delete', before, after: null });
 }
 
 export function deletePlan(planId) {

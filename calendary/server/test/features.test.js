@@ -174,16 +174,16 @@ describe('travel mode', () => {
     const planned = () => desiredReminders().some((r) => r.key.startsWith(`${ev.id}|`));
     assert.ok(planned());
 
-    assert.throws(() => travel.createTrip({ startDate: ymd(tomorrow), endDate: ymd(new Date()) }), /prima della partenza/);
-    const trip = travel.createTrip({ startDate: ymd(tomorrow), endDate: ymd(new Date(tomorrow.getTime() + 2 * 86400e3)), note: 'Lisbona' });
-    assert.equal(travel.tripAt(tomorrow).note, 'Lisbona');
-    assert.equal(travel.tripAt(new Date()), null);
+    assert.throws(() => travel.createTravelPeriod({ startDate: ymd(tomorrow), endDate: ymd(new Date()) }), /prima della partenza/);
+    const trip = travel.createTravelPeriod({ startDate: ymd(tomorrow), endDate: ymd(new Date(tomorrow.getTime() + 2 * 86400e3)), note: 'Lisbona' });
+    assert.equal(travel.travelPeriodAt(tomorrow).note, 'Lisbona');
+    assert.equal(travel.travelPeriodAt(new Date()), null);
     assert.ok(!planned());
 
-    const today = travel.createTrip({ startDate: ymd(new Date()), endDate: ymd(new Date()) });
+    const today = travel.createTravelPeriod({ startDate: ymd(new Date()), endDate: ymd(new Date()) });
     assert.equal((await announce('ciao')).skipped, 'modalità viaggio');
-    travel.deleteTrip(today.id);
-    travel.deleteTrip(trip.id);
+    travel.deleteTravelPeriod(today.id);
+    travel.deleteTravelPeriod(trip.id);
     assert.ok(planned());
   });
 });

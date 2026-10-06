@@ -4,7 +4,7 @@ import { effectiveReminder, getAllEvents } from './agenda.js';
 import { atTime, dayLabel, inMinutes } from './alexa-speech.js';
 import { db, deleteSetting, getSetting, setSetting } from './db.js';
 import { dosesBetween } from './pills.js';
-import { tripAt } from './travel.js';
+import { travelPeriodAt } from './travel.js';
 import { localStamp, nowIso } from './util.js';
 
 // Hubitat → Alexa: upcoming reminders are mirrored as Alexa reminders, so the Echo devices
@@ -104,7 +104,7 @@ export function desiredReminders(now = Date.now()) {
   }
   // "Prova promemoria" button: a one-off reminder a couple of minutes from now.
   // Travel mode: nothing rings on Alexa in those days (reminders already there are removed at the next sync).
-  const planned = list.filter((r) => !tripAt(r.fireAt));
+  const planned = list.filter((r) => !travelPeriodAt(r.fireAt));
   const test = testReminder(); // the test button works anyway
   if (test && test.fireAt >= now + MIN_LEAD_MS) planned.push(test);
   return planned.sort((a, b) => a.fireAt - b.fireAt).slice(0, MAX_REMINDERS);

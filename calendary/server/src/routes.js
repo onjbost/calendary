@@ -295,7 +295,7 @@ export async function registerRoutes(app) {
       remindersMode: config.alexa.reminders,
       outOfSession: canSyncOutOfSession(),
       sessionOnly: sessionOnly(),
-      trip: travel.tripAt(),
+      trip: travel.travelPeriodAt(),
       pending: plan ? plan.create.length + plan.remove.length : 0,
       ...syncStatus(),
       announce: announceStatus(),
@@ -305,16 +305,16 @@ export async function registerRoutes(app) {
   app.post('/alexa/sync', async () => requestSync({ force: true }));
 
   // travel mode: no Alexa reminders or announcements in these days
-  app.get('/travel', async () => ({ trips: travel.listTrips(), now: travel.tripAt() }));
+  app.get('/travel', async () => ({ trips: travel.listTravelPeriods(), now: travel.travelPeriodAt() }));
 
   app.post('/travel', async (req) => {
-    const t = travel.createTrip(req.body || {});
+    const t = travel.createTravelPeriod(req.body || {});
     broadcast('events'); // re-plans the Alexa reminders
     return t;
   });
 
   app.delete('/travel/:id', async (req) => {
-    travel.deleteTrip(req.params.id);
+    travel.deleteTravelPeriod(req.params.id);
     broadcast('events');
     return { ok: true };
   });
