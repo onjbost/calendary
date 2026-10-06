@@ -85,7 +85,7 @@ export function Lamp({ size = 'large', mode, onToggle, light = size === 'large',
           </svg>
         )}
       </button>
-      {light && pos && createPortal(
+      {light && pos && mode !== 'night' && createPortal(
         <div className="lamp-light" data-mode={mode} aria-hidden="true" style={{ '--lx': `${pos.x}px`, '--ly': `${pos.y}px` } as CSSProperties} />,
         document.body,
       )}

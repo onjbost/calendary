@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { syncNativeAlarm, useAlarm } from '../alarm';
 import { hm } from '../dates';
 import { applyEco, setBrightness, usePrefs } from '../device';
-import { useLampMode } from '../lamp-mode';
+import { useLampMode, usePageNight } from '../lamp-mode';
 import { useNow } from '../hooks';
 
 /**
@@ -13,7 +13,8 @@ export function DeviceLayer() {
   const [prefs] = usePrefs();
   const { mode } = useLampMode();
   // power saving follows the lamp: dimmed (eco) or off (night)
-  const eco = mode !== 'normal';
+  const pageNight = usePageNight();
+  const eco = mode !== 'normal' || pageNight;
   useEffect(() => { applyEco(eco); }, [eco]);
   const alarm = useAlarm();
 

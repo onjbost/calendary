@@ -18,7 +18,7 @@ import { notifyChanged } from '../live';
 import { hideStatusBar, keepAwake } from '../native';
 import { NightStand } from '../components/NightStand';
 import { inWindow, useBattery, useEcoFlag, useLandscape, usePrefs } from '../device';
-import { clearLampOverride, useLampMode } from '../lamp-mode';
+import { clearLampOverride, setPageNight, useLampMode } from '../lamp-mode';
 import { Lamp } from '../components/Lamp';
 import { Link } from '../router';
 import { tipOfTheDay } from '../tips';
@@ -121,6 +121,8 @@ export function KioskPage() {
     : prefs.nightAuto === 'hours' ? inWindow(now, prefs.redFrom, prefs.redTo) : false;
   const lamp = useLampMode(autoNight && idle && !document.querySelector('.modal-back, .note-view'));
   const night = lamp.mode === 'night';
+  useEffect(() => { setPageNight(night); }, [night]);
+  useEffect(() => () => setPageNight(false), []);
   // a tap on the night page: back to the automatic behaviour, the idle time starts again
   const exitNight = () => { clearLampOverride(); setLastTouch(Date.now()); };
 

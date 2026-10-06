@@ -34,14 +34,24 @@ test('la firma non dipende dall\'inattività del kiosk: tutte le pagine la calco
 
 test('finché la batteria non è nota (pagina appena aperta) la scelta manuale resta', () => {
   const override = { mode: 'normal' as const, sig: autoSignature({ ...base, charging: true, nightHours: true }) };
-  const loading = { ecoAuto: false, charging: null, nightHours: true, nightAuto: true, override };
+  const loading = { ecoAuto: false, charging: null, nightHours: true, nightAuto: false, override };
   assert.deepEqual(resolveMode({ ...loading, settled: false }), { mode: 'normal', override });
   assert.equal(resolveMode({ ...loading, nightHours: false, settled: true }).override, null);
 });
 
 test('una batteria sconosciuta non basta a cancellare la scelta manuale', () => {
   const override = { mode: 'normal' as const, sig: autoSignature({ ...base, charging: true, nightHours: true }) };
-  const r = resolveMode({ ecoAuto: false, charging: null, nightHours: true, nightAuto: true, override, settled: true });
+  const r = resolveMode({ ecoAuto: false, charging: null, nightHours: true, nightAuto: false, override, settled: true });
   assert.equal(r.mode, 'normal');
   assert.equal(resolveMode({ ecoAuto: false, charging: null, nightHours: false, nightAuto: false, override, settled: true }).override, null);
+});
+
+test('sul tablet, dopo l\'inattività, la notte automatica torna anche se avevi toccato la lampada', () => {
+  const sig = autoSignature({ ...base, charging: true, nightHours: true });
+  for (const mode of ['normal', 'eco'] as const) {
+    const r = resolveMode({ ecoAuto: false, charging: true, nightHours: true, nightAuto: true, override: { mode, sig } });
+    assert.equal(r.mode, 'night');
+  }
+  // while you are using it (no idle night yet) the tap still counts
+  assert.equal(resolveMode({ ecoAuto: false, charging: true, nightHours: true, nightAuto: false, override: { mode: 'eco', sig } }).mode, 'eco');
 });

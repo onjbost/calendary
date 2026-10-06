@@ -31,6 +31,29 @@ let memory: LampOverride | null = load();
 /** Back to the automatic behaviour (e.g. leaving the night page with a tap). */
 export const clearLampOverride = () => save(null);
 
+/** Leaving the night page some other way (Back button): a manual Night does not follow you. */
+export function clearNightOverride() {
+  if (memory?.mode === 'night') save(null);
+}
+
+// The kiosk decides its night by itself (idle time): it publishes it here, so power saving follows.
+let pageNight = false;
+export function setPageNight(on: boolean) {
+  if (on === pageNight) return;
+  pageNight = on;
+  bus.dispatchEvent(new Event('change'));
+}
+
+export function usePageNight() {
+  const [on, setOn] = useState(pageNight);
+  useEffect(() => {
+    const f = () => setOn(pageNight);
+    bus.addEventListener('change', f);
+    return () => bus.removeEventListener('change', f);
+  }, []);
+  return on;
+}
+
 /**
  * Current mode and the lamp actions. `nightAuto` is the page's own "night now" rule (the kiosk:
  * on charge or night hours, after the idle time); other pages pass false.

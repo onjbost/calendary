@@ -26,6 +26,8 @@ function sameConditions(sig: string, c: AutoConditions) {
  */
 export function resolveMode(c: AutoConditions & { nightAuto: boolean; override: LampOverride | null; settled?: boolean }): { mode: LampMode; override: LampOverride | null } {
   const override = c.override && (c.settled === false || sameConditions(c.override.sig, c)) ? c.override : null;
-  if (override) return { mode: override.mode, override };
+  // the page's own idle night (kiosk) wins over a tap: touching the screen resets the idle time anyway
+  if (override && !(c.nightAuto && override.mode !== 'night')) return { mode: override.mode, override };
+  if (override) return { mode: 'night', override };
   return { mode: c.nightAuto ? 'night' : c.ecoAuto ? 'eco' : 'normal', override: null };
 }

@@ -3,7 +3,7 @@ import { api } from './api';
 import { AlertWatcher } from './components/AlertWatcher';
 import { DeviceLayer } from './components/DeviceLayer';
 import { NightStand } from './components/NightStand';
-import { clearLampOverride, useLampMode } from './lamp-mode';
+import { clearLampOverride, clearNightOverride, useLampMode } from './lamp-mode';
 import { Background, Shell } from './components/Shell';
 import { connectLive, disconnectLive } from './live';
 import { AssistantPage } from './pages/AssistantPage';
@@ -101,7 +101,8 @@ export function App() {
 /** /notte outside the kiosk: a tap goes back to the automatic mode, a tap on the lamp switches it on. */
 function NightRoute() {
   const lamp = useLampMode();
-  const back = () => (history.length > 1 ? history.back() : navigate('/kiosk'));
+  const back = () => navigate('/', { replace: true });
+  useEffect(() => () => clearNightOverride(), []);
   return (
     <NightStand
       onExit={() => { clearLampOverride(); back(); }}
