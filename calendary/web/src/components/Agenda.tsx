@@ -20,7 +20,7 @@ export function Agenda({ events, now, onEventClick, empty = 'Niente in programma
         const s = Date.parse(ev.start);
         const e = Date.parse(ev.end);
         const state = ev.allDay ? '' : e < t ? 'past' : s <= t ? 'now' : '';
-        const ask = wardapp && state !== 'past' ? wardappAskPath(ev) : null;
+        const ask = wardapp ? wardappAskPath(ev, now) : null;
         return (
           <div key={ev.id} className={`agenda-item ${state} ${ev.done ? 'is-done' : ''}`} onClick={() => onEventClick(ev)}>
             <div className="bar" style={{ color: ev.color }} />

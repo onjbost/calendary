@@ -100,7 +100,8 @@ let wardappInfo: Promise<WardappToday | null> | null = null;
 export function useWardappInfo() {
   const [info, setInfo] = useState<WardappToday | null>(null);
   useEffect(() => {
-    wardappInfo ||= api.wardappToday().catch(() => null);
+    // a failed request is forgotten, so the next component (or page) asks again
+    wardappInfo ||= api.wardappToday().catch(() => { wardappInfo = null; return null; });
     let alive = true;
     wardappInfo.then((d) => { if (alive) setInfo(d); });
     return () => { alive = false; };
@@ -110,12 +111,16 @@ export function useWardappInfo() {
 
 /**
  * WardApp "Cosa mi metto?" page for an event, or null when it makes no sense:
- * all-day events and the workouts created by Moveo.
+ * all-day events, past events and the workouts created by Moveo.
+ * An event already in progress is asked from now (today), not from the day it started.
  */
-export function wardappAskPath(ev: Pick<CalEvent, 'allDay' | 'planId' | 'start' | 'end' | 'title' | 'location'>): string | null {
-  if (ev.allDay || ev.planId?.startsWith('moveo:')) return null;
-  const q = new URLSearchParams({ date: ymd(ev.start), start: hm(ev.start), title: ev.title });
-  if (ymd(ev.end) === ymd(ev.start)) q.set('end', hm(ev.end));
-  if (ev.location) q.set('location', ev.location);
+export function wardappAskPath(ev: Pick<CalEvent, 'allDay' | 'planId' | 'start' | 'end' | 'title' | 'location'>, now = new Date()): string | null {
+  if (ev.allDay || ev.planId?.startsWith('moveo:') || Date.parse(ev.end) <= now.getTime()) return null;
+  const from = new Date(Math.max(Date.parse(ev.start), now.getTime()));
+  // short fields first, long text capped: the signed link keeps only 1000 characters
+  const q = new URLSearchParams({ date: ymd(from), start: hm(from) });
+  if (ymd(ev.end) === ymd(from)) q.set('end', hm(ev.end));
+  q.set('title', ev.title.slice(0, 150));
+  if (ev.location) q.set('location', ev.location.slice(0, 150));
   return `/ask?${q.toString()}`;
 }
