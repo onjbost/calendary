@@ -71,6 +71,8 @@ function mapTrip(r) {
     weatherKind: r.weather_kind,
     weatherChanged: !!r.weather_changed,
     source: r.source,
+    // counts of the last suitcase received from WardApp (pack.js): { total, checked } or null
+    pack: parseWeather(r.pack_cache)?.counts || null,
     legs: db.prepare('SELECT * FROM trip_legs WHERE trip_id = ? ORDER BY depart_at').all(r.id).map(mapLeg),
     // day order; activities "to reschedule" (day '') last; untimed activities after the timed ones of their day
     activities: db.prepare(`SELECT * FROM trip_activities WHERE trip_id = ?
@@ -151,7 +153,7 @@ export function updateTrip(id, patch = {}) {
   );
   // new place or new dates: the saved weather no longer applies
   if (placeChanged || t.startDate !== before.startDate || t.endDate !== before.endDate) {
-    db.prepare('UPDATE trips SET weather = NULL, weather_at = NULL, weather_kind = NULL WHERE id = ?').run(before.id);
+    db.prepare('UPDATE trips SET weather = NULL, weather_at = NULL, weather_kind = NULL, weather_changed = 0 WHERE id = ?').run(before.id);
   }
   // activities outside the new dates are kept, "to reschedule"
   db.prepare("UPDATE trip_activities SET day = '', updated_at = ? WHERE trip_id = ? AND day != '' AND (day < ? OR day > ?)")

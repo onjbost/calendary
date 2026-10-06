@@ -5,6 +5,7 @@ import { broadcast } from '../stream.js';
 import { httpError, isYmd, str, ymd } from '../util.js';
 import { tripDays } from './days.js';
 import * as trips from './trips.js';
+import * as pack from './pack.js';
 import { geocode, refreshWeather } from './weather.js';
 
 const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -85,12 +86,25 @@ export async function registerTripRoutes(app) {
   app.patch('/trips/:id', async (req) => changed(trips.updateTrip(req.params.id, req.body || {})));
   app.delete('/trips/:id', async (req) => {
     trips.deleteTrip(req.params.id);
+    await pack.forgetPack(req.params.id);
     return changed({ ok: true });
   });
   app.post('/trips/:id/weather', async (req) => {
     trips.getTrip(req.params.id);
     return refreshWeather(req.params.id, { force: true });
   });
+
+  // suitcase (prepared by WardApp)
+  app.get('/trips/pack/wardrobe', async (req) => pack.searchWardrobe(req.query.q));
+  app.get('/trips/:id/pack', async (req) => pack.getPack(req.params.id));
+  app.post('/trips/:id/pack', async (req) => {
+    const r = await pack.preparePack(req.params.id);
+    broadcast('trips');
+    return r;
+  });
+  app.patch('/trips/:id/pack/items/:key', async (req) => pack.markPackItem(req.params.id, req.params.key, req.body || {}));
+  app.post('/trips/:id/pack/items', async (req) => pack.addPackItem(req.params.id, req.body?.itemId));
+  app.post('/trips/:id/pack/return', async (req) => pack.returnFromTrip(req.params.id, req.body?.itemIds));
 
   app.post('/trips/:id/legs', async (req) => changed(trips.addLeg(req.params.id, req.body || {})));
   app.patch('/trips/legs/:legId', async (req) => changed(trips.updateLeg(req.params.legId, req.body || {})));

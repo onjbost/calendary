@@ -4,6 +4,7 @@ import { db, getSetting } from '../db.js';
 import { announce } from '../announce.js';
 import { sendToAll } from '../push.js';
 import { addDays, fmtDay, fmtTime, nowIso, parseYmd, ymd } from '../util.js';
+import { packCounts } from './pack.js';
 import { listTrips } from './trips.js';
 
 const DAY_START = 8; // a check-in opening at night is announced at 8
@@ -83,7 +84,10 @@ export function dueTripReminders(now = new Date()) {
       if (today !== eve || t < fire.getTime() || t >= firstDepart) continue;
       const modes = [...new Set(legs.map((l) => l.mode))];
       const parts = modes.length ? modes.map((m) => WHAT_TO_PACK[m]) : ['documenti, caricabatterie e biglietti'];
-      add(`trip|${trip.id}|evening|${day}`, `🧳 Domani si parte per ${where}`, `Prepara: ${[...new Set(parts)].join('; ')}.`, url);
+      const counts = packCounts(trip.id);
+      const missing = counts ? counts.total - counts.checked : 0;
+      const suitcase = missing > 0 ? ` Valigia: mancano ${missing} ${missing === 1 ? 'capo' : 'capi'}.` : '';
+      add(`trip|${trip.id}|evening|${day}`, `🧳 Domani si parte per ${where}`, `Prepara: ${[...new Set(parts)].join('; ')}.${suitcase}`, url);
     }
 
     // welcome back: an hour after the last return leg lands, else at 18:00 of the last day; only that day
