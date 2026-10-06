@@ -5,6 +5,7 @@ import { BAGS, MODES, TAGS, tripsApi, type Activity, type Leg, type Trip } from 
 import { ActivityForm } from './ActivityForm';
 import { useTrip } from './hooks';
 import { LegForm } from './LegForm';
+import { PackTab } from './PackTab';
 import { dateRange, dayLabel, hhmm, outsideLegs, programmeOf, toYmd, tripDates, whenText } from './logic';
 import { TripForm } from './TripForm';
 import { WeatherStrip } from './WeatherStrip';
@@ -12,6 +13,7 @@ import './trips.css';
 
 type Tab = 'programme' | 'legs' | 'pack' | 'notes';
 const TABS: [Tab, string][] = [['programme', 'Programma'], ['legs', 'Spostamenti'], ['pack', 'Valigia'], ['notes', 'Note']];
+const packLabel = (t: Trip) => (t.pack ? `Valigia ${t.pack.checked}/${t.pack.total}` : 'Valigia');
 
 function LegLine({ leg, onOpen }: { leg: Leg; onOpen: () => void }) {
   return (
@@ -151,7 +153,7 @@ export function TripPage({ id }: { id: string }) {
 
       <div className="row trip-tabs">
         <div className="seg">
-          {TABS.map(([t, label]) => <button key={t} className={tab === t ? 'on' : ''} onClick={() => setTab(t)}>{label}</button>)}
+          {TABS.map(([t, label]) => <button key={t} className={tab === t ? 'on' : ''} onClick={() => setTab(t)}>{t === 'pack' ? packLabel(trip) : label}</button>)}
         </div>
         <span className="spacer" />
         {(tab === 'programme' || tab === 'legs') && <button className="btn sm" onClick={() => setLeg('new')}>＋ Tratta</button>}
@@ -159,12 +161,7 @@ export function TripPage({ id }: { id: string }) {
 
       {tab === 'programme' && <Programme trip={trip} onLeg={setLeg} onActivity={(a) => setActivity({ a })} onAdd={(day) => setActivity({ day })} />}
       {tab === 'legs' && <Legs trip={trip} onLeg={setLeg} />}
-      {tab === 'pack' && (
-        <div className="glass pad stack">
-          <b>🧳 Valigia</b>
-          <div>In arrivo con la prossima versione di WardApp: la lista dei capi del tuo armadio adatta a programma, meteo e bagaglio, da spuntare mentre la prepari.</div>
-        </div>
-      )}
+      {tab === 'pack' && <PackTab trip={trip} onChange={reload} />}
       {tab === 'notes' && <Notes trip={trip} />}
 
       {editTrip && <TripForm trip={trip} onClose={() => setEditTrip(false)} onSaved={() => { setEditTrip(false); reload(); }} />}

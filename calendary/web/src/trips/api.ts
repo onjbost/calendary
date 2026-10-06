@@ -51,7 +51,22 @@ export interface Trip {
   canWash: boolean; quietAlexa: boolean; notes: string;
   weather: WeatherDay[] | null; weatherAt: string | null; weatherKind: 'forecast' | 'last_year' | null; weatherChanged: boolean;
   source: 'manual' | 'event'; legs: Leg[]; activities: Activity[];
+  /** counts of the last suitcase received from WardApp */
+  pack: { total: number; checked: number } | null;
 }
+
+export type PackGroup = 'top' | 'bottom' | 'dress' | 'outerwear' | 'shoes' | 'underwear' | 'swim' | 'accessory' | 'essential';
+export interface PackLine {
+  key: string; itemId: string | null; name: string; group: PackGroup; qty: number; reasons: string[];
+  worn: boolean; manual: boolean; dirty: boolean; bulk: number; checked: boolean; thumbUrl: string | null;
+}
+export interface Pack {
+  tripId: string; generatedAt: string; ai: boolean; lines: PackLine[]; worn: string[]; tips: string[]; warnings: string[];
+  capacity: { used: number; max: number; fits: boolean; suggestBag: BagId | null } | null;
+  counts: { total: number; checked: number };
+}
+export interface PackResult { enabled: boolean; pack: Pack | null; stale: boolean; error: string | null }
+export interface WardrobeHit { id: string; name: string; category: string; thumbUrl: string | null }
 
 export interface TripDay {
   date: string; tripId: string; name: string; label: string; emoji: string; color: string;
@@ -107,6 +122,13 @@ export const tripsApi = {
   addActivity: (tripId: string, a: ActivityDraft) => request<Activity>('POST', `/trips/${tripId}/activities`, a),
   updateActivity: (id: string, a: ActivityDraft) => request<Activity>('PATCH', `/trips/activities/${id}`, a),
   removeActivity: (id: string) => request<{ ok: true }>('DELETE', `/trips/activities/${id}`),
+  pack: (id: string) => request<PackResult>('GET', `/trips/${id}/pack`),
+  preparePack: (id: string) => request<PackResult>('POST', `/trips/${id}/pack`, {}),
+  markPackItem: (id: string, key: string, body: { checked?: boolean; removed?: true }) =>
+    request<PackResult>('PATCH', `/trips/${id}/pack/items/${encodeURIComponent(key)}`, body),
+  addPackItem: (id: string, itemId: string) => request<PackResult>('POST', `/trips/${id}/pack/items`, { itemId }),
+  wardrobe: (q: string) => request<WardrobeHit[]>('GET', `/trips/pack/wardrobe?q=${encodeURIComponent(q)}`),
+  returnFromTrip: (id: string, itemIds: string[]) => request<{ count: number }>('POST', `/trips/${id}/pack/return`, { itemIds }),
   days: (from: string, to: string) => request<TripDay[]>('GET', `/trips/days?from=${from}&to=${to}`),
   geocode: (q: string) => request<PlaceHit[]>('GET', `/trips/geocode?q=${encodeURIComponent(q)}`),
   fromEvent: (e: { eventId: string; title: string; start: string; end: string; allDay: boolean; location: string }) =>

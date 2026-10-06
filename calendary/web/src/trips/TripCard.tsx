@@ -24,6 +24,7 @@ export function TripCard({ className = '' }: { className?: string }) {
       <div className="stack" style={{ gap: 8 }}>
         <div className="muted small">{trip.name !== (trip.place?.name || trip.name) ? `${trip.name} · ` : ''}{dateRange(trip.startDate, trip.endDate)}</div>
         <WeatherStrip trip={trip} compact />
+        {trip.pack && <div className="small">🧳 Valigia {trip.pack.checked}/{trip.pack.total}</div>}
         {inProgress ? (
           items.length ? items.slice(0, 4).map((it) => (
             <div key={it.kind === 'leg' ? it.leg.id : it.activity.id} className="small">

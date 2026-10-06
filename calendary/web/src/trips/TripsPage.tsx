@@ -17,7 +17,7 @@ function TripRow({ trip, today }: { trip: Trip; today: string }) {
       </div>
       <div className="trip-card-side">
         <span className="chip">{whenText(trip, today)}</span>
-        <span className="small">{modes || BAGS[trip.bag].emoji}{w ? ` · ${weatherIcon(w.code, w.rainy)} ${w.max !== null ? Math.round(w.max) : ''}°` : ''}</span>
+        <span className="small">{trip.pack ? `🧳 ${trip.pack.checked}/${trip.pack.total} · ` : ''}{modes || BAGS[trip.bag].emoji}{w ? ` · ${weatherIcon(w.code, w.rainy)} ${w.max !== null ? Math.round(w.max) : ''}°` : ''}</span>
       </div>
     </button>
   );

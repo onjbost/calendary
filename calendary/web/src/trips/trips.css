@@ -41,6 +41,25 @@
 .place-hit { border: 0; background: transparent; color: inherit; font: inherit; text-align: left; padding: 8px 10px; border-radius: 10px; cursor: pointer; }
 .place-hit:hover { background: rgba(255, 255, 255, 0.08); }
 
+/* Suitcase */
+.pack-head { flex-wrap: wrap; }
+.pack-actions { gap: 8px; }
+.pack-group { gap: 6px; }
+.pack-line { display: grid; grid-template-columns: 26px 44px 1fr auto; gap: 10px; align-items: center; padding: 4px 0; border-top: 1px solid rgba(255, 255, 255, 0.06); }
+.pack-line.done .pack-name > span:first-child { text-decoration: line-through; opacity: 0.55; }
+.pack-name { display: flex; flex-direction: column; min-width: 0; }
+.pack-qty { color: var(--cyan); }
+.pack-thumb { width: 44px; height: 44px; object-fit: contain; border-radius: 10px; background: rgba(255, 255, 255, 0.07); }
+.pack-thumb.empty { display: grid; place-items: center; font-size: 1.2rem; }
+.tiny-chip { margin-left: 6px; font-size: 0.68rem; padding: 1px 7px; }
+.pack-bar { height: 10px; border-radius: 6px; background: rgba(0, 0, 0, 0.35); box-shadow: inset 1px 2px 4px rgba(0, 0, 0, 0.6); overflow: hidden; }
+.pack-bar > span { display: block; height: 100%; border-radius: 6px; background: linear-gradient(90deg, #38bdf8, #7dd3fc); }
+.pack-bar.over > span { background: linear-gradient(90deg, #ff5d73, #ff8a1f); }
+.pack-tips { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
+.pack-hits { display: flex; flex-direction: column; gap: 4px; max-height: 50vh; overflow-y: auto; }
+.pack-hit { display: flex; align-items: center; gap: 10px; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; padding: 6px; border-radius: 10px; cursor: pointer; }
+.pack-hit:hover { background: rgba(255, 255, 255, 0.07); }
+
 /* Day strips in the calendar views and the dashboard */
 .trip-strip { display: flex; align-items: center; gap: 5px; width: 100%; min-width: 0; padding: 2px 7px; border: 0; border-radius: 7px; cursor: pointer; font: inherit; font-size: 0.72rem; line-height: 1.35; text-align: left; color: #d8f3ff; background: rgba(56, 189, 248, 0.16); box-shadow: inset 0 0 0 1px rgba(56, 189, 248, 0.35); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .trip-strip > span:last-child { overflow: hidden; text-overflow: ellipsis; }
