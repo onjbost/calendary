@@ -46,7 +46,7 @@ export const config = {
   },
   // Weather widget of the night mode (Home Assistant weather entity, empty = off).
   weatherEntity: String(pick('WEATHER_ENTITY', 'weather_entity', 'weather.forecast_home')).trim(),
-  publicUrl: String(pick('PUBLIC_URL', 'public_url', 'https://calendary.gattucciocloud.it')).replace(/\/$/, ''),
+  publicUrl: String(pick('PUBLIC_URL', 'public_url', 'https://hubitat.gattucciocloud.it')).replace(/\/$/, ''),
   timezone: String(pick('TZ_OVERRIDE', 'timezone', process.env.TZ || 'Europe/Rome')),
   icsSyncMinutes: Math.max(5, Number(pick('ICS_SYNC_MINUTES', 'ics_sync_minutes', 15))),
   morningSummary: String(pick('MORNING_SUMMARY', 'morning_summary', '07:30')),

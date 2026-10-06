@@ -1,13 +1,13 @@
 {
-  "name": "Calendary",
-  "short_name": "Calendary",
+  "name": "Hubitat",
+  "short_name": "Hubitat",
   "description": "Calendario, promemoria e pianificazione con stile neon",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#05030f",
-  "theme_color": "#05030f",
+  "background_color": "#070605",
+  "theme_color": "#070605",
   "lang": "it",
   "icons": [
     { "src": "/img/icon.svg", "sizes": "any", "type": "image/svg+xml" },

@@ -1,6 +1,6 @@
-# Calendary ✦
+# Hubitat ✦ (ex Calendary)
 
-Calendario e promemoria personale in stile **glassmorphism + neon**.
+L'hub dell'ecosistema Hubitat: calendario e promemoria personale in stile **vetro con rifrazioni colorate + argilla**, nero e arancione, con la lampada ad arco.
 Si modifica da **PC via web**, mentre il **tablet** fa da bacheca sempre accesa.
 
 - Vista **mensile**, **settimanale** e **giornaliera/oraria**, con inserimento, modifica ed eliminazione degli eventi.
@@ -11,7 +11,7 @@ Si modifica da **PC via web**, mentre il **tablet** fa da bacheca sempre accesa.
 - **Tips motivazionali**: regola dei 5 secondi (con conto alla rovescia a schermo intero), mangia il ranocchio, pomodoro, 2 minuti…
 - **Assistente virtuale** con AI gratuita o quasi: pianifica lo studio, aggiunge impegni e riempie la matrice. **Ogni modifica va approvata.**
 - **Pianificatore di studio** (funziona anche senza AI): *“corso di 15 ore in 5 moduli da 3 ore entro il 31/10”* → sessioni distribuite negli slot liberi, evitando gli impegni già presenti.
-- **Note**: sticky note con titolo e descrizione, raggruppate in cartelle per progetto, anche nella vista tablet. **Claude** può aggiungerle (*“annotalo su Calendary”*) tramite il server MCP: vedi `calendary/DOCS.md`.
+- **Note**: sticky note con titolo e descrizione, raggruppate in cartelle per progetto, anche nella vista tablet. **Claude** può aggiungerle (*“annotalo su Hubitat”*) tramite il server MCP: vedi `calendary/DOCS.md`.
 - **Pillole**: terapie con orari e giorni, notifica e sveglia su Alexa a ogni dose, pulsante **Presa ✓** in dashboard, magazzino con avviso prima che finiscano (Alexa la mattina, push a ogni dose), storico completo dall'inizio della terapia (percentuale, serie di giorni, mappa per settimane) e registro mese per mese.
 - **Temi**: *Neon* (predefinito) e *Minimal* nero e arancione, scelti per dispositivo in Impostazioni → Aspetto.
 - **Alexa**: aggiungi promemoria, impegni e attività a voce con la skill *AiCal*, chiedi cosa hai in programma, e senti sugli Echo i promemoria e gli annunci che arrivano da Calendary.
@@ -53,13 +53,15 @@ Calendary/
 Pubblica questa cartella su un repository GitHub (anche privato, con un token) e aggiungilo in
 **Raccolta → ⋮ → Repository**. Così gli aggiornamenti arrivano come per gli altri add-on: basta aumentare `version` in `calendary/config.yaml`.
 
-## 2. Accesso dall'esterno con Cloudflare (`calendary.gattucciocloud.it`)
+## 2. Accesso dall'esterno con Cloudflare (`hubitat.gattucciocloud.it`)
 
 **Con l'add-on Cloudflared** (quello di brenner-tobias), aggiungi nella sua configurazione:
 
 ```yaml
 additional_hosts:
-  - hostname: calendary.gattucciocloud.it
+  - hostname: hubitat.gattucciocloud.it
+    service: http://local-calendary:8787
+  - hostname: calendary.gattucciocloud.it   # vecchio indirizzo, resta attivo
     service: http://local-calendary:8787
 ```
 
@@ -67,7 +69,7 @@ e riavvia l'add-on Cloudflared. Il record DNS viene creato in automatico.
 
 **Con un tunnel gestito dalla dashboard** (Zero Trust → Networks → Tunnels → il tuo tunnel → *Public Hostname* → *Add*):
 
-- Subdomain: `calendary`, Domain: `gattucciocloud.it`
+- Subdomain: `hubitat` (e `calendary` per il vecchio indirizzo), Domain: `gattucciocloud.it`
 - Service: `HTTP` → `local-calendary:8787`
 
 Se `local-calendary` non viene risolto (cloudflared fuori da Home Assistant), usa `IP-DI-HOME-ASSISTANT:8787`.

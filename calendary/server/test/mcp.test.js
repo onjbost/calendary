@@ -22,6 +22,7 @@ describe('MCP server', () => {
     const init = handleMessage({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-03-26', capabilities: {}, clientInfo: { name: 't', version: '1' } } });
     assert.equal(init.result.protocolVersion, '2025-03-26');
     assert.ok(init.result.capabilities.tools);
+    assert.equal(init.result.serverInfo.title, 'Hubitat');
     assert.equal(handleMessage({ jsonrpc: '2.0', method: 'notifications/initialized' }), null);
     const names = handleMessage({ jsonrpc: '2.0', id: 2, method: 'tools/list' }).result.tools.map((t) => t.name);
     assert.deepEqual(names.sort(), ['add_note', 'create_note_folder', 'list_note_folders', 'list_notes', 'update_note']);

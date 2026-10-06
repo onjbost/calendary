@@ -50,7 +50,7 @@ export async function syncCalendar(id) {
   if (!cal || cal.type !== 'ics') return { changed: false };
   try {
     const res = await fetch(cal.url, {
-      headers: { 'user-agent': 'Calendary/0.1 (+ical sync)', accept: 'text/calendar, text/plain, */*' },
+      headers: { 'user-agent': 'Hubitat/0.11 (+ical sync)', accept: 'text/calendar, text/plain, */*' },
       redirect: 'follow',
       signal: AbortSignal.timeout(30_000),
     });

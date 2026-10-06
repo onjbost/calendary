@@ -1,8 +1,8 @@
-name: Calendary
+name: Hubitat
 version: "0.10.0"
 slug: calendary
-description: Calendario, promemoria, obiettivi con routine, matrice di Eisenhower, assistente e Alexa in stile neon
-url: https://calendary.gattucciocloud.it
+description: Hub dell'ecosistema Hubitat (ex Calendary) - calendario, promemoria, obiettivi, matrice di Eisenhower, assistente e Alexa
+url: https://hubitat.gattucciocloud.it
 arch:
   - aarch64
   - amd64
@@ -14,7 +14,7 @@ homeassistant_api: true
 ports:
   8787/tcp: 8787
 ports_description:
-  8787/tcp: Interfaccia web Calendary
+  8787/tcp: Interfaccia web Hubitat
 webui: "http://[HOST]:[PORT:8787]/"
 panel_icon: mdi:calendar-star
 options:
@@ -26,7 +26,7 @@ options:
   wardapp_url: ""
   wardapp_public_url: "https://wardapp.gattucciocloud.it"
   weather_entity: "weather.forecast_home"
-  public_url: "https://calendary.gattucciocloud.it"
+  public_url: "https://hubitat.gattucciocloud.it"
   timezone: "Europe/Rome"
   ics_sync_minutes: 15
   morning_summary: "07:30"

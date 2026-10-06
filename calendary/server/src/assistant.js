@@ -193,7 +193,7 @@ function systemPrompt() {
   const cals = listCalendars()
     .map((c) => `- ${c.id}: "${c.name}" (${c.type === 'local' ? 'interno, scrivibile' : 'iCal, sola lettura'})`)
     .join('\n');
-  return `Sei Calendary, l'assistente personale di pianificazione dell'utente. Parli italiano, sei conciso, pratico e motivante.
+  return `Sei Hubitat, l'assistente personale di pianificazione dell'utente. Parli italiano, sei conciso, pratico e motivante.
 Oggi è ${fmtLongDay(now)}, ora locale ${localStamp(now).slice(11)} (fuso ${config.timezone}).
 
 Calendari:

@@ -327,7 +327,7 @@ describe('test reminder', () => {
     assert.equal(r.ok, false);
     const t = plan().find((x) => x.key.startsWith('test|'));
     assert.ok(t);
-    assert.match(t.text, /Prova di Calendary/);
+    assert.match(t.text, /Prova di Hubitat/);
     assert.ok(t.fireAt - Date.now() > 120e3 && t.fireAt - Date.now() < 160e3);
     assert.equal(Date.parse(r.fireAt), t.fireAt);
   });

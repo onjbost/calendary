@@ -141,7 +141,7 @@ export async function browserLocalTest() {
   const reg = await navigator.serviceWorker.getRegistration();
   if (!reg) throw new Error('Service worker non registrato: ricarica la pagina e riprova');
   await reg.showNotification('🔔 Prova del browser', {
-    body: 'Se vedi questo messaggio, Windows/Android mostrano le notifiche di Calendary.',
+    body: 'Se vedi questo messaggio, Windows/Android mostrano le notifiche di Hubitat.',
     icon: '/img/icon-192.png',
     tag: `local-test-${Date.now()}`,
   });

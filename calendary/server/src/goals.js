@@ -633,7 +633,7 @@ function describeItem(i) {
 /** Markdown summary to bring to MidYear / Year-End reviews. */
 export function goalsReport() {
   const goals = listGoals();
-  const lines = [`# Report obiettivi`, '', `Generato il ${new Date().toLocaleDateString('it-IT')} da Calendary.`, ''];
+  const lines = [`# Report obiettivi`, '', `Generato il ${new Date().toLocaleDateString('it-IT')} da Hubitat.`, ''];
   lines.push('| Obiettivo | Avanzamento | Atteso a oggi | Stato | Scadenza |', '|---|---|---|---|---|');
   for (const g of goals) {
     const state = { done: 'completato', behind: 'in ritardo', untracked: 'da aggiornare', on_track: 'in linea' }[g.pace];

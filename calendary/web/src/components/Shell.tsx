@@ -37,7 +37,7 @@ export function Shell({ path, children }: { path: string; children: ReactNode })
       <nav className="sidebar glass">
         <Link to="/" className="brand">
           <img src="/img/icon.svg" alt="" />
-          <span className="neon-cyan flicker">CALENDARY</span>
+          <span className="neon-cyan flicker">HUBITAT</span>
         </Link>
         {NAV.map((n) => (
           <Link key={n.to} to={n.to} className={`nav-link ${isActive(n.to) ? 'active' : ''}`}>

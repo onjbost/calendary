@@ -289,7 +289,7 @@ export class ApiError extends Error {
 function proxyErrorMessage(status: number) {
   if (status === 524 || status === 504) return 'Il server ha impiegato troppo a rispondere (timeout del proxy Cloudflare). Riprova tra poco.';
   if (status === 502 || status === 521 || status === 522 || status === 523 || status === 530) {
-    return 'Calendary non è raggiungibile: controlla che l’add-on e il tunnel Cloudflare siano attivi.';
+    return 'Hubitat non è raggiungibile: controlla che l’add-on e il tunnel Cloudflare siano attivi.';
   }
   return `Risposta inattesa dal server (HTTP ${status}). Riprova tra poco.`;
 }

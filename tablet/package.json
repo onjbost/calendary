@@ -2,7 +2,7 @@
   "name": "calendary-tablet",
   "version": "0.3.0",
   "private": true,
-  "description": "Wrapper Android (Capacitor) per la vista kiosk di Calendary",
+  "description": "Wrapper Android (Capacitor) per la vista tablet di Hubitat (ex Calendary)",
   "scripts": {
     "sync": "cap sync android",
     "open": "cap open android",

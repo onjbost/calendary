@@ -67,7 +67,7 @@ export function DeviceSettings() {
         </div>
         <div className="faint small">
           {alarmAt ? `Prossima: ${capitalize(fmt(alarmAt, "EEEE 'alle' HH:mm"))}. ` : ''}
-          Suona con Calendary aperto (tablet in carica sul comodino), con volume crescente, "Posticipa 9 min" e "Ferma".
+          Suona con Hubitat aperto (tablet in carica sul comodino), con volume crescente, "Posticipa 9 min" e "Ferma".
           Nell’app Android c’è anche una notifica di riserva, se l’app fosse chiusa. Per sbloccare l’audio, tocca lo schermo almeno una volta dopo aver aperto la pagina.
         </div>
       </div>

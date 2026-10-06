@@ -257,10 +257,10 @@ function FolderModal({ folder, onClose, onSaved }: { folder?: NoteFolder; onClos
       <div className="stack">
         {error && <div className="alert error">{error}</div>}
         <label className="field">Nome del progetto
-          <input className="input" value={name} autoFocus onChange={(e) => setName(e.target.value)} placeholder="Es. Calendary" onKeyDown={(e) => e.key === 'Enter' && save()} />
+          <input className="input" value={name} autoFocus onChange={(e) => setName(e.target.value)} placeholder="Es. Hubitat" onKeyDown={(e) => e.key === 'Enter' && save()} />
         </label>
         <label className="field">Descrizione
-          <textarea className="input" rows={2} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Es. Modifiche e idee per l'app Calendary" />
+          <textarea className="input" rows={2} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Es. Modifiche e idee per l'app Hubitat" />
         </label>
         <div className="row">
           <span className="muted small">Colore</span>

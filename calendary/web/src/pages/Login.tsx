@@ -23,7 +23,7 @@ export function Login({ configured, onLogin }: { configured: boolean; onLogin: (
     <div className="login">
       <div className="login-card glass glow-cyan">
         <img src="/img/icon.svg" alt="" style={{ width: 84, height: 84, margin: '0 auto' }} />
-        <div className="logo neon-cyan flicker">CALENDARY</div>
+        <div className="logo neon-cyan flicker">HUBITAT</div>
         {configured ? (
           <>
             <div className="muted">Il tuo tempo, in una luce nuova.</div>
@@ -34,7 +34,7 @@ export function Login({ configured, onLogin }: { configured: boolean; onLogin: (
           </>
         ) : (
           <div className="alert">
-            Nessuna password configurata. In Home Assistant apri <b>Impostazioni → Componenti aggiuntivi → Calendary → Configurazione</b>,
+            Nessuna password configurata. In Home Assistant apri <b>Impostazioni → Componenti aggiuntivi → Hubitat → Configurazione</b>,
             imposta <code>password</code> e riavvia l'add-on.
           </div>
         )}

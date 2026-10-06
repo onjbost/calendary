@@ -6,7 +6,7 @@ import { useNow } from '../hooks';
 
 /**
  * Device-wide behaviour mounted once by the app: power saving (html.eco + lower brightness),
- * the bedside alarm (rings on any page while Calendary is open) and its backup notification.
+ * the bedside alarm (rings on any page while Hubitat is open) and its backup notification.
  */
 export function DeviceLayer() {
   const { eco, prefs } = useEcoMode();

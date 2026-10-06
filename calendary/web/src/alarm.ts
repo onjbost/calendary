@@ -1,4 +1,4 @@
-// Bedside alarm of the night mode. It rings from the page itself (tablet on charge with Calendary open);
+// Bedside alarm of the night mode. It rings from the page itself (tablet on charge with Hubitat open);
 // in the Android app a local notification is also scheduled as a backup, in case the app was closed.
 import { useEffect, useRef, useState } from 'react';
 import { loadPrefs, type DevicePrefs } from './device';
@@ -64,7 +64,7 @@ export function nextAlarm(prefs: DevicePrefs, from = new Date()): Date | null {
 
 /**
  * Watches the clock and rings at the alarm time. Returns the ringing state plus stop/snooze.
- * Mounted once by the app, so it works on every page while Calendary is open.
+ * Mounted once by the app, so it works on every page while Hubitat is open.
  */
 export function useAlarm() {
   const [ringing, setRinging] = useState(false);

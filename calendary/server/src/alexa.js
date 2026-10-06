@@ -10,7 +10,7 @@ import { createEvent, createTask } from './store.js';
 import { broadcast } from './stream.js';
 import { addDays, httpError, parseYmd, startOfDay, ymd } from './util.js';
 
-// Alexa → Calendary: the custom skill "AiCal" (interaction model in /alexa) talks to POST /api/alexa.
+// Alexa → Hubitat: the custom skill "AiCal" (interaction model in /alexa) talks to POST /api/alexa.
 // "Alexa, chiedi ad AiCal di ricordarmi di chiamare Marco domani alle 18"
 // "Alexa, chiedi ad AiCal cosa ho domani"
 
@@ -237,7 +237,7 @@ export async function handleAlexa(body, now = new Date()) {
   // Amazon lets a skill create reminders only while the user is talking to it: every request is a chance to sync.
   if (request.type === 'LaunchRequest') {
     return {
-      response: say(`Ciao, sono AiCal, il tuo Calendary. ${HELP}`, { end: false, reprompt: 'Cosa faccio?', ...(needsPermission ? { card: permissionCard() } : {}) }),
+      response: say(`Ciao, sono AiCal, il tuo Hubitat. ${HELP}`, { end: false, reprompt: 'Cosa faccio?', ...(needsPermission ? { card: permissionCard() } : {}) }),
       after: syncLater,
     };
   }

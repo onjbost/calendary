@@ -1,8 +1,17 @@
-# Calendary
+# Hubitat (ex Calendary)
 
-Calendario personale con stile neon: agenda mensile/settimanale/giornaliera, calendari iCal importati
+L'hub dell'ecosistema Hubitat. Calendario personale in stile vetro e argilla, nero e arancione: agenda mensile/settimanale/giornaliera, calendari iCal importati
 (Google, Outlook, lavoro, master…), matrice di Eisenhower giornaliera, tips motivazionali,
 notifiche push e un assistente che pianifica lo studio.
+
+## Da Calendary a Hubitat (0.11.0)
+
+Dalla 0.11.0 Calendary si chiama **Hubitat** ed è l'hub dell'ecosistema (Hubitat, Moveo, WardApp).
+- **Cambia** ciò che si vede: nome dell'add-on, app, icona, notifiche, app Android.
+- **Nuovo indirizzo** `https://hubitat.gattucciocloud.it`. Il vecchio `calendary.gattucciocloud.it` continua a funzionare: in Cloudflared tieni tutti e due gli hostname verso lo stesso servizio, poi metti `public_url: https://hubitat.gattucciocloud.it` nelle opzioni.
+- **Non cambia nulla di tecnico**: slug `calendary` (i dati in `/data` restano), hostname interno `local-calendary`, repository `onjbost/calendary`, id dell'app Android, `calendary://`, rotte API e `api_token`. Moveo e WardApp si collegano come prima.
+- **Skill Alexa** "AiCal": invariata. Per farla rispondere con il nuovo nome cambia il nome visualizzato nella Alexa Developer Console (il nome di invocazione può restare).
+- **App Android**: carica ancora `calendary.gattucciocloud.it/kiosk`; quando il nuovo hostname funziona, cambia `server.url` in `tablet/capacitor.config.json` e ricompila.
 
 ## Configurazione
 

@@ -198,7 +198,7 @@ function NativeNotifications() {
         )}
       </div>
       {st?.permission === 'denied' && (
-        <div className="alert small">Permesso negato: apri <b>Impostazioni Android → App → Calendary → Notifiche</b> e attivale.</div>
+        <div className="alert small">Permesso negato: apri <b>Impostazioni Android → App → Hubitat → Notifiche</b> e attivale.</div>
       )}
       {st?.exactAlarms && st.exactAlarms !== 'granted' && (
         <div className="alert small">Senza “Allarmi e promemoria” Android può ritardare le notifiche di qualche minuto.</div>
@@ -285,7 +285,7 @@ function WebNotifications() {
         Attivale su ogni browser in cui le vuoi (PC, telefono).
       </div>
       {!pushSupported() && (
-        <div className="alert small">Questo browser non supporta le notifiche push. Su iPhone/iPad aggiungi prima Calendary alla schermata Home (Condividi → Aggiungi a Home).</div>
+        <div className="alert small">Questo browser non supporta le notifiche push. Su iPhone/iPad aggiungi prima Hubitat alla schermata Home (Condividi → Aggiungi a Home).</div>
       )}
       <div className="row">
         {pushSupported() && (
@@ -304,7 +304,7 @@ function WebNotifications() {
           <li><b>Windows</b>: Impostazioni → Sistema → Notifiche → attiva le notifiche e controlla che <i>Chrome</i> / <i>Edge</i> siano abilitati. Disattiva <i>Non disturbare</i>.</li>
           <li><b>Browser</b>: clicca sul lucchetto accanto all’indirizzo → Notifiche → <i>Consenti</i>. In Chrome controlla anche <i>chrome://settings/content/notifications</i>.</li>
           <li>Chrome riceve le push solo se è in esecuzione (anche in background): Impostazioni → Sistema → <i>Continua a eseguire app in background</i>.</li>
-          <li><b>Android</b>: Impostazioni → App → Chrome (o Calendary) → Notifiche attive; disattiva l’ottimizzazione batteria se arrivano in ritardo.</li>
+          <li><b>Android</b>: Impostazioni → App → Chrome (o Hubitat) → Notifiche attive; disattiva l’ottimizzazione batteria se arrivano in ritardo.</li>
           <li>Le notifiche funzionano solo dall’indirizzo <b>https://calendary.gattucciocloud.it</b>, non da 192.168.x.x:8787 (lì il browser le blocca perché non è HTTPS).</li>
         </ol>
       </details>
@@ -377,7 +377,7 @@ function TravelMode() {
   );
 }
 
-/** Claude connector (MCP): lets Claude add notes ("annotalo su Calendary"). */
+/** Claude connector (MCP): lets Claude add notes ("annotalo su Hubitat"). */
 function ClaudeSettings() {
   const [st, setSt] = useState<{ enabled: boolean; url: string } | null>(null);
   useEffect(() => {
@@ -387,8 +387,8 @@ function ClaudeSettings() {
   return (
     <div className="stack">
       <div className="muted small">
-        Collega Claude a Calendary: quando gli dici <i>“annotalo su Calendary”</i> crea una nota con titolo e descrizione nella cartella del progetto
-        (es. <b>Calendary</b>, <b>Moveo</b>). Claude può leggere e scrivere <b>solo le note</b>.
+        Collega Claude a Hubitat: quando gli dici <i>“annotalo su Hubitat”</i> crea una nota con titolo e descrizione nella cartella del progetto
+        (es. <b>Hubitat</b>, <b>Moveo</b>). Claude può leggere e scrivere <b>solo le note</b>.
       </div>
       <div className="row small">
         <span className="chip"><Dot ok={st.enabled} /> Server MCP: {st.enabled ? 'attivo' : 'spento (manca mcp_token)'}</span>
@@ -397,7 +397,7 @@ function ClaudeSettings() {
         <summary>Come collegarlo</summary>
         <ol>
           <li>Nella configurazione dell'add-on scrivi in <code>mcp_token</code> una stringa casuale di almeno 24 caratteri (è la password del collegamento), salva e riavvia.</li>
-          <li>Su <b>claude.ai → Impostazioni → Connettori → Aggiungi connettore personalizzato</b>: nome <i>Calendary</i>, URL <code>{st.url}</code> (sostituisci <code>&lt;mcp_token&gt;</code> con il token).</li>
+          <li>Su <b>claude.ai → Impostazioni → Connettori → Aggiungi connettore personalizzato</b>: nome <i>Hubitat</i>, URL <code>{st.url}</code> (sostituisci <code>&lt;mcp_token&gt;</code> con il token).</li>
           <li>In Claude Code puoi usare anche: <code>claude mcp add --transport http calendary {st.url.replace('/<mcp_token>', '')} --header "Authorization: Bearer &lt;mcp_token&gt;"</code></li>
         </ol>
         <div className="faint tiny">L'URL contiene il token: trattalo come una password. Se lo cambi, aggiorna anche il connettore.</div>
@@ -406,7 +406,7 @@ function ClaudeSettings() {
   );
 }
 
-/** Alexa: the "Calendary" skill (voice → app) and reminders/announcements on the Echo devices (app → voice). */
+/** Alexa: the "Hubitat" skill (voice → app) and reminders/announcements on the Echo devices (app → voice). */
 function AlexaSettings() {
   const { toast } = useUI();
   const [st, setSt] = useState<AlexaStatus | null>(null);
@@ -440,7 +440,7 @@ function AlexaSettings() {
       <div className="muted small">
         Con la skill <b>AiCal</b> puoi dire <i>“Alexa, chiedi ad AiCal di ricordarmi di chiamare Marco domani alle 18”</i>,
         <i> “Alexa, chiedi ad AiCal cosa ho domani”</i> o <i>“…aggiungi fare la spesa alla matrice”</i>.
-        I promemoria di Calendary suonano sui tuoi Echo e, se colleghi Home Assistant, gli eventi importanti vengono anche annunciati a voce.
+        I promemoria di Hubitat suonano sui tuoi Echo e, se colleghi Home Assistant, gli eventi importanti vengono anche annunciati a voce.
       </div>
       <div className="row small">
         <span className="chip"><Dot ok={st.skillConfigured} /> Skill: {st.skillConfigured ? 'configurata' : 'manca alexa_skill_id'}</span>
@@ -456,7 +456,7 @@ function AlexaSettings() {
       {st.lastError && <div className="alert error small">Ultimo errore: {st.lastError}</div>}
       {st.sessionOnly && st.remindersMode !== 'off' && (
         <div className="alert small">
-          Amazon permette di creare i promemoria <b>solo mentre parli con AiCal</b>. Calendary programma quelli dei prossimi 3 giorni
+          Amazon permette di creare i promemoria <b>solo mentre parli con AiCal</b>. Hubitat programma quelli dei prossimi 3 giorni
           ogni volta che usi la skill: basta dire <i>“Alexa, chiedi ad AiCal di aggiornare i promemoria”</i> (anche una volta al giorno).
           Per avvisi del tutto automatici, senza dire nulla, usa gli <b>annunci</b> di Home Assistant (<code>alexa_announce_service</code>).
         </div>
@@ -559,7 +559,7 @@ export function SettingsPage({ onLogout }: { onLogout: () => void }) {
         </section>
         <section className="glass pad span-12">
           <div className="row">
-            <div className="muted small grow">Calendary · dati salvati sul tuo Home Assistant</div>
+            <div className="muted small grow">Hubitat · dati salvati sul tuo Home Assistant</div>
             <button className="btn danger" onClick={async () => { await api.logout(); onLogout(); }}>Esci</button>
           </div>
         </section>

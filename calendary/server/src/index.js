@@ -78,4 +78,4 @@ onChange((scope) => {
 });
 
 await app.listen({ port: config.port, host: '0.0.0.0' });
-app.log.info(`Calendary pronto su http://localhost:${config.port} (fuso ${config.timezone})`);
+app.log.info(`Hubitat pronto su http://localhost:${config.port} (fuso ${config.timezone})`);

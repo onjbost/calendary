@@ -7,7 +7,7 @@ import { dosesBetween } from './pills.js';
 import { tripAt } from './travel.js';
 import { localStamp, nowIso } from './util.js';
 
-// Calendary → Alexa: upcoming reminders are mirrored as Alexa reminders, so the Echo devices
+// Hubitat → Alexa: upcoming reminders are mirrored as Alexa reminders, so the Echo devices
 // chime and read them aloud (Amazon gives third-party skills reminders, not alarms).
 //
 // The Reminders API needs a token that Alexa only hands to the skill inside a request. When the
@@ -154,7 +154,7 @@ async function amazonRefusal(res) {
     // Amazon no longer lets the skill create reminders on its own: stop sending Skill Messages that can't work.
     setSetting('alexa_session_only', '1');
     return 'Amazon permette di creare i promemoria solo mentre parli con la skill: di\' "Alexa, chiedi ad AiCal di aggiornare i promemoria" '
-      + '(o usa qualsiasi comando di AiCal) e Calendary programma quelli dei prossimi 3 giorni. Per avvisi del tutto automatici usa gli annunci di Home Assistant.';
+      + '(o usa qualsiasi comando di AiCal) e Hubitat programma quelli dei prossimi 3 giorni. Per avvisi del tutto automatici usa gli annunci di Home Assistant.';
   }
   return `Amazon ha rifiutato il promemoria (${res.status}${detail ? `: ${String(detail).slice(0, 160)}` : ''}). `
     + 'Se il permesso Promemoria è concesso nell\'app Alexa, prova da un Echo vero: il simulatore della console non gestisce i promemoria.';
@@ -269,7 +269,7 @@ function testReminder() {
 export async function scheduleTestReminder() {
   // session-only: leave time to say "Alexa, chiedi ad AiCal di aggiornare i promemoria"
   const fireAt = Date.now() + (sessionOnly() ? 4 * 60e3 : TEST_LEAD_MS);
-  setSetting('alexa_test_reminder', JSON.stringify({ fireAt, text: 'Prova di Calendary: le notifiche su Alexa funzionano!' }));
+  setSetting('alexa_test_reminder', JSON.stringify({ fireAt, text: 'Prova di Hubitat: le notifiche su Alexa funzionano!' }));
   if (sessionOnly()) return { ok: true, sessionOnly: true, fireAt: new Date(fireAt).toISOString() };
   const r = await requestSync({ force: true });
   return { ...r, fireAt: new Date(fireAt).toISOString() };

@@ -5,7 +5,7 @@ import { broadcast } from './stream.js';
 import { httpError } from './util.js';
 
 // MCP server ("Model Context Protocol", Streamable HTTP, stateless): lets Claude read and write the notes.
-// "Annotalo su Calendary" → add_note in the project's folder. Scope: notes and folders only.
+// "Annotalo su Hubitat" → add_note in the project's folder. Scope: notes and folders only.
 //
 // Connect it as a custom connector on claude.ai: https://<public_url>/api/mcp/<mcp_token>
 // or from Claude Code: claude mcp add --transport http calendary https://<public_url>/api/mcp --header "Authorization: Bearer <mcp_token>"
@@ -24,7 +24,7 @@ function tokenMatches(candidate) {
 
 // ------------------------------------------------------------------ tools
 
-const folderRef = { type: 'string', description: 'Cartella (progetto): nome, es. "Calendary", oppure id' };
+const folderRef = { type: 'string', description: 'Cartella (progetto): nome, es. "Hubitat", oppure id' };
 
 const TOOLS = [
   {
@@ -37,7 +37,7 @@ const TOOLS = [
   {
     name: 'create_note_folder',
     title: 'Crea una cartella',
-    description: 'Crea una cartella per un progetto (es. "Calendary", "Moveo").',
+    description: 'Crea una cartella per un progetto (es. "Hubitat", "Moveo").',
     inputSchema: {
       type: 'object',
       properties: {
@@ -63,13 +63,13 @@ const TOOLS = [
   {
     name: 'add_note',
     title: 'Aggiungi una nota',
-    description: 'Aggiunge una nota su Calendary, per esempio una modifica o un aggiornamento da fare in futuro a un\'app. '
+    description: 'Aggiunge una nota su Hubitat, per esempio una modifica o un aggiornamento da fare in futuro a un\'app. '
       + 'Dai sempre un titolo breve e una descrizione chiara e autonoma (cosa fare, perché, dove nel codice se noto). '
       + 'Se la cartella del progetto non esiste viene creata.',
     inputSchema: {
       type: 'object',
       properties: {
-        folder: { ...folderRef, description: 'Progetto a cui si riferisce la nota, es. "Calendary". Creata se manca.' },
+        folder: { ...folderRef, description: 'Progetto a cui si riferisce la nota, es. "Hubitat". Creata se manca.' },
         title: { type: 'string', description: 'Titolo breve (max ~80 caratteri)' },
         description: { type: 'string', description: 'Descrizione dettagliata in Markdown: # titoli, - elenchi, - [ ] checklist, **grassetto**, ```tab per le tablature' },
         pinned: { type: 'boolean', description: 'Fissa la nota in cima' },
@@ -174,8 +174,8 @@ export function handleMessage(msg) {
       return result(id, {
         protocolVersion: PROTOCOL_VERSIONS.includes(asked) ? asked : PROTOCOL_VERSIONS[0],
         capabilities: { tools: { listChanged: false } },
-        serverInfo: { name: 'calendary', title: 'Calendary', version: '0.8.0' },
-        instructions: 'Note di Calendary raggruppate in cartelle per progetto. Quando l\'utente dice "annotalo su Calendary", '
+        serverInfo: { name: 'calendary', title: 'Hubitat', version: '0.8.0' },
+        instructions: 'Note di Hubitat (ex Calendary) raggruppate in cartelle per progetto. Quando l\'utente dice "annotalo su Hubitat" (o "su Calendary"), '
           + 'usa add_note con la cartella del progetto di cui si sta parlando, un titolo breve e una descrizione chiara.',
       });
     }

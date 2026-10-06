@@ -1,4 +1,4 @@
-# Calendary — Home Assistant add-on (also runs as a plain Docker container)
+# Hubitat — Home Assistant add-on (also runs as a plain Docker container)
 
 # ---- 1. build the web app ------------------------------------------------
 FROM node:24-alpine AS web
@@ -24,7 +24,7 @@ ENV NODE_ENV=production \
 EXPOSE 8787
 
 LABEL io.hass.type="addon" \
-      io.hass.name="Calendary" \
+      io.hass.name="Hubitat" \
       io.hass.description="Calendario, promemoria e pianificazione in stile neon"
 
 CMD ["node", "--disable-warning=ExperimentalWarning", "src/index.js"]

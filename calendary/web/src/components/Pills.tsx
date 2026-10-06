@@ -347,7 +347,7 @@ function PillModal({ pill, onClose }: { pill?: Pill; onClose: () => void }) {
           ))}
         </div>
         <div className="pill-stock-box">
-          <div className="muted small"><b>📦 Magazzino</b> · facoltativo: Calendary scala le compresse a ogni dose presa e ti avvisa quando stanno per finire.</div>
+          <div className="muted small"><b>📦 Magazzino</b> · facoltativo: Hubitat scala le compresse a ogni dose presa e ti avvisa quando stanno per finire.</div>
           <div className="grid-2">
             <label className="field">Compresse per dose
               <input className="input" inputMode="decimal" value={String(f.unitsPerDose ?? 1)} onChange={(e) => set('unitsPerDose', e.target.value.replace(',', '.') as unknown as number)} placeholder="Es. 1,5" />
@@ -369,7 +369,7 @@ function PillModal({ pill, onClose }: { pill?: Pill; onClose: () => void }) {
           <textarea className="input" rows={2} value={f.notes || ''} onChange={(e) => set('notes', e.target.value)} placeholder="Es. dopo i pasti" />
         </label>
         <div className="faint tiny">
-          All'orario arriva una notifica su Calendary{f.alexa ? ' e una sveglia su Alexa' : ''}; se dopo 30 minuti non l'hai segnata come presa ricevi un secondo avviso.
+          All'orario arriva una notifica su Hubitat{f.alexa ? ' e una sveglia su Alexa' : ''}; se dopo 30 minuti non l'hai segnata come presa ricevi un secondo avviso.
         </div>
       </div>
     </Modal>

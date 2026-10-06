@@ -1,12 +1,12 @@
 {
   "appId": "it.gattucciocloud.calendary",
-  "appName": "Calendary",
+  "appName": "Hubitat",
   "webDir": "www",
   "server": {
     "url": "https://calendary.gattucciocloud.it/kiosk",
     "cleartext": false,
     "errorPath": "index.html",
-    "allowNavigation": ["calendary.gattucciocloud.it"]
+    "allowNavigation": ["calendary.gattucciocloud.it", "hubitat.gattucciocloud.it"]
   },
   "android": {
     "backgroundColor": "#05030f",
