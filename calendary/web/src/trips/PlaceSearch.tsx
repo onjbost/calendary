@@ -25,7 +25,7 @@ export function PlaceSearch({ value, onChange }: { value: Place | null; onChange
       {value && <div className="faint tiny">📍 {value.name}{value.country ? `, ${value.country}` : ''}</div>}
       {error && <div className="faint tiny">{error}</div>}
       {hits.length > 0 && (
-        <div className="place-hits glass">
+        <div className="place-hits">
           {hits.map((h) => (
             <button key={`${h.lat},${h.lon}`} type="button" className="place-hit"
               onClick={() => { onChange({ name: h.name, country: h.country, lat: h.lat, lon: h.lon }); setQ(h.name); setHits([]); }}>

@@ -1,15 +1,19 @@
 import { isSameDay, isSameMonth } from 'date-fns';
 import type { CalEvent } from '../api';
-import { eventsOnDay, fmt, hm, monthGrid } from '../dates';
+import { eventsOnDay, fmt, hm, monthGrid, ymd } from '../dates';
+import type { TripDay } from '../trips/api';
+import { DayStrips } from '../trips/DayStrips';
 
 const DOW = ['LUN', 'MAR', 'MER', 'GIO', 'VEN', 'SAB', 'DOM'];
 
-export function MonthView({ anchor, events, onDayClick, onEventClick, maxPerCell = 3 }: {
+export function MonthView({ anchor, events, onDayClick, onEventClick, maxPerCell = 3, tripDays }: {
   anchor: Date;
   events: CalEvent[];
   onDayClick: (day: Date) => void;
   onEventClick: (ev: CalEvent) => void;
   maxPerCell?: number;
+  /** day strips of the trips (not events: they don't count in maxPerCell) */
+  tripDays?: Map<string, TripDay[]>;
 }) {
   const days = monthGrid(anchor);
   const today = new Date();
@@ -29,6 +33,7 @@ export function MonthView({ anchor, events, onDayClick, onEventClick, maxPerCell
             title={fmt(day, 'EEEE d MMMM')}
           >
             <div className="num">{fmt(day, 'd')}</div>
+            <DayStrips days={tripDays?.get(ymd(day))} />
             {shown.map((ev) => (
               <div
                 key={ev.id}

@@ -102,3 +102,10 @@ export function groupDaysByDate(days: TripDay[]) {
   for (const d of days) map.set(d.date, [...(map.get(d.date) || []), d]);
   return map;
 }
+
+/** An event long enough to become a trip: at least two calendar days (all-day ends are exclusive). */
+export function spansDays(e: { start: string; end: string; allDay: boolean }) {
+  const first = toYmd(new Date(e.start));
+  const last = toYmd(new Date(Date.parse(e.end) - (e.allDay ? 1 : 0)));
+  return last > first;
+}

@@ -13,6 +13,7 @@ import { MoveoBoard } from '../components/MoveoBoard';
 import { TimeGrid } from '../components/TimeGrid';
 import { TipCard } from '../components/TipCard';
 import { capitalize, countdown, eventsOnDay, fmt, hm, monthGrid, parseYmd, weekDays, WEEK, ymd } from '../dates';
+import { DayStrips, useTripDayMap } from '../trips/DayStrips';
 import { useEvents, useGoals, useNow, useSwipe, useTasks } from '../hooks';
 import { notifyChanged } from '../live';
 import { hideStatusBar, keepAwake } from '../native';
@@ -88,6 +89,7 @@ export function KioskPage() {
     return { from, to: view.to > soon ? view.to : soon };
   }, [dayKey, focusKey, tab]);
   const { data: events } = useEvents(range.from, range.to);
+  const tripDays = useTripDayMap(ymd(range.from), ymd(addDays(range.to, -1)));
   const { data: taskData, setData: setTaskData } = useTasks(dayKey);
   const { data: goals } = useGoals();
 
@@ -207,6 +209,7 @@ export function KioskPage() {
         <div className="stack" style={{ gap: 2 }}>
           <div className="kiosk-date neon-violet">{capitalize(fmt(now, 'EEEE'))}</div>
           <div className="kiosk-date muted">{fmt(now, 'd MMMM yyyy')}</div>
+          <DayStrips days={tripDays.get(dayKey)} />
         </div>
         <span className="spacer" />
         <div className="seg kiosk-menu">
@@ -300,15 +303,15 @@ export function KioskPage() {
         <div className="kiosk-full" {...swipe}>
           {calendarNav}
           {tab === 'day' && (
-            <TimeGrid days={[focus]} events={events} onEventClick={openEvent} onSlotClick={create} hourHeight={60} className="kiosk-full" />
+            <TimeGrid days={[focus]} events={events} onEventClick={openEvent} onSlotClick={create} hourHeight={60} className="kiosk-full" tripDays={tripDays} />
           )}
           {tab === 'week' && (
-            <TimeGrid days={weekDays(focus)} events={events} onEventClick={openEvent} onSlotClick={create} onDayClick={openDay}
+            <TimeGrid days={weekDays(focus)} events={events} tripDays={tripDays} onEventClick={openEvent} onSlotClick={create} onDayClick={openDay}
               hourHeight={46} className="kiosk-full" />
           )}
           {tab === 'month' && (
             <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
-              <MonthView anchor={focus} events={events} onEventClick={openEvent} onDayClick={openDay} maxPerCell={4} />
+              <MonthView anchor={focus} events={events} tripDays={tripDays} onEventClick={openEvent} onDayClick={openDay} maxPerCell={4} />
             </div>
           )}
         </div>

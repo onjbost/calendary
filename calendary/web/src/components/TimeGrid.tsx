@@ -1,13 +1,15 @@
 import { useEffect, useRef, type MouseEvent } from 'react';
 import { isSameDay, startOfDay } from 'date-fns';
 import type { CalEvent } from '../api';
-import { eventsOnDay, fmt, hm, layoutDay } from '../dates';
+import { eventsOnDay, fmt, hm, layoutDay, ymd } from '../dates';
+import type { TripDay } from '../trips/api';
+import { DayStrips } from '../trips/DayStrips';
 import { useNow } from '../hooks';
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
 /** Week or day view: hours on the left, one column per day, overlapping events side by side. */
-export function TimeGrid({ days, events, onSlotClick, onEventClick, onDayClick, hourHeight = 52, scrollToHour = 7, className = '' }: {
+export function TimeGrid({ days, events, onSlotClick, onEventClick, onDayClick, hourHeight = 52, scrollToHour = 7, className = '', tripDays }: {
   days: Date[];
   events: CalEvent[];
   onSlotClick?: (date: Date) => void;
@@ -16,6 +18,8 @@ export function TimeGrid({ days, events, onSlotClick, onEventClick, onDayClick, 
   hourHeight?: number;
   scrollToHour?: number;
   className?: string;
+  /** day strips of the trips, shown in the day header */
+  tripDays?: Map<string, TripDay[]>;
 }) {
   const now = useNow(60_000);
   const bodyRef = useRef<HTMLDivElement>(null);
@@ -51,6 +55,7 @@ export function TimeGrid({ days, events, onSlotClick, onEventClick, onDayClick, 
           <div key={d.toISOString()} className={`dh ${isSameDay(d, now) ? 'today' : ''}`} onClick={() => onDayClick?.(d)}>
             <div className="d1">{fmt(d, 'EEE').toUpperCase()}</div>
             <div className="d2">{fmt(d, 'd')}</div>
+            <DayStrips days={tripDays?.get(ymd(d))} short={days.length > 1} />
           </div>
         ))}
       </div>

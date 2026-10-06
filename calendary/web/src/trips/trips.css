@@ -37,7 +37,7 @@
 .mode-seg { flex-wrap: wrap; }
 
 .place-search { position: relative; display: flex; flex-direction: column; gap: 4px; }
-.place-hits { position: absolute; top: 44px; left: 0; right: 0; z-index: 5; display: flex; flex-direction: column; padding: 4px; }
+.place-hits { position: absolute; top: 44px; left: 0; right: 0; z-index: 20; display: flex; flex-direction: column; padding: 4px; background: #17120d; border-radius: 14px; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.1); }
 .place-hit { border: 0; background: transparent; color: inherit; font: inherit; text-align: left; padding: 8px 10px; border-radius: 10px; cursor: pointer; }
 .place-hit:hover { background: rgba(255, 255, 255, 0.08); }
 
@@ -48,7 +48,14 @@
 .trip-strip.big { font-size: 0.9rem; padding: 6px 12px; border-radius: 12px; }
 .trip-strips { display: flex; flex-direction: column; gap: 2px; }
 
+@media (max-width: 860px) {
+  /* the phone lamp sits fixed in the top-right corner: the title leaves room, the buttons go to the next line */
+  .trip-head { padding-right: 64px; }
+  .trip-title { flex-basis: calc(100% - 60px); }
+  .trip-head > .btn.ghost:not(.icon) { padding: 6px 13px; font-size: 0.85rem; }
+}
 @media (max-width: 700px) {
+  .trip-tabs .seg { overflow-x: auto; max-width: 100%; scrollbar-width: none; }
   .bag-pick { grid-template-columns: repeat(2, 1fr); }
   .trip-item { grid-template-columns: 46px 1fr; }
   .trip-item > :nth-child(3) { grid-column: 2; }

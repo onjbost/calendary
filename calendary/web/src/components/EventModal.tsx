@@ -8,6 +8,7 @@ import { navigate } from '../router';
 import { useUI } from '../ui';
 import { Modal } from './Modal';
 import { isMoveoLink, openMoveoUrl, openWardapp, useWardappInfo, wardappAskPath } from '../suite';
+import { TripFromEventButton } from '../trips/TripFromEvent';
 
 const REMINDERS: { value: string; label: string }[] = [
   { value: '', label: 'Automatico' },
@@ -158,6 +159,7 @@ export function EventModal({ event, draft, onClose }: {
           {event.location && <div>📍 {event.location}</div>}
           {event.description && <div className="muted small" style={{ whiteSpace: 'pre-wrap' }}>{event.description}</div>}
           <EventLinkButton event={event} onOpen={onClose} />
+          <TripFromEventButton event={event} onDone={onClose} deleteEvent={api.deleteEvent} />
           {event.source === 'milestone' ? (
             <button className="btn sm" style={{ alignSelf: 'flex-start' }} onClick={() => { onClose(); navigate('/obiettivi'); }}>Apri obiettivi →</button>
           ) : (
@@ -246,7 +248,7 @@ export function EventModal({ event, draft, onClose }: {
           {event && confirmDelete && (
             <>
               <button className="btn danger" onClick={() => remove(false)} disabled={busy}>Conferma eliminazione</button>
-              {event.planId && <button className="btn danger" onClick={() => remove(true)} disabled={busy}>Elimina tutto il piano</button>}
+              {event.planId && !event.planId.startsWith('trip:') && <button className="btn danger" onClick={() => remove(true)} disabled={busy}>Elimina tutto il piano</button>}
             </>
           )}
           <span className="spacer" />
@@ -258,6 +260,7 @@ export function EventModal({ event, draft, onClose }: {
       <div className="stack">
         {error && <div className="alert error">{error}</div>}
         {event?.linkUrl && <EventLinkButton event={event} onOpen={onClose} />}
+        {event && <TripFromEventButton event={event} onDone={onClose} deleteEvent={api.deleteEvent} />}
         {event && wardapp && wardappAskPath(event) && (
           <button className="btn" onClick={() => openWardapp(wardappAskPath(event)!, wardapp.publicUrl)}>👕 Cosa mi metto?</button>
         )}

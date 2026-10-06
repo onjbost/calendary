@@ -14,6 +14,19 @@ notifiche push e un assistente che pianifica lo studio.
 - **Automatico**: valgono le regole di *Impostazioni → Questo dispositivo* (risparmio sotto la soglia di batteria, notte in carica/orizzontale o nelle ore notturne). Una scelta fatta toccando la lampada vale su questo dispositivo finché non cambiano le condizioni (metti o togli la carica, entri o esci dalle ore notturne, la batteria scende sotto la soglia).
 - Con *Riduci movimento* attivo nel sistema, accensione e spegnimento sono semplici dissolvenze.
 
+## Viaggi (0.12.0)
+
+Nuova sezione **🧳 Viaggi** nel menu. È un modulo separato (cartelle `server/src/trips/` e `web/src/trips/`, tabelle `trips` e `trip_*`), pronto a diventare un'app a sé dell'ecosistema.
+
+- **Viaggio**: nome, destinazione (cerca la città), date, bagaglio (zaino piccolo o grande, trolley cabina, valigia grande), *posso fare il bucato*, *Alexa in silenzio durante il viaggio* (crea da solo il periodo di modalità viaggio).
+- **Spostamenti**: aereo, treno, bus, auto, traghetto, con orari, numero del volo o del treno e codice di prenotazione (si copia con un tocco). Ogni tratta diventa un evento nel calendario, ad esempio *✈️ FR1234 Pisa → Cagliari*.
+- **Programma** giorno per giorno: attività con etichetta (mare, montagna, cena elegante, lavoro, sport, città, serata) e, se vuoi, l'orario. Solo quelle con l'orario finiscono nel calendario. Se cambi le date, le attività rimaste fuori vanno in *Da riprogrammare*.
+- **Nel calendario** non compare un evento lungo quanto il viaggio: ogni giorno ha una striscia sottile, *🧳 Si parte · Cagliari*, *🌴 In viaggio · Cagliari · 3/5*, *🏠 Rientro da Cagliari*, che si tocca per aprire il viaggio. Gli eventi del viaggio si possono spostare o eliminare anche dal calendario: il viaggio si aggiorna.
+- **Trasforma in viaggio**: nella scheda di un evento di almeno due giorni. Il viaggio prende titolo, date e località; poi Hubitat ti chiede se eliminare l'evento originale.
+- **Meteo della destinazione** da Open-Meteo (gratuito, senza chiave): le previsioni da 16 giorni prima della partenza, prima di allora il meteo delle stesse date dell'anno scorso.
+- **Promemoria** (notifica e Alexa): *✈️ Check-in aperto* quando si apre il check-in di un volo (24 ore prima, modificabile per tratta; se si apre di notte arriva alle 8); *🧳 Domani si parte* alle 20 della sera prima, con cosa preparare per il mezzo; *🏠 Bentornato!* un'ora dopo l'arrivo dell'ultimo volo (o alle 18 dell'ultimo giorno).
+- **Dashboard e tablet**: la striscia del giorno sotto la data e la card del viaggio in corso o in partenza entro 7 giorni. Il riepilogo del mattino dice *“Oggi sei in viaggio a Cagliari, giorno 3 di 5”*.
+
 ## Da Calendary a Hubitat (0.11.0)
 
 Dalla 0.11.0 Calendary si chiama **Hubitat** ed è l'hub dell'ecosistema (Hubitat, Moveo, WardApp).

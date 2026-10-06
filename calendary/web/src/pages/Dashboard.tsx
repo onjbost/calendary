@@ -14,6 +14,8 @@ import { useEvents, useGoals, useNow, useTasks } from '../hooks';
 import { notifyChanged } from '../live';
 import { Link, navigate } from '../router';
 import { tipOfTheDay, TIPS } from '../tips';
+import { DayStrips, useTripDayMap } from '../trips/DayStrips';
+import { TripCard } from '../trips/TripCard';
 import { useUI } from '../ui';
 
 export function Dashboard() {
@@ -42,6 +44,7 @@ export function Dashboard() {
   };
 
   const openTasks = taskData.tasks.filter((t) => !t.done).length;
+  const tripToday = useTripDayMap(dayKey, dayKey).get(dayKey);
 
   return (
     <div className="dash">
@@ -52,6 +55,7 @@ export function Dashboard() {
             <div className="muted mono small">{greeting(now).toUpperCase()}</div>
             <div className="big-clock neon-cyan">{hm(now)}<span className="sec">{fmt(now, 'ss')}</span></div>
             <div className="neon-violet mono" style={{ marginTop: 6 }}>{capitalize(fmt(now, 'EEEE d MMMM yyyy'))}</div>
+            {tripToday && <div style={{ marginTop: 8, maxWidth: 360 }}><DayStrips days={tripToday} big /></div>}
           </div>
           <div className="next-card" style={{ minWidth: 240 }}>
             <div className="muted small mono">PROSSIMO</div>
@@ -101,6 +105,7 @@ export function Dashboard() {
         )}
       </section>
 
+      <TripCard className="span-12" />
       <WardappCard className="span-12 glow-amber" />
 
       {goals.length > 0 && (

@@ -5,6 +5,7 @@ import { TimeGrid } from '../components/TimeGrid';
 import { capitalize, fmt, monthGrid, parseYmd, weekDays, WEEK, ymd } from '../dates';
 import { isNarrowScreen, useCalendars, useEvents, useLocalStorage, useSwipe } from '../hooks';
 import { navigate } from '../router';
+import { useTripDayMap } from '../trips/DayStrips';
 import { useUI } from '../ui';
 
 type View = 'month' | 'week' | 'day';
@@ -30,6 +31,7 @@ export function CalendarPage({ query }: { query: URLSearchParams }) {
 
   const { data: all, loading } = useEvents(range.from, range.to);
   const events = all.filter((e) => !hidden.includes(e.calendarId));
+  const tripDays = useTripDayMap(ymd(range.from), ymd(addDays(range.to, -1)));
 
   const go = (v: View, d: Date) => navigate(`/calendario?view=${v}&date=${ymd(d)}`, { replace: true });
   const step = (dir: 1 | -1) => {
@@ -85,14 +87,14 @@ export function CalendarPage({ query }: { query: URLSearchParams }) {
       )}
 
       {view === 'month' && (
-        <MonthView anchor={anchor} events={events} onEventClick={openEvent} onDayClick={(d) => go('day', d)} />
+        <MonthView anchor={anchor} events={events} tripDays={tripDays} onEventClick={openEvent} onDayClick={(d) => go('day', d)} />
       )}
       {view === 'week' && (
-        <TimeGrid days={weekDays(anchor)} events={events} onEventClick={openEvent} onSlotClick={slot} onDayClick={(d) => go('day', d)}
+        <TimeGrid days={weekDays(anchor)} events={events} tripDays={tripDays} onEventClick={openEvent} onSlotClick={slot} onDayClick={(d) => go('day', d)}
           className="cal-grid" hourHeight={50} />
       )}
       {view === 'day' && (
-        <TimeGrid days={[anchor]} events={events} onEventClick={openEvent} onSlotClick={slot} hourHeight={64} className="cal-grid" />
+        <TimeGrid days={[anchor]} events={events} tripDays={tripDays} onEventClick={openEvent} onSlotClick={slot} hourHeight={64} className="cal-grid" />
       )}
     </div>
   );

@@ -45,3 +45,12 @@ test('programma del giorno: tratte e attività con orario in ordine, senza orari
   const items = programmeOf(t, '2026-11-02');
   assert.deepEqual(items.map((i) => (i.kind === 'leg' ? i.leg.id : i.activity.id)), ['a3', 'l1', 'a2', 'a1']);
 });
+
+test('trasforma in viaggio: almeno due giorni (la fine degli eventi giornata intera è esclusa)', async () => {
+  const { spansDays } = await import('../src/trips/logic.ts');
+  const iso = (s: string) => new Date(s).toISOString();
+  assert.equal(spansDays({ start: iso('2026-11-02T00:00'), end: iso('2026-11-03T00:00'), allDay: true }), false);
+  assert.equal(spansDays({ start: iso('2026-11-02T00:00'), end: iso('2026-11-04T00:00'), allDay: true }), true);
+  assert.equal(spansDays({ start: iso('2026-11-02T09:00'), end: iso('2026-11-03T18:00'), allDay: false }), true);
+  assert.equal(spansDays({ start: iso('2026-11-02T20:00'), end: iso('2026-11-02T23:00'), allDay: false }), false);
+});
