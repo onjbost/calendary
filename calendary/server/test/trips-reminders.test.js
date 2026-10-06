@@ -101,3 +101,24 @@ test('sera prima con il cambio dell\'ora', () => {
   const r = dueTripReminders(at('2026-10-24T20:00')).find((x) => x.title === '🧳 Domani si parte per Cagliari');
   assert.match(r.body, /biglietto/);
 });
+
+test('revisione: gita di un giorno: Bentornato dopo il treno di ritorno, non alle 18', () => {
+  const t = trip({ startDate: '2026-11-10', endDate: '2026-11-10' });
+  trips.addLeg(t.id, { mode: 'train', from: 'Pisa', to: 'Firenze', departAt: local('2026-11-10T08:00'), arriveAt: local('2026-11-10T09:00') });
+  trips.addLeg(t.id, { mode: 'train', from: 'Firenze', to: 'Pisa', departAt: local('2026-11-10T19:00'), arriveAt: local('2026-11-10T21:00') });
+  assert.ok(!titles(at('2026-11-10T18:30')).includes('🏠 Bentornato!'));
+  assert.ok(titles(at('2026-11-10T22:00')).includes('🏠 Bentornato!'));
+});
+
+test('revisione: sera prima anche quando la prima tratta parte il secondo giorno, o c\'è solo il ritorno', () => {
+  const t = trip();
+  trips.addLeg(t.id, { mode: 'plane', from: 'Cagliari', to: 'Olbia', departAt: local('2026-11-03T09:00'), arriveAt: local('2026-11-03T09:40') });
+  const r = dueTripReminders(at('2026-11-02T20:00')).find((x) => x.title === '🧳 Domani si parte per Cagliari');
+  assert.ok(r, 'evening before the first leg');
+  assert.match(r.body, /carta d'imbarco/);
+  db.exec('DELETE FROM trips');
+  const only = trip();
+  trips.addLeg(only.id, { mode: 'plane', from: 'Cagliari', to: 'Pisa', departAt: local('2026-11-06T19:00'), arriveAt: local('2026-11-06T20:10') });
+  assert.ok(titles(at('2026-11-01T20:00')).includes('🧳 Domani si parte per Cagliari'));
+  assert.ok(!titles(at('2026-11-05T20:00')).includes('🧳 Domani si parte per Cagliari'));
+});

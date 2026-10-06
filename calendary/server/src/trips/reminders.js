@@ -66,14 +66,16 @@ export function dueTripReminders(now = new Date()) {
       }
     }
 
-    // evening before: one per departure day of the outbound legs (or the trip's first day when it has no legs)
-    const outbound = trip.legs.filter((l) => l.direction === 'out');
+    // evening before: one per departure day of the outbound legs; without them the first leg that isn't the return,
+    // and without that the trip's first day
+    let outbound = trip.legs.filter((l) => l.direction === 'out');
+    if (!outbound.length) outbound = trip.legs.filter((l) => l.direction !== 'back').slice(0, 1);
     const byDay = new Map();
     for (const leg of outbound) {
       const d = ymd(new Date(leg.departAt));
       byDay.set(d, [...(byDay.get(d) || []), leg]);
     }
-    if (!trip.legs.length) byDay.set(trip.startDate, []);
+    if (!outbound.length) byDay.set(trip.startDate, []);
     for (const [day, legs] of byDay) {
       const eve = ymd(addDays(parseYmd(day), -1));
       const fire = at(eve, eveningTime());

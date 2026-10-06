@@ -156,6 +156,7 @@ export function updateTrip(id, patch = {}) {
   // activities outside the new dates are kept, "to reschedule"
   db.prepare("UPDATE trip_activities SET day = '', updated_at = ? WHERE trip_id = ? AND day != '' AND (day < ? OR day > ?)")
     .run(nowIso(), before.id, t.startDate, t.endDate);
+  recomputeDirections(before.id);
   const after = getTrip(before.id);
   emit('trip:update', before, after);
   return after;
@@ -191,12 +192,6 @@ function normalizeLeg(input, trip, base = null) {
     if (!Number.isFinite(n) || n < 1 || n > 24 * 30) throw httpError(400, 'Apertura del check-in non valida (ore prima della partenza)');
     checkinHours = n;
   }
-  let direction = m.direction;
-  if (!['out', 'back', 'other'].includes(direction) || (base && !input.direction && (input.departAt || input.arriveAt))) {
-    direction = ymd(arriveAt) >= trip.endDate && trip.endDate > trip.startDate ? 'back'
-      : ymd(departAt) <= trip.startDate ? 'out'
-        : ymd(arriveAt) >= trip.endDate ? 'back' : 'other';
-  }
   return {
     mode: m.mode,
     from: str(m.from, 120) || '',
@@ -207,8 +202,27 @@ function normalizeLeg(input, trip, base = null) {
     booking: str(m.booking, 80) || '',
     notes: str(m.notes, 2000) || '',
     checkinHours,
-    direction,
   };
+}
+
+/**
+ * Outbound / return / other for every leg of a trip, from the dates and the order of the legs: a leg leaving on the
+ * first day is "out", one landing on the last day is "back"; when both (day trips, an overnight ferry on a two-day
+ * trip) it is "back" only if an earlier leg already left. Recomputed on every change, so the order of entry is moot.
+ */
+function recomputeDirections(tripId) {
+  const trip = tripRow(tripId);
+  if (!trip) return;
+  const legs = db.prepare('SELECT id, depart_at, arrive_at FROM trip_legs WHERE trip_id = ? ORDER BY depart_at').all(trip.id);
+  const set = db.prepare('UPDATE trip_legs SET direction = ? WHERE id = ?');
+  let earlierOut = false;
+  for (const l of legs) {
+    const out = ymd(l.depart_at) <= trip.start_date;
+    const back = ymd(l.arrive_at) >= trip.end_date;
+    const direction = out && back ? (earlierOut ? 'back' : 'out') : out ? 'out' : back ? 'back' : 'other';
+    if (out) earlierOut = true;
+    set.run(direction, l.id);
+  }
 }
 
 export function addLeg(tripId, input = {}) {
@@ -217,9 +231,10 @@ export function addLeg(tripId, input = {}) {
   const id = crypto.randomUUID();
   const now = nowIso();
   db.prepare(`INSERT INTO trip_legs (id, trip_id, mode, from_place, to_place, depart_at, arrive_at, code, booking, notes,
-      checkin_hours, direction, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
-    id, trip.id, l.mode, l.from, l.to, l.departAt, l.arriveAt, l.code, l.booking, l.notes, l.checkinHours, l.direction, now, now,
+      checkin_hours, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
+    id, trip.id, l.mode, l.from, l.to, l.departAt, l.arriveAt, l.code, l.booking, l.notes, l.checkinHours, now, now,
   );
+  recomputeDirections(trip.id);
   const after = mapLeg(legRow(id));
   emit('leg:create', null, after);
   return after;
@@ -235,9 +250,10 @@ export function updateLeg(legId, patch = {}) {
   const before = getLeg(legId);
   const l = normalizeLeg(patch, getTrip(before.tripId), before);
   db.prepare(`UPDATE trip_legs SET mode = ?, from_place = ?, to_place = ?, depart_at = ?, arrive_at = ?, code = ?, booking = ?,
-      notes = ?, checkin_hours = ?, direction = ?, updated_at = ? WHERE id = ?`).run(
-    l.mode, l.from, l.to, l.departAt, l.arriveAt, l.code, l.booking, l.notes, l.checkinHours, l.direction, nowIso(), before.id,
+      notes = ?, checkin_hours = ?, updated_at = ? WHERE id = ?`).run(
+    l.mode, l.from, l.to, l.departAt, l.arriveAt, l.code, l.booking, l.notes, l.checkinHours, nowIso(), before.id,
   );
+  recomputeDirections(before.tripId);
   const after = getLeg(before.id);
   emit('leg:update', before, after);
   return after;
@@ -246,6 +262,7 @@ export function updateLeg(legId, patch = {}) {
 export function deleteLeg(legId) {
   const before = getLeg(legId);
   db.prepare('DELETE FROM trip_legs WHERE id = ?').run(before.id);
+  recomputeDirections(before.tripId);
   emit('leg:delete', before, null);
 }
 

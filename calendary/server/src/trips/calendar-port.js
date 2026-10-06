@@ -19,8 +19,9 @@ export const legTitle = (leg) => {
 
 export const activityTitle = (a) => `${TAGS[a.tag]?.emoji || TAGS.other.emoji} ${a.title}`;
 
-/** "🍽️ Cena al porto" → "Cena al porto" (any leading emoji, as the user may have typed another one). */
-const stripEmoji = (title) => String(title || '').replace(/^[\p{Extended_Pictographic}\p{Emoji_Component}️‍\s]+/u, '').trim();
+/** "🍽️ Cena al porto" → "Cena al porto" (any leading emoji, as the user may have typed another one). Digits stay:
+ * Emoji_Component would also match "3" in "3 musei". */
+const stripEmoji = (title) => String(title || '').replace(/^(?:\p{Extended_Pictographic}|\p{Emoji_Modifier}|️|‍|\s)+/u, '').trim();
 
 function calendarId() {
   const id = getSetting('trips_calendar_id');

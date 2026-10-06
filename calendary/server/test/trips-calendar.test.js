@@ -152,3 +152,13 @@ test('il calendario dei viaggi si può scegliere', () => {
   const leg2 = trips.addLeg(t.id, { mode: 'bus', from: 'A', to: 'B', departAt: local('2026-11-03T09:00'), arriveAt: local('2026-11-03T10:00') });
   assert.equal(store.getEvent(trips.getLeg(leg2.id).eventId).calendarId, store.firstLocalCalendarId());
 });
+
+test('revisione: spostare dal calendario un\'attività che inizia con un numero non ne tocca il titolo', () => {
+  const t = sardegna();
+  const a = trips.addActivity(t.id, { day: '2026-11-03', tag: 'city', title: '3 musei in un giorno', time: '10:00' });
+  const evId = trips.getActivity(a.id).eventId;
+  assert.equal(store.getEvent(evId).title, '🏙️ 3 musei in un giorno');
+  store.updateEvent(evId, { start: local('2026-11-03T11:00'), end: local('2026-11-03T13:00') });
+  assert.equal(trips.getActivity(a.id).title, '3 musei in un giorno');
+  assert.equal(trips.getActivity(a.id).time, '11:00');
+});

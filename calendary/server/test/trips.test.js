@@ -125,3 +125,15 @@ test('collegamento agli eventi e sync', () => {
   assert.deepEqual(calls, ['trip:create', 'activity:create', 'trip:delete']);
   trips.setTripsSync(null);
 });
+
+test('revisione: direzione delle tratte nelle gite di un giorno e nei viaggi di due giorni, in qualunque ordine', () => {
+  const gita = trips.createTrip({ name: 'Gita', startDate: '2026-11-10', endDate: '2026-11-10' });
+  const back = trips.addLeg(gita.id, { mode: 'train', from: 'Firenze', to: 'Pisa', departAt: local('2026-11-10T19:00'), arriveAt: local('2026-11-10T21:00') });
+  const out = trips.addLeg(gita.id, { mode: 'train', from: 'Pisa', to: 'Firenze', departAt: local('2026-11-10T08:00'), arriveAt: local('2026-11-10T09:00') });
+  assert.equal(trips.getLeg(out.id).direction, 'out');
+  assert.equal(trips.getLeg(back.id).direction, 'back');
+  // two days, overnight ferry out that lands on the last day
+  const due = trips.createTrip({ name: 'Due', startDate: '2026-11-12', endDate: '2026-11-13' });
+  const ferry = trips.addLeg(due.id, { mode: 'ferry', from: 'Livorno', to: 'Olbia', departAt: local('2026-11-12T22:00'), arriveAt: local('2026-11-13T07:00') });
+  assert.equal(trips.getLeg(ferry.id).direction, 'out');
+});
