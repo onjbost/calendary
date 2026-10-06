@@ -8,7 +8,6 @@ import {
   allowExactAlarms, browserLocalTest, currentPushSubscription, disablePush, enablePush, isNative, nativeNotificationStatus, pushSupported, sendNativeTest,
   type NativeNotificationStatus,
 } from '../native';
-import { currentTheme, setTheme, THEMES, type ThemeId } from '../theme';
 import { useUI } from '../ui';
 
 const PALETTE = ['#00e5ff', '#ff2bd6', '#a66bff', '#9dff3a', '#ffb020', '#ff3d6e', '#3d8bff', '#00d5a0'];
@@ -407,29 +406,6 @@ function ClaudeSettings() {
   );
 }
 
-/** Theme picker: colors, background and fonts, saved on this device. */
-function ThemePicker() {
-  const [theme, set] = useState<ThemeId>(currentTheme);
-  const pick = (id: ThemeId) => {
-    setTheme(id);
-    set(id);
-  };
-  return (
-    <div className="stack">
-      <div className="muted small">Cambia colori, sfondo e caratteri; la disposizione resta la stessa. La scelta vale per questo dispositivo: il tablet e il PC possono avere temi diversi.</div>
-      <div className="theme-grid">
-        {THEMES.map((t) => (
-          <button key={t.id} className={`theme-card ${theme === t.id ? 'on' : ''}`} onClick={() => pick(t.id)}>
-            <div className="theme-swatch">{t.swatch.map((c) => <span key={c} style={{ background: c }} />)}</div>
-            <b>{t.name}{theme === t.id ? ' ✓' : ''}</b>
-            <span className="faint small">{t.description}</span>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 /** Alexa: the "Calendary" skill (voice → app) and reminders/announcements on the Echo devices (app → voice). */
 function AlexaSettings() {
   const { toast } = useUI();
@@ -576,10 +552,6 @@ export function SettingsPage({ onLogout }: { onLogout: () => void }) {
         <section className="glass pad span-12 glow-cyan">
           <div className="card-title"><h2>Claude</h2></div>
           <ClaudeSettings />
-        </section>
-        <section className="glass pad span-12 glow-violet">
-          <div className="card-title"><h2 className="neon-violet">Aspetto</h2></div>
-          <ThemePicker />
         </section>
         <section className="glass pad span-12 glow-pink">
           <div className="card-title"><h2 className="neon-pink">Alexa</h2></div>

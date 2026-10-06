@@ -10,3 +10,4 @@ tablet/android/local.properties
 *.log
 *.apk
 .DS_Store
+.superpowers/
