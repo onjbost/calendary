@@ -217,9 +217,18 @@ export function listenDeepLinks() {
     if (!raw) return;
     try {
       const target = new URL(new URL(raw).searchParams.get('url') || '');
-      if (target.origin === window.location.origin) window.location.href = target.href;
+      if (target.origin === window.location.origin && target.href !== window.location.href) window.location.href = target.href;
     } catch { /* malformed link */ }
   };
   app.addListener('appUrlOpen', (e: { url: string }) => handle(e.url));
-  app.getLaunchUrl?.().then((r: { url?: string } | undefined) => handle(r?.url)).catch(() => {});
+  // the launch link stays the same for the whole process, also after a page reload: open it only once,
+  // otherwise opening the app from a link reloads the page forever
+  app.getLaunchUrl?.().then((r: { url?: string } | undefined) => {
+    const launch = r?.url;
+    let handled: string | null = null;
+    try { handled = sessionStorage.getItem('calendary:launch-handled'); } catch { /* storage unavailable */ }
+    if (!launch || launch === handled) return;
+    try { sessionStorage.setItem('calendary:launch-handled', launch); } catch { /* storage unavailable */ }
+    handle(launch);
+  }).catch(() => {});
 }
