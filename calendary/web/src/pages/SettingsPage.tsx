@@ -305,7 +305,7 @@ function WebNotifications() {
           <li><b>Browser</b>: clicca sul lucchetto accanto all’indirizzo → Notifiche → <i>Consenti</i>. In Chrome controlla anche <i>chrome://settings/content/notifications</i>.</li>
           <li>Chrome riceve le push solo se è in esecuzione (anche in background): Impostazioni → Sistema → <i>Continua a eseguire app in background</i>.</li>
           <li><b>Android</b>: Impostazioni → App → Chrome (o Hubitat) → Notifiche attive; disattiva l’ottimizzazione batteria se arrivano in ritardo.</li>
-          <li>Le notifiche funzionano solo dall’indirizzo <b>https://calendary.gattucciocloud.it</b>, non da 192.168.x.x:8787 (lì il browser le blocca perché non è HTTPS).</li>
+          <li>Le notifiche funzionano solo dall’indirizzo <b>https://hubitat.gattucciocloud.it</b>, non da 192.168.x.x:8787 (lì il browser le blocca perché non è HTTPS).</li>
         </ol>
       </details>
       <div className="faint tiny">L'app Android del tablet non compare qui: usa notifiche locali, gestite dalla sua pagina Impostazioni.</div>

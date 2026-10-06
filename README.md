@@ -61,15 +61,13 @@ Pubblica questa cartella su un repository GitHub (anche privato, con un token) e
 additional_hosts:
   - hostname: hubitat.gattucciocloud.it
     service: http://local-calendary:8787
-  - hostname: calendary.gattucciocloud.it   # vecchio indirizzo, resta attivo
-    service: http://local-calendary:8787
 ```
 
 e riavvia l'add-on Cloudflared. Il record DNS viene creato in automatico.
 
 **Con un tunnel gestito dalla dashboard** (Zero Trust → Networks → Tunnels → il tuo tunnel → *Public Hostname* → *Add*):
 
-- Subdomain: `hubitat` (e `calendary` per il vecchio indirizzo), Domain: `gattucciocloud.it`
+- Subdomain: `hubitat`, Domain: `gattucciocloud.it`
 - Service: `HTTP` → `local-calendary:8787`
 
 Se `local-calendary` non viene risolto (cloudflared fuori da Home Assistant), usa `IP-DI-HOME-ASSISTANT:8787`.
@@ -81,7 +79,7 @@ Note:
 
 ## 3. Primo utilizzo
 
-1. Apri `https://calendary.gattucciocloud.it` ed entra con la password.
+1. Apri `https://hubitat.gattucciocloud.it` ed entra con la password.
 2. **Impostazioni → Aggiungi calendario → Importa iCal**: incolla il link `.ics` del calendario di lavoro, del master, di Google o di Outlook. Nell'app, sotto il campo, ci sono le istruzioni per trovare il link.
 3. **Impostazioni → Notifiche → Attiva su questo dispositivo** (su PC e telefono). Su iPhone/iPad devi prima aggiungere l'app alla Home (Condividi → Aggiungi alla schermata Home).
 4. Segna come **⚡ Importante** gli eventi per cui vuoi l'avviso: arriva 30 minuti prima, oppure con il promemoria che scegli.
@@ -90,7 +88,7 @@ Note:
 
 ### Senza compilare nulla (PWA)
 
-Sul tablet apri `https://calendary.gattucciocloud.it/kiosk` con Chrome → ⋮ → **Aggiungi a schermata Home** / **Installa app**.
+Sul tablet apri `https://hubitat.gattucciocloud.it/kiosk` con Chrome → ⋮ → **Aggiungi a schermata Home** / **Installa app**.
 La vista tablet tiene lo schermo acceso finché è aperta (Wake Lock API). Per una bacheca fissa attiva anche **Blocco app su schermo** (Impostazioni Android → Sicurezza).
 
 ### App Android nativa (Capacitor)
@@ -111,7 +109,7 @@ L'APK viene creato in `tablet/android/app/build/outputs/apk/debug/app-debug.apk`
 
 Per installarlo sul tablet puoi copiare l'APK (via USB o Google Drive) e aprirlo dal tablet. Android chiederà di consentire l'installazione da quella app una sola volta.
 In alternativa, con il *Debug USB* attivo: `adb install -r app-debug.apk`.
-L'app carica direttamente `https://calendary.gattucciocloud.it/kiosk`: ogni aggiornamento della webapp arriva sul tablet senza ricompilare l'APK.
+L'app carica direttamente `https://hubitat.gattucciocloud.it/kiosk`: ogni aggiornamento della webapp arriva sul tablet senza ricompilare l'APK.
 Se cambi dominio, modifica `server.url` in `tablet/capacitor.config.json` e rifai `npx cap sync android`.
 
 La vista tablet:
@@ -124,7 +122,7 @@ La vista tablet:
 
 ### Smartphone
 
-Apri `https://calendary.gattucciocloud.it` e installala nella schermata Home (Chrome: ⋮ → *Installa app*; iPhone: Condividi → *Aggiungi alla schermata Home*).
+Apri `https://hubitat.gattucciocloud.it` e installala nella schermata Home (Chrome: ⋮ → *Installa app*; iPhone: Condividi → *Aggiungi alla schermata Home*).
 Sul telefono il calendario si apre nella vista *Giorno* e si cambia giorno con uno swipe. Il pulsante ＋ crea un evento; l'editor si apre dal basso e **Salva / Elimina** restano sempre visibili.
 
 ## 5. Assistente AI
@@ -162,7 +160,7 @@ L'integrazione ha due direzioni, indipendenti tra loro:
 2. **Build → Interaction Model → JSON Editor**: incolla il contenuto di [`alexa/skill-package/interactionModels/custom/it-IT.json`](alexa/skill-package/interactionModels/custom/it-IT.json) → **Save** → **Build skill**.
    La frase di attivazione è `a. i. cal` (si dice *AiCal*, in italiano come si legge): “calendary” veniva confuso con “calendario”,
    Amazon vuole almeno due parole e non accetta “ai” (preposizione), mentre accetta le sigle scritte “a. i.”.
-3. **Endpoint** → **HTTPS** → Default Region: `https://calendary.gattucciocloud.it/api/alexa`,
+3. **Endpoint** → **HTTPS** → Default Region: `https://hubitat.gattucciocloud.it/api/alexa`,
    certificato: *My development endpoint has a certificate from a trusted certificate authority* (quello di Cloudflare va bene) → **Save**.
 4. Copia lo **Skill ID** (`amzn1.ask.skill.…`, in alto nella pagina Endpoint) nell'opzione `alexa_skill_id` dell'add-on.
 5. **Permissions**: attiva **Reminders**. In fondo alla stessa pagina, in *Alexa Skill Messaging*, copia **Alexa Client Id** e **Alexa Client Secret**
@@ -190,7 +188,7 @@ quando sposti o cancelli un evento.
 
 **Sicurezza**: `/api/alexa` è l'unico indirizzo raggiungibile senza password, perché lo chiama Amazon. Il server accetta solo richieste **firmate da Amazon**
 (certificato `echo-api.amazon.com`, firma del corpo, timestamp entro 150 s) e con il **tuo Skill ID**.
-Se proteggi il dominio con **Cloudflare Access**, aggiungi un'applicazione *Bypass* per il percorso `calendary.gattucciocloud.it/api/alexa`.
+Se proteggi il dominio con **Cloudflare Access**, aggiungi un'applicazione *Bypass* per il percorso `hubitat.gattucciocloud.it/api/alexa`.
 
 ### Annunci vocali con Home Assistant (facoltativo)
 

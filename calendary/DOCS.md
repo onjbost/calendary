@@ -18,10 +18,10 @@ notifiche push e un assistente che pianifica lo studio.
 
 Dalla 0.11.0 Calendary si chiama **Hubitat** ed è l'hub dell'ecosistema (Hubitat, Moveo, WardApp).
 - **Cambia** ciò che si vede: nome dell'add-on, app, icona, notifiche, app Android.
-- **Nuovo indirizzo** `https://hubitat.gattucciocloud.it`. Il vecchio `calendary.gattucciocloud.it` continua a funzionare: in Cloudflared tieni tutti e due gli hostname verso lo stesso servizio, poi metti `public_url: https://hubitat.gattucciocloud.it` nelle opzioni.
+- **Indirizzo** `https://hubitat.gattucciocloud.it` (il vecchio `calendary.…` è stato dismesso): in Cloudflared serve solo questo hostname, e nelle opzioni `public_url: https://hubitat.gattucciocloud.it`. In Moveo e WardApp metti `calendary_public_url: https://hubitat.gattucciocloud.it`.
 - **Non cambia nulla di tecnico**: slug `calendary` (i dati in `/data` restano), hostname interno `local-calendary`, repository `onjbost/calendary`, id dell'app Android, `calendary://`, rotte API e `api_token`. Moveo e WardApp si collegano come prima.
 - **Skill Alexa** "AiCal": invariata. Per farla rispondere con il nuovo nome cambia il nome visualizzato nella Alexa Developer Console (il nome di invocazione può restare).
-- **App Android**: carica ancora `calendary.gattucciocloud.it/kiosk`; quando il nuovo hostname funziona, cambia `server.url` in `tablet/capacitor.config.json` e ricompila.
+- **App Android**: carica `hubitat.gattucciocloud.it/kiosk` dall'APK 0.4.2 (ricompila con `Hubitatuild-android.ps1`).
 
 ## Configurazione
 
@@ -35,7 +35,7 @@ Dalla 0.11.0 Calendary si chiama **Hubitat** ed è l'hub dell'ecosistema (Hubita
 | `wardapp_url` | Indirizzo interno di **WardApp** per la card *Oggi indosso* (`http://local-wardapp:8789`). Vuoto = card nascosta. |
 | `wardapp_public_url` | Indirizzo pubblico di WardApp, usato nei link (`https://wardapp.gattucciocloud.it`). |
 | `weather_entity` | Entità meteo di Home Assistant per il widget della modalità notte (default `weather.forecast_home`, creata da Met.no con l'installazione). Vuoto = niente meteo. |
-| `public_url` | Indirizzo pubblico (es. `https://calendary.gattucciocloud.it`). Serve per le notifiche push. |
+| `public_url` | Indirizzo pubblico (es. `https://hubitat.gattucciocloud.it`). Serve per le notifiche push. |
 | `timezone` | Fuso orario, default `Europe/Rome`. |
 | `ics_sync_minutes` | Ogni quanti minuti riscaricare i calendari iCal (default 15). |
 | `morning_summary` | Ora del riepilogo push mattutino, es. `07:30`. Vuoto = disattivato. |
@@ -151,8 +151,8 @@ Calendary espone un server **MCP** (Model Context Protocol) che permette a Claud
 quando gli dici *“annotalo su Calendary”* crea la nota nella cartella del progetto, creando la cartella se manca.
 
 1. Imposta `mcp_token` (una stringa casuale di almeno 24 caratteri) e riavvia l'add-on.
-2. Su claude.ai: **Impostazioni → Connettori → Aggiungi connettore personalizzato**, URL `https://calendary.gattucciocloud.it/api/mcp/<mcp_token>`.
-   Da Claude Code: `claude mcp add --transport http calendary https://calendary.gattucciocloud.it/api/mcp --header "Authorization: Bearer <mcp_token>"`.
+2. Su claude.ai: **Impostazioni → Connettori → Aggiungi connettore personalizzato**, URL `https://hubitat.gattucciocloud.it/api/mcp/<mcp_token>`.
+   Da Claude Code: `claude mcp add --transport http calendary https://hubitat.gattucciocloud.it/api/mcp --header "Authorization: Bearer <mcp_token>"`.
 
 Strumenti: `list_note_folders`, `create_note_folder`, `list_notes`, `add_note`, `update_note`. Le note aggiunte da Claude hanno il simbolo ✦.
 

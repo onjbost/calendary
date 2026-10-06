@@ -28,7 +28,7 @@
     "apis": {
       "custom": {
         "endpoint": {
-          "uri": "https://calendary.gattucciocloud.it/api/alexa",
+          "uri": "https://hubitat.gattucciocloud.it/api/alexa",
           "sslCertificateType": "Trusted"
         },
         "interfaces": []
@@ -41,7 +41,7 @@
     ],
     "events": {
       "endpoint": {
-        "uri": "https://calendary.gattucciocloud.it/api/alexa",
+        "uri": "https://hubitat.gattucciocloud.it/api/alexa",
         "sslCertificateType": "Trusted"
       },
       "subscriptions": [
@@ -67,8 +67,8 @@
       "containsAds": false,
       "locales": {
         "it-IT": {
-          "privacyPolicyUrl": "https://calendary.gattucciocloud.it",
-          "termsOfUseUrl": "https://calendary.gattucciocloud.it"
+          "privacyPolicyUrl": "https://hubitat.gattucciocloud.it",
+          "termsOfUseUrl": "https://hubitat.gattucciocloud.it"
         }
       }
     }
