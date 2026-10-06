@@ -15,6 +15,7 @@ import { onChange } from './stream.js';
 import { initPush } from './push.js';
 import { startIcsSync } from './ics.js';
 import { startNotifier } from './notifier.js';
+import { registerTripRoutes, startTrips } from './trips/index.js';
 import { ensureDefaultCalendars } from './store.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -37,6 +38,7 @@ registerAuth(app);
 await app.register(registerRoutes, { prefix: '/api' });
 await app.register(registerAlexa, { prefix: '/api' });
 await app.register(registerMcp, { prefix: '/api' });
+await app.register(registerTripRoutes, { prefix: '/api' });
 
 // Single sign-on from Moveo or WardApp: /sso?t=<ticket signed by them> → session cookie → redirect.
 app.get('/sso', async (req, reply) => {
@@ -72,6 +74,7 @@ ensureDefaultCalendars();
 initPush();
 startIcsSync();
 startNotifier();
+startTrips();
 startAlexaReminders();
 onChange((scope) => {
   if (['events', 'goals', 'calendars', 'pills'].includes(scope)) scheduleSync();
