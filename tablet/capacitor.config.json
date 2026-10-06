@@ -9,7 +9,7 @@
     "allowNavigation": ["calendary.gattucciocloud.it", "hubitat.gattucciocloud.it"]
   },
   "android": {
-    "backgroundColor": "#05030f",
+    "backgroundColor": "#070605",
     "allowMixedContent": false
   },
   "plugins": {

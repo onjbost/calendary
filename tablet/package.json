@@ -1,12 +1,12 @@
 {
   "name": "calendary-tablet",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "description": "Wrapper Android (Capacitor) per la vista tablet di Hubitat (ex Calendary)",
   "scripts": {
     "sync": "cap sync android",
     "open": "cap open android",
-    "icons": "capacitor-assets generate --android --iconBackgroundColor #05030f --splashBackgroundColor #05030f",
+    "icons": "capacitor-assets generate --android --iconBackgroundColor #070605 --splashBackgroundColor #070605",
     "apk": "cd android && gradlew assembleDebug"
   },
   "dependencies": {

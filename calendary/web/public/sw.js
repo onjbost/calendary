@@ -1,5 +1,5 @@
 // Hubitat service worker: offline shell + web push notifications.
-const CACHE = 'calendary-v3';
+const CACHE = 'hubitat-v1';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((c) => c.addAll(['/', '/manifest.webmanifest', '/img/icon.svg'])).catch(() => {}));

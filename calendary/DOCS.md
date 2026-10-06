@@ -4,6 +4,16 @@ L'hub dell'ecosistema Hubitat. Calendario personale in stile vetro e argilla, ne
 (Google, Outlook, lavoro, master…), matrice di Eisenhower giornaliera, tips motivazionali,
 notifiche push e un assistente che pianifica lo studio.
 
+## Stile Hubitat e lampada (0.11.0)
+
+- **Un solo tema**: vetro con rifrazioni colorate per le card (bordo sottile che scompone la luce) e argilla per pulsanti, chip e interruttori; nero e arancione; caratteri **Unbounded** (titoli, orologio, numeri) e **Outfit** (testi). Neon e Minimal non ci sono più.
+- **La lampada ad arco** illumina l'app: grande nella card dell'orologio (PC) e accanto all'orologio della vista tablet, piccola in alto a destra sul telefono. Toccandola si passa **Normale → Risparmio energetico → Notte**.
+  - **Normale**: luce piena, aloni e riflessi.
+  - **Risparmio**: luce al 35%, vetro opaco, niente aloni, ombre né animazioni (`html.eco`), aggiornamenti più radi.
+  - **Notte**: lampada spenta e pagina notte con orologio a cifre, prossima sveglia (o prossimo impegno) e prossimo allenamento di Moveo. Un tocco sulla lampada la riaccende; un tocco altrove esce e torna al comportamento automatico.
+- **Automatico**: valgono le regole di *Impostazioni → Questo dispositivo* (risparmio sotto la soglia di batteria, notte in carica/orizzontale o nelle ore notturne). Una scelta fatta toccando la lampada vale su questo dispositivo finché non cambiano le condizioni (metti o togli la carica, entri o esci dalle ore notturne, la batteria scende sotto la soglia).
+- Con *Riduci movimento* attivo nel sistema, accensione e spegnimento sono semplici dissolvenze.
+
 ## Da Calendary a Hubitat (0.11.0)
 
 Dalla 0.11.0 Calendary si chiama **Hubitat** ed è l'hub dell'ecosistema (Hubitat, Moveo, WardApp).

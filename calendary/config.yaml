@@ -1,5 +1,5 @@
 name: Hubitat
-version: "0.10.0"
+version: "0.11.0"
 slug: calendary
 description: Hub dell'ecosistema Hubitat (ex Calendary) - calendario, promemoria, obiettivi, matrice di Eisenhower, assistente e Alexa
 url: https://hubitat.gattucciocloud.it
