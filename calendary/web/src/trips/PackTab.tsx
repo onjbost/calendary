@@ -142,7 +142,8 @@ export function PackTab({ trip, onChange }: { trip: Trip; onChange?: () => void 
   const today = toYmd(new Date());
   return (
     <div className="stack">
-      {readOnly && <div className="alert">WardApp non risponde: è l'ultima lista ricevuta, in sola lettura. {res.error}</div>}
+      {readOnly && <div className="alert row">WardApp non risponde: è l'ultima lista ricevuta, in sola lettura. {res.error} <button className="btn sm" onClick={load}>Riprova</button></div>}
+      {!readOnly && res.error && <div className="alert row">Non sono riuscito a rigenerare: {res.error} <button className="btn sm" onClick={prepare} disabled={busy}>Riprova</button></div>}
       {error && <div className="alert error">{error}</div>}
       {trip.weatherChanged && !readOnly && (
         <div className="alert row">Il meteo è cambiato da quando hai preparato la valigia. <button className="btn sm" onClick={prepare} disabled={busy}>Rigenera</button></div>

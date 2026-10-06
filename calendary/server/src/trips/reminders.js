@@ -94,7 +94,10 @@ export function dueTripReminders(now = new Date()) {
     const back = trip.legs.filter((l) => l.direction === 'back').sort((a, b) => a.arriveAt.localeCompare(b.arriveAt)).at(-1);
     const fire = back ? new Date(Date.parse(back.arriveAt) + 3600e3) : at(trip.endDate, '18:00');
     if (t >= fire.getTime() && today === ymd(fire)) {
-      add(`trip|${trip.id}|return|${trip.endDate}`, '🏠 Bentornato!', `Rientro da ${where}: svuota la valigia e rimetti a posto i capi.`, url);
+      const body = packCounts(trip.id)
+        ? `Rientro da ${where}: svuota la valigia, metto i capi usati nel cesto di WardApp? Toccami per sceglierli.`
+        : `Rientro da ${where}: svuota la valigia e rimetti a posto i capi.`;
+      add(`trip|${trip.id}|return|${trip.endDate}`, '🏠 Bentornato!', body, url);
     }
   }
   return out;

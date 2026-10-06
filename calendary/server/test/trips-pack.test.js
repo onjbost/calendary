@@ -153,3 +153,22 @@ test('il viaggio porta i conteggi dell\'ultima valigia', async () => {
   await call('POST', `/api/trips/${t.id}/pack`);
   assert.deepEqual(trips.getTrip(t.id).pack, { total: 24, checked: 18 });
 });
+
+test('revisione: una preparazione non riuscita non rende la scheda di sola lettura', async () => {
+  const t = sardegna();
+  wardapp = () => json({ ...PACK, tripId: t.id });
+  await call('POST', `/api/trips/${t.id}/pack`);
+  wardapp = () => { throw new DOMException('The operation was aborted due to timeout', 'TimeoutError'); };
+  const r = (await call('POST', `/api/trips/${t.id}/pack`)).body;
+  assert.equal(r.stale, false);
+  assert.equal(r.pack.counts.total, 24);
+  assert.match(r.error, /WardApp/);
+});
+
+test('revisione: il Bentornato propone il cesto di WardApp quando c\'è la valigia', async () => {
+  const t = sardegna();
+  wardapp = () => json({ ...PACK, tripId: t.id });
+  await call('POST', `/api/trips/${t.id}/pack`);
+  const r = dueTripReminders(new Date('2026-11-04T18:00')).find((x) => x.title === '🏠 Bentornato!');
+  assert.match(r.body, /metto i capi usati nel cesto di WardApp\?/);
+});

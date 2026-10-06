@@ -7,7 +7,7 @@ import { db } from './db.js';
 import { getTrip } from './trips.js';
 
 const TIMEOUT_MS = 15_000;
-const GENERATE_TIMEOUT_MS = 70_000; // WardApp may ask its AI
+const GENERATE_TIMEOUT_MS = 110_000; // WardApp may ask its AI (two models at most, 25 s each, plus the rules)
 
 if (!db.prepare('PRAGMA table_info(trips)').all().some((c) => c.name === 'pack_cache')) {
   db.exec('ALTER TABLE trips ADD COLUMN pack_cache TEXT');
@@ -103,7 +103,8 @@ export async function preparePack(tripId) {
     db.prepare('UPDATE trips SET weather_changed = 0 WHERE id = ?').run(trip.id);
     return ok(pack);
   } catch (err) {
-    return fallback(trip.id, err);
+    // the last list stays usable (WardApp may simply have been slow): the page shows the error and can retry
+    return { enabled: true, pack: cacheOf(trip.id), stale: false, error: err.message };
   }
 }
 
